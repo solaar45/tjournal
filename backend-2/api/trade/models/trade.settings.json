@@ -1,0 +1,53 @@
+{
+  "kind": "collectionType",
+  "collectionName": "trades",
+  "info": {
+    "name": "Trade",
+    "description": ""
+  },
+  "options": {
+    "increments": true,
+    "timestamps": true,
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "symbol": {
+      "type": "string"
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "Aktie",
+        "Zertifikat",
+        "Optionsschein",
+        "Krypto"
+      ]
+    },
+    "status": {
+      "type": "string"
+    },
+    "shares": {
+      "type": "integer"
+    },
+    "side": {
+      "type": "enumeration",
+      "enum": [
+        "Long",
+        "Short"
+      ]
+    },
+    "entrydate": {
+      "type": "date"
+    },
+    "entryprice": {
+      "type": "decimal"
+    },
+    "exitdate": {
+      "type": "date"
+    },
+    "exitprice": {
+      "type": "decimal"
+    }
+  }
+}
