@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -43,6 +43,39 @@ import {
 import { useCreateTrade } from '@/hooks/useTrades';
 import { TradeType, TradeSide, TradeStatus, Broker } from '@/types/trade';
 import { toast } from 'sonner';
+
+// LocalStorage keys for smart defaults
+const STORAGE_KEYS = {
+  LAST_BROKER: 'tjournal_last_broker',
+  LAST_TYPE: 'tjournal_last_type',
+  LAST_SHARES: 'tjournal_last_shares',
+};
+
+// Get smart defaults from localStorage
+const getSmartDefaults = () => {
+  if (typeof window === 'undefined') {
+    return {
+      broker: undefined,
+      type: TradeType.AKTIE,
+      shares: '',
+    };
+  }
+
+  return {
+    broker: localStorage.getItem(STORAGE_KEYS.LAST_BROKER) as Broker | undefined,
+    type: (localStorage.getItem(STORAGE_KEYS.LAST_TYPE) as TradeType) || TradeType.AKTIE,
+    shares: localStorage.getItem(STORAGE_KEYS.LAST_SHARES) || '',
+  };
+};
+
+// Save smart defaults to localStorage
+const saveSmartDefaults = (broker?: Broker, type?: TradeType, shares?: number) => {
+  if (typeof window === 'undefined') return;
+  
+  if (broker) localStorage.setItem(STORAGE_KEYS.LAST_BROKER, broker);
+  if (type) localStorage.setItem(STORAGE_KEYS.LAST_TYPE, type);
+  if (shares) localStorage.setItem(STORAGE_KEYS.LAST_SHARES, shares.toString());
+};
 
 // Zod Schema für Validierung - use z.coerce for number fields
 const tradeFormSchema = z.object({
@@ -118,23 +151,56 @@ interface TradeFormProps {
 
 export function TradeForm({ trigger }: TradeFormProps) {
   const [open, setOpen] = useState(false);
+  const [saveAndNew, setSaveAndNew] = useState(false);
   const createTrade = useCreateTrade();
+  const symbolInputRef = useRef<HTMLInputElement>(null);
+
+  // Get smart defaults
+  const smartDefaults = getSmartDefaults();
 
   const form = useForm<TradeFormValues>({
     resolver: zodResolver(tradeFormSchema),
     defaultValues: {
       symbol: '',
-      type: TradeType.AKTIE,
-      side: TradeSide.LONG,
-      broker: undefined,
-      entryShares: '' as any,
+      type: smartDefaults.type,
+      side: TradeSide.LONG, // Most trades are Long
+      broker: smartDefaults.broker,
+      entryShares: smartDefaults.shares as any,
       entryPrice: '' as any,
-      entryDate: new Date(),
+      entryDate: new Date(), // Today by default
       exitShares: '' as any,
       exitPrice: '' as any,
       exitDate: undefined,
     },
   });
+
+  // Auto-focus on symbol field when dialog opens
+  useEffect(() => {
+    if (open) {
+      // Small delay to ensure dialog is fully rendered
+      setTimeout(() => {
+        symbolInputRef.current?.focus();
+      }, 100);
+    }
+  }, [open]);
+
+  // Global keyboard shortcut: Ctrl/Cmd + N to open dialog
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+N or Cmd+N (Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        setOpen(true);
+      }
+      // Escape to close
+      if (e.key === 'Escape' && open) {
+        setOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open]);
 
   const exitPrice = form.watch('exitPrice');
   const exitShares = form.watch('exitShares');
@@ -172,11 +238,34 @@ export function TradeForm({ trigger }: TradeFormProps) {
 
     console.log('Submitting payload:', payload);
 
+    // Save smart defaults for next time
+    saveSmartDefaults(data.broker, data.type, data.entryShares);
+
     createTrade.mutate(payload, {
       onSuccess: () => {
-        setOpen(false);
-        form.reset();
         toast.success('Trade erfolgreich erstellt');
+        
+        if (saveAndNew) {
+          // Reset form but keep smart defaults
+          form.reset({
+            symbol: '',
+            type: data.type,
+            side: TradeSide.LONG,
+            broker: data.broker,
+            entryShares: data.entryShares as any,
+            entryPrice: '' as any,
+            entryDate: new Date(),
+            exitShares: '' as any,
+            exitPrice: '' as any,
+            exitDate: undefined,
+          });
+          setSaveAndNew(false);
+          // Re-focus symbol field
+          setTimeout(() => symbolInputRef.current?.focus(), 100);
+        } else {
+          setOpen(false);
+          form.reset();
+        }
       },
       onError: (error) => {
         console.error('API Error:', error);
@@ -192,6 +281,12 @@ export function TradeForm({ trigger }: TradeFormProps) {
       .map(([field, error]: [string, any]) => `${field}: ${error.message}`)
       .join(', ');
     toast.error('Formularfehler: ' + errorMessages);
+  };
+
+  // Handle Save & New
+  const handleSaveAndNew = () => {
+    setSaveAndNew(true);
+    form.handleSubmit(onSubmit, onError)();
   };
 
   return (
@@ -213,6 +308,9 @@ export function TradeForm({ trigger }: TradeFormProps) {
               <path d="M12 5v14" />
             </svg>
             Neuer Trade
+            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+              <span className="text-xs">⌘</span>N
+            </kbd>
           </Button>
         )}
       </DialogTrigger>
@@ -221,6 +319,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
           <DialogTitle>Neuen Trade erfassen</DialogTitle>
           <DialogDescription>
             Erfasse die Details deines Trades. Einstiegsdaten sind Pflicht, Ausstiegsdaten optional.
+            <span className="block mt-1 text-xs opacity-75">⌨️ Tipp: Tab zum nächsten Feld, Enter zum Speichern, Esc zum Abbrechen</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -236,7 +335,9 @@ export function TradeForm({ trigger }: TradeFormProps) {
                     <FormLabel>Symbol *</FormLabel>
                     <FormControl>
                       <Input
+                        ref={symbolInputRef}
                         placeholder="AAPL"
+                        autoComplete="off"
                         {...field}
                         onChange={(e) =>
                           field.onChange(e.target.value.toUpperCase())
@@ -355,6 +456,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                       <Input
                         type="number"
                         placeholder="50"
+                        autoComplete="off"
                         {...field}
                       />
                     </FormControl>
@@ -375,6 +477,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         type="number"
                         step="0.01"
                         placeholder="180.50"
+                        autoComplete="off"
                         {...field}
                       />
                     </FormControl>
@@ -448,6 +551,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                       <Input
                         type="number"
                         placeholder="50"
+                        autoComplete="off"
                         {...field}
                       />
                     </FormControl>
@@ -470,6 +574,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         type="number"
                         step="0.01"
                         placeholder="185.20"
+                        autoComplete="off"
                         {...field}
                       />
                     </FormControl>
@@ -536,7 +641,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
               </div>
             )}
 
-            <DialogFooter>
+            <DialogFooter className="gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -544,9 +649,17 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 disabled={createTrade.isPending}
               >
                 Abbrechen
+                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
+                  Esc
+                </kbd>
               </Button>
-              <Button type="submit" disabled={createTrade.isPending}>
-                {createTrade.isPending ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleSaveAndNew}
+                disabled={createTrade.isPending}
+              >
+                {createTrade.isPending && saveAndNew ? (
                   <>
                     <svg
                       className="mr-2 h-4 w-4 animate-spin"
@@ -571,7 +684,46 @@ export function TradeForm({ trigger }: TradeFormProps) {
                     Wird erstellt...
                   </>
                 ) : (
-                  'Trade erstellen'
+                  <>
+                    Speichern & Neu
+                    <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
+                      <span className="text-xs">⌘</span>⏎
+                    </kbd>
+                  </>
+                )}
+              </Button>
+              <Button type="submit" disabled={createTrade.isPending}>
+                {createTrade.isPending && !saveAndNew ? (
+                  <>
+                    <svg
+                      className="mr-2 h-4 w-4 animate-spin"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Wird erstellt...
+                  </>
+                ) : (
+                  <>
+                    Speichern
+                    <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
+                      ⏎
+                    </kbd>
+                  </>
                 )}
               </Button>
             </DialogFooter>
