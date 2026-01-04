@@ -26,7 +26,6 @@ import {
 } from 'lucide-react';
 import { Position, Transaction, TransactionType } from '@/types/position';
 import { formatCurrency, formatPercent } from '@/lib/tradeUtils';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -70,26 +69,29 @@ function getTransactionRowBg(type: TransactionType, pnl?: number): string {
 }
 
 /**
- * Get status text and color classes
+ * Get status text and color classes based on P&L
  */
-function getStatusDisplay(status: string): { text: string; className: string } {
-  if (status === 'OPEN') {
+function getStatusDisplay(position: Position): { text: string; className: string } {
+  // If position is still open (has remaining shares)
+  if (position.remainingShares > 0) {
     return {
       text: 'Open',
-      className: 'text-blue-600 dark:text-blue-400',
+      className: 'text-muted-foreground',
     };
   }
-  if (status === 'PARTIAL') {
+  
+  // Closed position - Win or Loss based on P&L
+  if (position.totalPnL >= 0) {
     return {
-      text: 'Partial',
-      className: 'text-amber-600 dark:text-amber-400',
+      text: 'Win',
+      className: 'text-green-600 dark:text-green-400',
+    };
+  } else {
+    return {
+      text: 'Loss',
+      className: 'text-red-600 dark:text-red-400',
     };
   }
-  // CLOSED
-  return {
-    text: 'Closed',
-    className: 'text-muted-foreground',
-  };
 }
 
 /**
@@ -147,36 +149,32 @@ export function PositionTableTanstack({
         ),
         cell: ({ row }) => <span className="font-bold">{row.original.symbol}</span>,
       },
-      // Side Column - Now subtle with diagonal arrow
+      // Side Column - Icon only
       {
         id: 'side',
         accessorKey: 'side',
-        header: 'Side',
-        size: 80,
+        header: '',
+        size: 40,
         cell: ({ row }) => {
           const isLong = row.original.side === 'Long';
           return (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center justify-center" title={row.original.side}>
               {isLong ? (
-                <ArrowUpRight className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                <ArrowUpRight className="h-4 w-4 text-green-600 dark:text-green-400" />
               ) : (
-                <ArrowDownRight className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                <ArrowDownRight className="h-4 w-4 text-red-600 dark:text-red-400" />
               )}
-              <span className="text-xs text-muted-foreground">
-                {row.original.side}
-              </span>
             </div>
           );
         },
       },
-      // Status Column - Subtle text
+      // Status Column - Win/Loss/Open
       {
         id: 'status',
-        accessorKey: 'status',
         header: 'Status',
-        size: 70,
+        size: 60,
         cell: ({ row }) => {
-          const { text, className } = getStatusDisplay(row.original.status);
+          const { text, className } = getStatusDisplay(row.original);
           return (
             <span className={cn('text-xs font-medium', className)}>
               {text}
@@ -403,18 +401,20 @@ export function PositionTableTanstack({
                       <TableCell />
 
                       {/* Date */}
-                      <TableCell className="py-1 pl-8 text-xs text-muted-foreground" colSpan={2}>
+                      <TableCell className="py-1 pl-8 text-xs text-muted-foreground">
                         {format(new Date(txn.date), 'dd.MM.yy', { locale: de })}
                       </TableCell>
 
-                      {/* Type Badge */}
-                      <TableCell className="py-1">
-                        <Badge
-                          variant={txn.type === TransactionType.ENTRY ? 'default' : 'secondary'}
-                          className="text-xs"
-                        >
+                      {/* Transaction Type (Entry/Exit) - now just text */}
+                      <TableCell className="py-1" colSpan={2}>
+                        <span className={cn(
+                          'text-xs font-medium',
+                          txn.type === TransactionType.ENTRY
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-amber-600 dark:text-amber-400'
+                        )}>
                           {txn.type === TransactionType.ENTRY ? 'Entry' : 'Exit'}
-                        </Badge>
+                        </span>
                       </TableCell>
 
                       {/* Price */}
