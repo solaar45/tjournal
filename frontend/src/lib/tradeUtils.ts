@@ -8,8 +8,11 @@ export function calculatePnL(trade: Trade): Trade {
     return trade;
   }
 
+  // Use exitShares if available, otherwise fall back to entryShares for full exit
+  const exitShares = trade.exitShares ?? trade.entryShares ?? trade.shares;
+  
   const multiplier = trade.side === 'Long' ? 1 : -1;
-  const pnl = (trade.exitPrice - trade.entryPrice) * trade.shares * multiplier;
+  const pnl = (trade.exitPrice - trade.entryPrice) * exitShares * multiplier;
   const pnlPercent = ((trade.exitPrice - trade.entryPrice) / trade.entryPrice) * 100 * multiplier;
 
   return {
