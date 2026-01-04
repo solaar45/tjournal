@@ -119,6 +119,20 @@ export default function TradesPage() {
         meta: { group: 'information' },
       },
       {
+        id: 'info-broker',
+        accessorKey: 'broker',
+        header: 'Broker',
+        cell: ({ row }) => {
+          const broker = row.original.broker;
+          return (
+            <div className="text-sm">
+              {broker || <span className="text-muted-foreground">-</span>}
+            </div>
+          );
+        },
+        meta: { group: 'information' },
+      },
+      {
         id: 'info-shares',
         accessorKey: 'entryShares',
         header: ({ column }) => {
@@ -450,7 +464,7 @@ export default function TradesPage() {
               <TableHeader>
                 {/* Group Header Row */}
                 <TableRow>
-                  <TableHead colSpan={5} className="text-center bg-slate-50 font-semibold border-r">
+                  <TableHead colSpan={6} className="text-center bg-slate-50 font-semibold border-r">
                     Information
                   </TableHead>
                   <TableHead colSpan={2} className="text-center bg-blue-50 font-semibold border-r">
