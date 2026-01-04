@@ -4,7 +4,9 @@ import { useTrades, useTradeStats } from '@/hooks/useTrades';
 import { formatCurrency, formatPercent } from '@/lib/tradeUtils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { TradeForm } from '@/components/trade-form';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { TradeType, TradeSide } from '@/types/trade';
@@ -45,11 +47,14 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Übersicht über deine Trading-Performance
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Übersicht über deine Trading-Performance
+          </p>
+        </div>
+        <TradeForm />
       </div>
 
       {/* KPI Cards */}
@@ -260,8 +265,9 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           {recentTrades.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Noch keine Trades vorhanden.
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">Noch keine Trades vorhanden.</p>
+              <TradeForm trigger={<Button>Ersten Trade erstellen</Button>} />
             </div>
           ) : (
             <Table>
