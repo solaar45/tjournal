@@ -1,20 +1,17 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import {
   flexRender,
   getCoreRowModel,
-  getExpandedRowModel,
   getSortedRowModel,
   useReactTable,
   ColumnDef,
-  Row,
   SortingState,
   ExpandedState,
 } from '@tanstack/react-table';
-import { useState } from 'react';
 import {
   ChevronDown,
   ChevronRight,
@@ -70,17 +67,6 @@ function getTransactionRowBg(type: TransactionType, pnl?: number): string {
 }
 
 /**
- * Flattened row type for TanStack Table
- */
-type TableRow = {
-  id: string;
-  type: 'position' | 'transaction';
-  position?: Position;
-  transaction?: Transaction;
-  parentId?: string;
-};
-
-/**
  * Main TanStack Position Table Component
  */
 export function PositionTableTanstack({
@@ -89,34 +75,10 @@ export function PositionTableTanstack({
   onAddTransaction,
 }: PositionTableTanstackProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [expanded, setExpanded] = useState<ExpandedState>({});
-
-  // Flatten data: Position rows + their transaction sub-rows
-  const data = useMemo<TableRow[]>(() => {
-    const rows: TableRow[] = [];
-    positions.forEach((position) => {
-      // Add position master row
-      rows.push({
-        id: position.id,
-        type: 'position',
-        position,
-      });
-      
-      // Add transaction sub-rows
-      position.transactions.forEach((transaction) => {
-        rows.push({
-          id: transaction.id,
-          type: 'transaction',
-          transaction,
-          parentId: position.id,
-        });
-      });
-    });
-    return rows;
-  }, [positions]);
+  const [expanded, setExpanded] = useState<ExpandedState>({}); // Empty = all collapsed
 
   // Define columns
-  const columns = useMemo<ColumnDef<TableRow>[]>(
+  const columns = useMemo<ColumnDef<Position>[]>(
     () => [
       // Expand/Collapse Column
       {
@@ -124,7 +86,6 @@ export function PositionTableTanstack({
         header: '',
         size: 40,
         cell: ({ row }) => {
-          if (row.original.type !== 'position') return null;
           return (
             <Button
               variant="ghost"
@@ -155,83 +116,52 @@ export function PositionTableTanstack({
             <ArrowUpDown className="ml-1 h-3 w-3" />
           </Button>
         ),
-        cell: ({ row }) => {
-          const { type, position, transaction } = row.original;
-          if (type === 'position' && position) {
-            return <span className="font-bold">{position.symbol}</span>;
-          }
-          if (type === 'transaction' && transaction) {
-            return (
-              <span className="text-xs text-muted-foreground pl-4">
-                {format(new Date(transaction.date), 'dd.MM.yy', { locale: de })}
-              </span>
-            );
-          }
-          return null;
-        },
-        sortingFn: (rowA, rowB) => {
-          const a = rowA.original.position?.symbol || '';
-          const b = rowB.original.position?.symbol || '';
-          return a.localeCompare(b);
-        },
+        cell: ({ row }) => <span className="font-bold">{row.original.symbol}</span>,
       },
-      // Side / Type Column
+      // Side Column
       {
-        id: 'sideType',
+        id: 'side',
+        accessorKey: 'side',
         header: 'Side',
         size: 70,
-        cell: ({ row }) => {
-          const { type, position, transaction } = row.original;
-          if (type === 'position' && position) {
-            return (
-              <Badge
-                variant={position.side === 'Long' ? 'default' : 'secondary'}
-                className="text-xs"
-              >
-                {position.side === 'Long' ? '↑' : '↓'} {position.side}
-              </Badge>
-            );
-          }
-          if (type === 'transaction' && transaction) {
-            return (
-              <Badge
-                variant={transaction.type === TransactionType.ENTRY ? 'default' : 'secondary'}
-                className="text-xs"
-              >
-                {transaction.type === TransactionType.ENTRY ? 'Entry' : 'Exit'}
-              </Badge>
-            );
-          }
-          return null;
-        },
+        cell: ({ row }) => (
+          <Badge
+            variant={row.original.side === 'Long' ? 'default' : 'secondary'}
+            className="text-xs"
+          >
+            {row.original.side === 'Long' ? '↑' : '↓'} {row.original.side}
+          </Badge>
+        ),
       },
       // Status Column
       {
         id: 'status',
+        accessorKey: 'status',
         header: 'Status',
         size: 70,
-        cell: ({ row }) => {
-          const { type, position } = row.original;
-          if (type !== 'position' || !position) return null;
-          return (
-            <Badge
-              variant={
-                position.status === 'OPEN'
-                  ? 'default'
-                  : position.status === 'PARTIAL'
-                  ? 'outline'
-                  : 'secondary'
-              }
-              className="text-xs font-mono"
-            >
-              {position.status === 'OPEN' ? '[O]' : position.status === 'PARTIAL' ? '[P]' : '[C]'}
-            </Badge>
-          );
-        },
+        cell: ({ row }) => (
+          <Badge
+            variant={
+              row.original.status === 'OPEN'
+                ? 'default'
+                : row.original.status === 'PARTIAL'
+                ? 'outline'
+                : 'secondary'
+            }
+            className="text-xs font-mono"
+          >
+            {row.original.status === 'OPEN'
+              ? '[O]'
+              : row.original.status === 'PARTIAL'
+              ? '[P]'
+              : '[C]'}
+          </Badge>
+        ),
       },
       // Price Column
       {
-        id: 'price',
+        id: 'avgPrice',
+        accessorKey: 'avgEntryPrice',
         header: ({ column }) => (
           <div className="text-right">
             <Button
@@ -245,115 +175,59 @@ export function PositionTableTanstack({
             </Button>
           </div>
         ),
-        cell: ({ row }) => {
-          const { type, position, transaction } = row.original;
-          if (type === 'position' && position) {
-            return (
-              <div className="text-right font-medium text-sm">
-                {formatCurrency(position.avgEntryPrice)}
-              </div>
-            );
-          }
-          if (type === 'transaction' && transaction) {
-            return (
-              <div className="text-right text-xs font-mono">
-                {formatCurrency(transaction.price)}
-              </div>
-            );
-          }
-          return null;
-        },
-        sortingFn: (rowA, rowB) => {
-          const a = rowA.original.position?.avgEntryPrice || 0;
-          const b = rowB.original.position?.avgEntryPrice || 0;
-          return a - b;
-        },
+        cell: ({ row }) => (
+          <div className="text-right font-medium text-sm">
+            {formatCurrency(row.original.avgEntryPrice)}
+          </div>
+        ),
       },
       // Shares Column
       {
         id: 'shares',
         header: () => <div className="text-right">Shares</div>,
-        cell: ({ row }) => {
-          const { type, position, transaction } = row.original;
-          if (type === 'position' && position) {
-            return (
-              <div className="text-right text-sm">
-                <span className="font-medium">{position.remainingShares}</span>
-                <span className="text-muted-foreground">/{position.totalEntryShares}</span>
-              </div>
-            );
-          }
-          if (type === 'transaction' && transaction) {
-            return (
-              <div className="text-right text-xs">
-                {transaction.type === TransactionType.EXIT && '-'}
-                {transaction.shares} Stk
-              </div>
-            );
-          }
-          return null;
-        },
+        cell: ({ row }) => (
+          <div className="text-right text-sm">
+            <span className="font-medium">{row.original.remainingShares}</span>
+            <span className="text-muted-foreground">/{row.original.totalEntryShares}</span>
+          </div>
+        ),
       },
       // Entries Summary
       {
         id: 'entries',
         header: () => <div className="text-right">Entries</div>,
         cell: ({ row }) => {
-          const { type, position, transaction } = row.original;
-          if (type === 'position' && position) {
-            const entryCount = position.transactions.filter(
-              (t) => t.type === TransactionType.ENTRY
-            ).length;
-            return (
-              <div className="text-right text-xs text-muted-foreground">
-                {entryCount}× {formatCompact(position.totalEntryValue)}
-              </div>
-            );
-          }
-          if (type === 'transaction' && transaction) {
-            return (
-              <div className="text-right text-xs text-muted-foreground">
-                {formatCurrency(transaction.value)}
-              </div>
-            );
-          }
-          return null;
+          const entryCount = row.original.transactions.filter(
+            (t) => t.type === TransactionType.ENTRY
+          ).length;
+          return (
+            <div className="text-right text-xs text-muted-foreground">
+              {entryCount}× {formatCompact(row.original.totalEntryValue)}
+            </div>
+          );
         },
       },
-      // Exits Summary / P&L
+      // Exits Summary
       {
         id: 'exits',
         header: () => <div className="text-right">Exits</div>,
         cell: ({ row }) => {
-          const { type, position, transaction } = row.original;
-          if (type === 'position' && position) {
-            const exitCount = position.transactions.filter(
-              (t) => t.type === TransactionType.EXIT
-            ).length;
-            return (
-              <div className="text-right text-xs text-muted-foreground">
-                {exitCount > 0 ? `${exitCount}× ${formatCompact(position.totalExitValue || 0)}` : '-'}
-              </div>
-            );
-          }
-          if (type === 'transaction' && transaction && transaction.pnl !== undefined) {
-            return (
-              <div
-                className={cn(
-                  'text-right text-xs font-semibold',
-                  transaction.pnl >= 0 ? 'text-green-600' : 'text-red-600'
-                )}
-              >
-                {formatCurrency(transaction.pnl)}
-              </div>
-            );
-          }
-          return null;
+          const exitCount = row.original.transactions.filter(
+            (t) => t.type === TransactionType.EXIT
+          ).length;
+          return (
+            <div className="text-right text-xs text-muted-foreground">
+              {exitCount > 0
+                ? `${exitCount}× ${formatCompact(row.original.totalExitValue || 0)}`
+                : '-'}
+            </div>
+          );
         },
       },
       // Total P&L
       {
         id: 'pnl',
+        accessorKey: 'totalPnL',
         header: ({ column }) => (
           <div className="text-right">
             <Button
@@ -368,50 +242,34 @@ export function PositionTableTanstack({
           </div>
         ),
         cell: ({ row }) => {
-          const { type, position, transaction } = row.original;
-          if (type === 'position' && position) {
-            const isProfitable = position.totalPnL >= 0;
-            return (
-              <div className="text-right">
-                <div className="flex items-center justify-end gap-1">
-                  {isProfitable ? (
-                    <TrendingUp className="h-3 w-3 text-green-600" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 text-red-600" />
-                  )}
-                  <span
-                    className={cn(
-                      'font-bold text-sm',
-                      isProfitable ? 'text-green-600' : 'text-red-600'
-                    )}
-                  >
-                    {formatCurrency(position.totalPnL)}
-                  </span>
-                </div>
-                <div
+          const isProfitable = row.original.totalPnL >= 0;
+          return (
+            <div className="text-right">
+              <div className="flex items-center justify-end gap-1">
+                {isProfitable ? (
+                  <TrendingUp className="h-3 w-3 text-green-600" />
+                ) : (
+                  <TrendingDown className="h-3 w-3 text-red-600" />
+                )}
+                <span
                   className={cn(
-                    'text-xs',
+                    'font-bold text-sm',
                     isProfitable ? 'text-green-600' : 'text-red-600'
                   )}
                 >
-                  {formatPercent(position.totalPnLPercent)}
-                </div>
+                  {formatCurrency(row.original.totalPnL)}
+                </span>
               </div>
-            );
-          }
-          if (type === 'transaction' && transaction) {
-            return (
-              <div className="text-right text-xs text-muted-foreground">
-                Ø {formatCurrency(transaction.positionAvgPrice)}
+              <div
+                className={cn(
+                  'text-xs',
+                  isProfitable ? 'text-green-600' : 'text-red-600'
+                )}
+              >
+                {formatPercent(row.original.totalPnLPercent)}
               </div>
-            );
-          }
-          return null;
-        },
-        sortingFn: (rowA, rowB) => {
-          const a = rowA.original.position?.totalPnL || 0;
-          const b = rowB.original.position?.totalPnL || 0;
-          return a - b;
+            </div>
+          );
         },
       },
       // Actions Column
@@ -419,41 +277,43 @@ export function PositionTableTanstack({
         id: 'actions',
         header: () => <div className="text-right">Actions</div>,
         size: 90,
-        cell: ({ row }) => {
-          const { type, position } = row.original;
-          if (type !== 'position' || !position) return null;
-          return (
-            <div className="flex items-center justify-end gap-1">
-              {onEdit && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0"
-                  onClick={() => onEdit(position)}
-                >
-                  <Edit className="h-3 w-3" />
-                </Button>
-              )}
-              {onAddTransaction && position.remainingShares > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0"
-                  onClick={() => onAddTransaction(position.id)}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
-          );
-        },
+        cell: ({ row }) => (
+          <div className="flex items-center justify-end gap-1">
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(row.original);
+                }}
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+            )}
+            {onAddTransaction && row.original.remainingShares > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddTransaction(row.original.id);
+                }}
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        ),
       },
     ],
     [onEdit, onAddTransaction]
   );
 
   const table = useReactTable({
-    data,
+    data: positions,
     columns,
     state: {
       sorting,
@@ -463,14 +323,6 @@ export function PositionTableTanstack({
     onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    getRowCanExpand: (row) => row.original.type === 'position',
-    getSubRows: (row) => {
-      if (row.type === 'position' && row.position) {
-        return data.filter((r) => r.parentId === row.position!.id);
-      }
-      return undefined;
-    },
   });
 
   return (
@@ -495,40 +347,90 @@ export function PositionTableTanstack({
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => {
-              const isTransaction = row.original.type === 'transaction';
-              const transactionPnl = row.original.transaction?.pnl;
-              const transactionType = row.original.transaction?.type;
-
-              return (
+            table.getRowModel().rows.map((row) => (
+              <>
+                {/* Master Row */}
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                  className={cn(
-                    isTransaction && 'border-l-4',
-                    isTransaction && getTransactionRowBg(transactionType!, transactionPnl),
-                    !isTransaction && 'hover:bg-muted/50 cursor-pointer'
-                  )}
-                  onClick={() => {
-                    if (!isTransaction) {
-                      row.toggleExpanded();
-                    }
-                  }}
+                  className="hover:bg-muted/50 cursor-pointer"
+                  onClick={() => row.toggleExpanded()}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className={cn(
-                        isTransaction ? 'py-1 text-xs' : 'py-2',
-                        isTransaction && cell.column.id === 'symbol' && 'pl-8'
-                      )}
-                    >
+                    <TableCell key={cell.id} className="py-2">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
-              );
-            })
+
+                {/* Expanded Transaction Rows */}
+                {row.getIsExpanded() &&
+                  row.original.transactions.map((txn) => (
+                    <TableRow
+                      key={txn.id}
+                      className={cn(
+                        'border-l-4',
+                        getTransactionRowBg(txn.type, txn.pnl)
+                      )}
+                    >
+                      {/* Empty expander cell */}
+                      <TableCell />
+
+                      {/* Date */}
+                      <TableCell className="py-1 pl-8 text-xs text-muted-foreground" colSpan={2}>
+                        {format(new Date(txn.date), 'dd.MM.yy', { locale: de })}
+                      </TableCell>
+
+                      {/* Type Badge */}
+                      <TableCell className="py-1">
+                        <Badge
+                          variant={txn.type === TransactionType.ENTRY ? 'default' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {txn.type === TransactionType.ENTRY ? 'Entry' : 'Exit'}
+                        </Badge>
+                      </TableCell>
+
+                      {/* Price */}
+                      <TableCell className="py-1 text-right text-xs font-mono">
+                        {formatCurrency(txn.price)}
+                      </TableCell>
+
+                      {/* Shares */}
+                      <TableCell className="py-1 text-right text-xs font-medium">
+                        {txn.type === TransactionType.EXIT && '-'}
+                        {txn.shares} Stk
+                      </TableCell>
+
+                      {/* Value */}
+                      <TableCell className="py-1 text-right text-xs text-muted-foreground">
+                        {formatCurrency(txn.value)}
+                      </TableCell>
+
+                      {/* P/L or empty */}
+                      <TableCell className="py-1 text-right">
+                        {txn.pnl !== undefined && (
+                          <span
+                            className={cn(
+                              'font-semibold text-xs',
+                              txn.pnl >= 0 ? 'text-green-600' : 'text-red-600'
+                            )}
+                          >
+                            {formatCurrency(txn.pnl)}
+                          </span>
+                        )}
+                      </TableCell>
+
+                      {/* Avg Price After */}
+                      <TableCell className="py-1 text-right text-xs text-muted-foreground">
+                        Ø {formatCurrency(txn.positionAvgPrice)}
+                      </TableCell>
+
+                      {/* Empty actions cell */}
+                      <TableCell />
+                    </TableRow>
+                  ))}
+              </>
+            ))
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
