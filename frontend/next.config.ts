@@ -1,12 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    turbo: {
-      // Set root to current directory to prevent parent workspace detection
-      root: process.cwd(),
-    },
-  },
+  // Turbopack is now enabled by default in Next.js 16 with 'next dev'
 };
 
 export default nextConfig;
