@@ -2,93 +2,111 @@
 
 📈 A modern, full-stack trading journal application for tracking and analyzing your trades.
 
+## 🚀 Quick Start
+
+**New here?** Check out the [QUICKSTART.md](QUICKSTART.md) guide to get up and running in 5 minutes!
+
 ## Project Status
 
-⚠️ **This project is currently being migrated to a modern tech stack:**
+✅ **Phase 1 Complete: Frontend Integration**
 
-- ✅ **New Backend:** Phoenix/Elixir (see `backend_phoenix/`)
-- 🔄 **Frontend:** React (planned upgrade to modern stack)
-- ❌ **Legacy Backends:** Flask (`backend/`) and Strapi (`backend-2/`) - deprecated
+- ✅ **Backend:** Phoenix/Elixir with PostgreSQL
+- ✅ **Frontend:** React 18 with full CRUD functionality
+- ✅ **API Integration:** Complete REST API integration
+- ✅ **Statistics Dashboard:** Real-time P&L tracking
+- ❌ **Legacy Backends:** Flask (`backend/`) and Strapi (`backend-2/`) - to be removed
 
 ## Features
 
-- 📊 Track trades across multiple asset types (Stocks, Crypto, Options, Certificates)
-- 💰 Calculate P&L and trading statistics
-- 📅 Monitor entry/exit dates and prices
-- 📊 Long and Short position tracking
-- 📄 Export and import trade data
-- 📊 Performance analytics and dashboards
+- ✅ **CRUD Operations** - Create, Read, Update, Delete trades
+- ✅ **Multi-Asset Support** - Stocks, Crypto, Options, Certificates
+- ✅ **P&L Calculation** - Automatic profit/loss calculation
+- ✅ **Statistics Dashboard** - Win rate, total P&L, average P&L
+- ✅ **Long/Short Tracking** - Support for both position types
+- ✅ **Real-time Updates** - Dashboard updates after each action
+- ✅ **Responsive Design** - Works on desktop and mobile
+- 🔄 **CSV Import/Export** - Coming soon
+- 🔄 **Advanced Filtering** - Coming soon
+- 🔄 **Charts & Visualizations** - Coming soon
 
 ## Tech Stack
 
-### Active Development (Phoenix Backend)
+### Backend (Phoenix)
 
-- **Backend:** Elixir 1.16+ / Phoenix 1.7
+- **Language:** Elixir 1.16+
+- **Framework:** Phoenix 1.7
 - **Database:** PostgreSQL 16
 - **API:** RESTful JSON API
 - **Features:** CORS, LiveDashboard, Telemetry
+- **Testing:** ExUnit
+- **Linting:** Credo
 
-### Frontend (Current)
+### Frontend (React)
 
-- **Framework:** React 18
+- **Framework:** React 18.3.1
 - **HTTP Client:** Axios
-- **CSV Parsing:** Papa Parse
+- **Styling:** CSS Modules
+- **State Management:** React Hooks
+- **Build Tool:** Create React App
 
-### Legacy (Deprecated)
+### Infrastructure
 
-- ❌ Flask + MySQL (`backend/`)
-- ❌ Strapi 3.6 + SQLite (`backend-2/`)
+- **Containerization:** Docker & Docker Compose
+- **CI/CD:** GitHub Actions
+- **Version Control:** Git
 
 ## Quick Start
 
-### Phoenix Backend
+### Option 1: Manual Setup
 
 ```bash
+# 1. Clone repository
+git clone https://github.com/solaar45/tjournal.git
+cd tjournal
+git checkout feature/phoenix-backend
+
+# 2. Start Backend
 cd backend_phoenix
-
-# Install dependencies
 mix deps.get
-
-# Setup database
 mix ecto.setup
-
-# Start server
 mix phx.server
+
+# 3. Start Frontend (new terminal)
+cd frontend
+npm install
+cp .env.example .env
+npm start
 ```
 
-API available at: http://localhost:4000/api
-
-For detailed instructions, see [`backend_phoenix/README.md`](backend_phoenix/README.md)
-
-### Docker Setup
+### Option 2: Docker Setup
 
 ```bash
 cd backend_phoenix
 docker-compose up -d
-```
 
-### Frontend
-
-```bash
-cd frontend
+# Frontend still needs to run locally
+cd ../frontend
 npm install
 npm start
 ```
 
-Frontend available at: http://localhost:3000
+**URLs:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:4000/api
+- LiveDashboard: http://localhost:4000/dashboard
 
 ## API Documentation
 
 ### Endpoints
 
-```
-GET    /api/trades              # List all trades
-POST   /api/trades              # Create trade
-GET    /api/trades/:id          # Get trade
-PUT    /api/trades/:id          # Update trade
-DELETE /api/trades/:id          # Delete trade
-GET    /api/trades/statistics   # Get statistics
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/trades` | List all trades |
+| GET | `/api/trades/:id` | Get single trade |
+| POST | `/api/trades` | Create new trade |
+| PUT | `/api/trades/:id` | Update trade |
+| DELETE | `/api/trades/:id` | Delete trade |
+| GET | `/api/trades/statistics` | Get statistics |
 
 ### Example Trade Object
 
@@ -104,8 +122,21 @@ GET    /api/trades/statistics   # Get statistics
   "entryprice": "150.00",
   "exitdate": null,
   "exitprice": null,
-  "notes": "Long term hold",
-  "pnl": null
+  "notes": "Long term investment",
+  "inserted_at": "2024-01-15T10:00:00Z",
+  "updated_at": "2024-01-15T10:00:00Z"
+}
+```
+
+### Statistics Response
+
+```json
+{
+  "total_trades": 10,
+  "winning_trades": 6,
+  "losing_trades": 4,
+  "total_pnl": 1250.50,
+  "avg_pnl": 125.05
 }
 ```
 
@@ -115,7 +146,7 @@ GET    /api/trades/statistics   # Get statistics
 
 - Elixir 1.14+ and Erlang/OTP 25+
 - PostgreSQL 14+
-- Node.js 18+ (for frontend)
+- Node.js 18+ and npm
 - Docker & Docker Compose (optional)
 
 ### Running Tests
@@ -124,10 +155,12 @@ GET    /api/trades/statistics   # Get statistics
 # Backend tests
 cd backend_phoenix
 mix test
+mix test --cover  # With coverage
 
 # Frontend tests
 cd frontend
 npm test
+npm test -- --coverage  # With coverage
 ```
 
 ### Code Quality
@@ -135,107 +168,137 @@ npm test
 ```bash
 # Backend
 cd backend_phoenix
-mix format        # Format code
-mix credo         # Linting
-mix dialyzer      # Type checking
+mix format              # Format code
+mix format --check-formatted  # Check formatting
+mix credo               # Linting
+mix credo --strict      # Strict linting
 
 # Frontend
 cd frontend
-npm run lint
+npm run lint            # ESLint
 ```
 
 ## Project Structure
 
 ```
 tjournal/
-├── backend_phoenix/    # ✅ New Phoenix backend
+├── backend_phoenix/       # ✅ Phoenix/Elixir Backend
 │   ├── lib/
-│   │   ├── tjournal/       # Business logic
-│   │   └── tjournal_web/   # Web/API layer
+│   │   ├── tjournal/       # Business logic & contexts
+│   │   └── tjournal_web/   # Controllers, views, router
 │   ├── priv/repo/       # Migrations & seeds
 │   ├── test/            # Tests
-│   └── README.md        # Backend docs
-├── frontend/           # React frontend
-├── backend/            # ❌ Deprecated Flask
-├── backend-2/          # ❌ Deprecated Strapi
-└── README.md           # This file
+│   ├── config/          # Configuration
+│   └── docker-compose.yml
+├── frontend/             # ✅ React Frontend
+│   ├── src/
+│   │   ├── api/         # API service layer
+│   │   ├── components/  # React components
+│   │   ├── App.js       # Main app component
+│   │   └── App.css      # Styles
+│   ├── public/
+│   └── package.json
+├── backend/              # ❌ Deprecated Flask
+├── backend-2/            # ❌ Deprecated Strapi
+├── QUICKSTART.md         # Quick start guide
+├── CHANGELOG.md          # Change log
+└── README.md             # This file
 ```
 
-## Migration Notes
+## Why Phoenix?
 
-### Why Phoenix?
+The migration from Flask/Strapi to Phoenix/Elixir brings significant advantages:
 
-The migration from Flask/Strapi to Phoenix brings:
-
-1. **Performance:** Elixir's concurrency model handles thousands of connections efficiently
-2. **Reliability:** Fault-tolerant by design with supervisor trees
-3. **Developer Experience:** Built-in LiveDashboard, interactive IEx shell
-4. **Type Safety:** Pattern matching and compile-time checks
-5. **Scalability:** Built for distributed systems from day one
-6. **Real-time Ready:** WebSocket support out of the box
-
-### Data Migration
-
-To migrate data from old backends:
-
-```bash
-# Export from old backend
-# Import to Phoenix
-cd backend_phoenix
-mix run priv/repo/import_legacy_data.exs
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. **⚡ Performance** - Handles thousands of concurrent connections efficiently
+2. **🛡️ Reliability** - Fault-tolerant with supervisor trees
+3. **🛠️ Developer Experience** - Built-in LiveDashboard, IEx REPL
+4. **🔒 Type Safety** - Pattern matching and compile-time checks
+5. **📈 Scalability** - Designed for distributed systems
+6. **⚡ Real-time Ready** - WebSocket/LiveView support out of the box
 
 ## Roadmap
 
-### Phase 1: Backend Migration (Current) ✅
-- [x] Phoenix setup with PostgreSQL
-- [x] Trade CRUD operations
+### ✅ Phase 1: Frontend Integration (Complete)
+- [x] Phoenix backend with PostgreSQL
+- [x] Trade CRUD API endpoints
 - [x] Statistics endpoint
+- [x] React frontend with CRUD UI
+- [x] Dashboard with real-time statistics
 - [x] Docker setup
-- [x] Tests
-- [x] CI/CD pipeline
+- [x] Tests and CI/CD
+- [x] Documentation
 
-### Phase 2: Frontend Upgrade
-- [ ] Migrate to TypeScript
-- [ ] Add UI framework (Shadcn/Blueprint)
-- [ ] Implement TanStack Query
-- [ ] Add TanStack Table for data grids
-- [ ] Dashboard with charts
-- [ ] Advanced filtering
+### 🔄 Phase 2: Data Migration & Cleanup (Next)
+- [ ] CSV Import/Export functionality
+- [ ] Legacy data migration scripts
+- [ ] Remove old Flask backend
+- [ ] Remove old Strapi backend
+- [ ] Production deployment guide
 
-### Phase 3: Advanced Features
-- [ ] User authentication
-- [ ] Multi-user support
-- [ ] Real-time price updates
-- [ ] Performance analytics
-- [ ] Portfolio tracking
+### 🔮 Phase 3: Enhanced Features
+- [ ] Advanced filtering and sorting
+- [ ] Pagination for large datasets
+- [ ] Charts and visualizations (Recharts)
 - [ ] Export for tax reports
-- [ ] Backtesting features
+- [ ] Trade notes with rich text
+- [ ] Tags/categories for trades
 
-### Phase 4: Production
+### 🔮 Phase 4: Modern Frontend Stack
+- [ ] TypeScript migration
+- [ ] UI framework (Shadcn/ui or Blueprint)
+- [ ] TanStack Query for server state
+- [ ] TanStack Table for data grids
+- [ ] React Router for navigation
+- [ ] Form validation (React Hook Form + Zod)
+
+### 🔮 Phase 5: Advanced Features
+- [ ] User authentication (Guardian JWT)
+- [ ] Multi-user support
+- [ ] Portfolio tracking
+- [ ] Real-time price integration
+- [ ] Performance analytics
+- [ ] Backtesting capabilities
+- [ ] Mobile app (React Native)
+
+### 🔮 Phase 6: Production & Scaling
 - [ ] Production deployment
-- [ ] Monitoring & logging
+- [ ] Monitoring & logging (Sentry)
 - [ ] Automated backups
-- [ ] API documentation (OpenAPI)
+- [ ] Rate limiting
+- [ ] Caching layer (Cachex/Redis)
+- [ ] Background jobs (Oban)
+- [ ] OpenAPI documentation
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests (`mix test` & `npm test`)
+5. Run linters (`mix credo` & `npm run lint`)
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+## Documentation
+
+- [QUICKSTART.md](QUICKSTART.md) - Get started in 5 minutes
+- [CHANGELOG.md](CHANGELOG.md) - Detailed change history
+- [Backend README](backend_phoenix/README.md) - Backend documentation
+- [Frontend README](frontend/README.md) - Frontend documentation
 
 ## License
 
-MIT
+MIT License - see LICENSE file for details
 
 ## Support
 
-For issues and questions:
-- Open an issue on GitHub
-- Check the [Phoenix Backend README](backend_phoenix/README.md) for backend-specific docs
+- 🐛 **Bug Reports:** [GitHub Issues](https://github.com/solaar45/tjournal/issues)
+- 💡 **Feature Requests:** [GitHub Issues](https://github.com/solaar45/tjournal/issues)
+- 📚 **Documentation:** Check the README files in each directory
 
 ---
 
-**Note:** The old Flask and Strapi backends are deprecated and will be removed in a future release. Please use the Phoenix backend for all new development.
+**Made with ❤️ using Elixir, Phoenix, and React**
