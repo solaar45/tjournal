@@ -270,79 +270,101 @@ export default function DashboardPage() {
               <TradeForm trigger={<Button>Ersten Trade erstellen</Button>} />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Symbol</TableHead>
-                  <TableHead>Typ</TableHead>
-                  <TableHead>Seite</TableHead>
-                  <TableHead>Anzahl</TableHead>
-                  <TableHead>Einstieg</TableHead>
-                  <TableHead>Ausstieg</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">P&L</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentTrades.map((trade) => (
-                  <TableRow key={trade.id}>
-                    <TableCell className="font-medium">{trade.symbol}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{trade.type}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={trade.side === TradeSide.LONG ? "default" : "secondary"}>
-                        {trade.side}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{trade.shares}</TableCell>
-                    <TableCell>
-                      <div className="text-sm">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  {/* Main Header Row */}
+                  <TableRow>
+                    <TableHead colSpan={5} className="text-center bg-slate-50 font-semibold">Information</TableHead>
+                    <TableHead colSpan={2} className="text-center bg-blue-50 font-semibold">Einstieg</TableHead>
+                    <TableHead colSpan={2} className="text-center bg-amber-50 font-semibold">Ausstieg</TableHead>
+                    <TableHead colSpan={2} className="text-center bg-green-50 font-semibold">Rendite</TableHead>
+                  </TableRow>
+                  {/* Sub-Header Row */}
+                  <TableRow className="border-b">
+                    <TableHead className="bg-slate-50">Symbol</TableHead>
+                    <TableHead className="bg-slate-50">Typ</TableHead>
+                    <TableHead className="bg-slate-50">Status</TableHead>
+                    <TableHead className="bg-slate-50">Seite</TableHead>
+                    <TableHead className="bg-slate-50">Anzahl</TableHead>
+                    <TableHead className="bg-blue-50">Datum</TableHead>
+                    <TableHead className="bg-blue-50">Preis</TableHead>
+                    <TableHead className="bg-amber-50">Datum</TableHead>
+                    <TableHead className="bg-amber-50">Preis</TableHead>
+                    <TableHead className="bg-green-50">P&L</TableHead>
+                    <TableHead className="bg-green-50 text-right">%</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentTrades.map((trade) => (
+                    <TableRow key={trade.id}>
+                      {/* Information Group */}
+                      <TableCell className="font-medium">{trade.symbol}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{trade.type}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={trade.status === 'open' ? 'default' : 'secondary'}>
+                          {trade.status === 'open' ? 'Offen' : 'Geschlossen'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={trade.side === TradeSide.LONG ? "default" : "secondary"}>
+                          {trade.side}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{trade.shares}</TableCell>
+
+                      {/* Einstieg Group */}
+                      <TableCell className="text-sm">
+                        {format(new Date(trade.entryDate), 'dd.MM.yyyy', { locale: de })}
+                      </TableCell>
+                      <TableCell className="text-sm">
                         {formatCurrency(trade.entryPrice)}
-                        <div className="text-xs text-muted-foreground">
-                          {format(new Date(trade.entryDate), 'dd.MM.yyyy', { locale: de })}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {trade.exitPrice ? (
-                        <div className="text-sm">
-                          {formatCurrency(trade.exitPrice)}
-                          {trade.exitDate && (
-                            <div className="text-xs text-muted-foreground">
-                              {format(new Date(trade.exitDate), 'dd.MM.yyyy', { locale: de })}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={trade.status === 'open' ? 'default' : 'secondary'}>
-                        {trade.status === 'open' ? 'Offen' : 'Geschlossen'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {trade.pnl !== undefined ? (
-                        <div>
+                      </TableCell>
+
+                      {/* Ausstieg Group */}
+                      <TableCell className="text-sm">
+                        {trade.exitDate
+                          ? format(new Date(trade.exitDate), 'dd.MM.yyyy', { locale: de })
+                          : <span className="text-muted-foreground">-</span>
+                        }
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {trade.exitPrice
+                          ? formatCurrency(trade.exitPrice)
+                          : <span className="text-muted-foreground">-</span>
+                        }
+                      </TableCell>
+
+                      {/* Rendite Group */}
+                      <TableCell>
+                        {trade.pnl !== undefined ? (
                           <div className={`font-medium ${
                             trade.pnl >= 0 ? 'text-green-600' : 'text-red-600'
                           }`}>
                             {formatCurrency(trade.pnl)}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {trade.pnlPercent !== undefined ? (
+                          <div className={`font-medium ${
+                            (trade.pnlPercent || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
                             {formatPercent(trade.pnlPercent || 0)}
                           </div>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
