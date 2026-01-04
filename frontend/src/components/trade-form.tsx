@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/popover';
 import { useCreateTrade } from '@/hooks/useTrades';
 import { TradeType, TradeSide, TradeStatus, Broker } from '@/types/trade';
+import { toast } from 'sonner';
 
 // Zod Schema für Validierung
 const tradeFormSchema = z.object({
@@ -169,9 +170,22 @@ export function TradeForm({ trigger }: TradeFormProps) {
       onSuccess: () => {
         setOpen(false);
         form.reset();
+        toast.success('Trade erfolgreich erstellt');
+      },
+      onError: (error) => {
+        toast.error('Fehler beim Erstellen des Trades: ' + error.message);
       },
     });
   }
+
+  // Handle form errors
+  const onError = (errors: any) => {
+    console.log('Form validation errors:', errors);
+    const errorMessages = Object.entries(errors)
+      .map(([field, error]: [string, any]) => `${field}: ${error.message}`)
+      .join(', ');
+    toast.error('Formularfehler: ' + errorMessages);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -204,7 +218,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-6">
             {/* Symbol & Type */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
