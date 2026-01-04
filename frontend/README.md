@@ -1,191 +1,36 @@
-# Trading Journal - Frontend
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-React-basiertes Frontend für das Trading Journal, integriert mit Phoenix/Elixir Backend.
+## Getting Started
 
-## Features
-
-- ✅ **CRUD-Operationen** für Trades (Erstellen, Lesen, Bearbeiten, Löschen)
-- ✅ **Echtzeit-Statistiken** Dashboard mit P&L, Win-Rate, etc.
-- ✅ **Responsive Design** für Desktop und Mobile
-- ✅ **Dark Mode** UI
-- ✅ **Formular-Validierung**
-- ✅ **Error Handling** mit benutzerfreundlichen Meldungen
-
-## Tech Stack
-
-- **React 18.3.1**
-- **Axios** für HTTP-Requests
-- **Papa Parse** für CSV-Parsing (bereit für Import/Export)
-- **Create React App**
-
-## Setup
-
-### 1. Dependencies installieren
+First, run the development server:
 
 ```bash
-npm install
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-### 2. Umgebungsvariablen konfigurieren
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-Kopiere `.env.example` zu `.env`:
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-```bash
-cp .env.example .env
-```
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-Passe die API-URL bei Bedarf an:
+## Learn More
 
-```env
-REACT_APP_API_URL=http://localhost:4000/api
-```
+To learn more about Next.js, take a look at the following resources:
 
-### 3. Backend starten
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-Stelle sicher, dass das Phoenix-Backend läuft:
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-```bash
-cd ../backend_phoenix
-mix phx.server
-```
+## Deploy on Vercel
 
-Backend sollte auf `http://localhost:4000` laufen.
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-### 4. Frontend starten
-
-```bash
-npm start
-```
-
-Frontend öffnet sich auf `http://localhost:3000`.
-
-## Verwendung
-
-### Neuen Trade erstellen
-
-1. Klicke auf **"+ Neuer Trade"** Button
-2. Fülle das Formular aus (Pflichtfelder: Symbol, Typ, Seite, Anzahl, Einstiegsdatum, Einstiegspreis)
-3. Klicke auf **"Erstellen"**
-
-### Trade bearbeiten
-
-1. Klicke auf das Stift-Symbol (✏️) in der Trade-Zeile
-2. Bearbeite die Felder
-3. Klicke auf **"Speichern"**
-
-### Trade löschen
-
-1. Klicke auf das Mülleimer-Symbol (🗑️) in der Trade-Zeile
-2. Bestätige die Löschung
-
-### Trade schließen
-
-1. Bearbeite den Trade
-2. Setze Status auf **"Geschlossen"**
-3. Füge **Ausstiegsdatum** und **Ausstiegspreis** hinzu
-4. P&L wird automatisch berechnet
-
-## Projekt-Struktur
-
-```
-frontend/
-├── public/              # Statische Dateien
-├── src/
-│   ├── api/            # API Service Layer
-│   │   └── tradesApi.js  # Phoenix Backend API Calls
-│   ├── components/     # React Komponenten
-│   │   ├── TradeForm.js    # Formular für Trade Create/Edit
-│   │   ├── TradeForm.css
-│   │   ├── TradeList.js    # Tabelle mit allen Trades
-│   │   └── TradeList.css
-│   ├── App.js          # Haupt-Komponente mit State-Management
-│   ├── App.css         # Haupt-Styles
-│   ├── index.js        # Entry Point
-│   └── index.css       # Global Styles
-├── .env.example        # Beispiel-Konfiguration
-├── package.json
-└── README.md
-```
-
-## API Integration
-
-Das Frontend kommuniziert mit dem Phoenix-Backend über folgende Endpoints:
-
-- `GET /api/trades` - Alle Trades abrufen
-- `GET /api/trades/:id` - Einzelnen Trade abrufen
-- `POST /api/trades` - Neuen Trade erstellen
-- `PUT /api/trades/:id` - Trade aktualisieren
-- `DELETE /api/trades/:id` - Trade löschen
-- `GET /api/trades/statistics` - Statistiken abrufen
-
-### Beispiel API Request:
-
-```javascript
-import tradesApi from './api/tradesApi';
-
-// Trade erstellen
-const newTrade = {
-  symbol: 'AAPL',
-  type: 'Aktie',
-  side: 'Long',
-  status: 'open',
-  shares: 100,
-  entrydate: '2024-01-15',
-  entryprice: 150.50,
-  notes: 'Langfristiges Investment'
-};
-
-const createdTrade = await tradesApi.createTrade(newTrade);
-```
-
-## Verfügbare Scripts
-
-```bash
-# Development Server starten
-npm start
-
-# Production Build erstellen
-npm run build
-
-# Tests ausführen
-npm test
-
-# Linting
-npm run lint
-```
-
-## Troubleshooting
-
-### "Fehler beim Laden der Trades"
-
-- Überprüfe, ob das Phoenix-Backend läuft (`mix phx.server`)
-- Stelle sicher, dass die API-URL in `.env` korrekt ist
-- Überprüfe CORS-Einstellungen im Backend
-
-### "Network Error" / CORS-Fehler
-
-- Das Phoenix-Backend muss CORS für `http://localhost:3000` erlauben
-- Check `backend_phoenix/config/config.exs` für CORS-Konfiguration
-
-### Styling-Probleme
-
-- Stelle sicher, dass alle CSS-Dateien korrekt importiert sind
-- Browser-Cache leeren mit `Ctrl+Shift+R` (oder `Cmd+Shift+R` auf Mac)
-
-## Nächste Schritte
-
-- [ ] CSV Import/Export implementieren
-- [ ] Advanced Filtering (nach Datum, Symbol, Status)
-- [ ] Sortierung in Tabelle
-- [ ] Pagination für große Datensätze
-- [ ] Charts/Visualisierungen (Recharts)
-- [ ] TypeScript Migration
-- [ ] Unit Tests
-
-## Contributing
-
-Pull Requests sind willkommen! Für größere Änderungen bitte zuerst ein Issue erstellen.
-
-## License
-
-MIT
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
