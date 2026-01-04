@@ -68,6 +68,29 @@ function getTransactionRowBg(type: TransactionType, pnl?: number): string {
 }
 
 /**
+ * Get status text and color classes
+ */
+function getStatusDisplay(status: string): { text: string; className: string } {
+  if (status === 'OPEN') {
+    return {
+      text: 'Open',
+      className: 'text-blue-600 dark:text-blue-400',
+    };
+  }
+  if (status === 'PARTIAL') {
+    return {
+      text: 'Partial',
+      className: 'text-amber-600 dark:text-amber-400',
+    };
+  }
+  // CLOSED
+  return {
+    text: 'Closed',
+    className: 'text-muted-foreground',
+  };
+}
+
+/**
  * Main TanStack Position Table Component
  */
 export function PositionTableTanstack({
@@ -137,30 +160,20 @@ export function PositionTableTanstack({
           </Badge>
         ),
       },
-      // Status Column
+      // Status Column - Now subtle text
       {
         id: 'status',
         accessorKey: 'status',
         header: 'Status',
         size: 70,
-        cell: ({ row }) => (
-          <Badge
-            variant={
-              row.original.status === 'OPEN'
-                ? 'default'
-                : row.original.status === 'PARTIAL'
-                ? 'outline'
-                : 'secondary'
-            }
-            className="text-xs font-mono"
-          >
-            {row.original.status === 'OPEN'
-              ? '[O]'
-              : row.original.status === 'PARTIAL'
-              ? '[P]'
-              : '[C]'}
-          </Badge>
-        ),
+        cell: ({ row }) => {
+          const { text, className } = getStatusDisplay(row.original.status);
+          return (
+            <span className={cn('text-xs font-medium', className)}>
+              {text}
+            </span>
+          );
+        },
       },
       // Price Column
       {
@@ -174,7 +187,7 @@ export function PositionTableTanstack({
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
               className="h-8 text-xs"
             >
-              Ø Price
+              ø Price
               <ArrowUpDown className="ml-1 h-3 w-3" />
             </Button>
           </div>
@@ -326,7 +339,7 @@ export function PositionTableTanstack({
     onSortingChange: setSorting,
     onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
-    getExpandedRowModel: getExpandedRowModel(), // CRITICAL: This enables expansion!
+    getExpandedRowModel: getExpandedRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
 
@@ -427,7 +440,7 @@ export function PositionTableTanstack({
 
                       {/* Avg Price After */}
                       <TableCell className="py-1 text-right text-xs text-muted-foreground">
-                        Ø {formatCurrency(txn.positionAvgPrice)}
+                        ø {formatCurrency(txn.positionAvgPrice)}
                       </TableCell>
 
                       {/* Empty actions cell */}
