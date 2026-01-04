@@ -57,16 +57,19 @@ export default function TradesPage() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
 
-  // Spalten-Definition
+  // Spalten-Definition mit Gruppen
   const columns = useMemo<ColumnDef<Trade>[]>(
     () => [
+      // === INFORMATION GROUP ===
       {
+        id: 'info-symbol',
         accessorKey: 'symbol',
         header: ({ column }) => {
           return (
             <Button
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8"
             >
               Symbol
               <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -74,35 +77,56 @@ export default function TradesPage() {
           );
         },
         cell: ({ row }) => (
-          <div className="font-medium">{row.getValue('symbol')}</div>
+          <div className="font-medium">{row.getValue('info-symbol')}</div>
         ),
+        meta: { group: 'information' },
       },
       {
+        id: 'info-type',
         accessorKey: 'type',
         header: 'Typ',
         cell: ({ row }) => (
-          <Badge variant="outline">{row.getValue('type')}</Badge>
+          <Badge variant="outline">{row.getValue('info-type')}</Badge>
         ),
         filterFn: (row, id, value) => {
           return value === 'all' || row.getValue(id) === value;
         },
+        meta: { group: 'information' },
       },
       {
+        id: 'info-status',
+        accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row }) => (
+          <Badge variant={row.getValue('info-status') === 'open' ? 'default' : 'secondary'}>
+            {row.getValue('info-status') === 'open' ? 'Offen' : 'Geschlossen'}
+          </Badge>
+        ),
+        filterFn: (row, id, value) => {
+          return value === 'all' || row.getValue(id) === value;
+        },
+        meta: { group: 'information' },
+      },
+      {
+        id: 'info-side',
         accessorKey: 'side',
         header: 'Seite',
         cell: ({ row }) => (
-          <Badge variant={row.getValue('side') === TradeSide.LONG ? 'default' : 'secondary'}>
-            {row.getValue('side')}
+          <Badge variant={row.getValue('info-side') === TradeSide.LONG ? 'default' : 'secondary'}>
+            {row.getValue('info-side')}
           </Badge>
         ),
+        meta: { group: 'information' },
       },
       {
+        id: 'info-shares',
         accessorKey: 'entryShares',
         header: ({ column }) => {
           return (
             <Button
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8"
             >
               Anzahl
               <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -125,72 +149,87 @@ export default function TradesPage() {
             </div>
           );
         },
+        meta: { group: 'information' },
+      },
+      // === EINSTIEG GROUP ===
+      {
+        id: 'entry-date',
+        accessorKey: 'entryDate',
+        header: 'Datum',
+        cell: ({ row }) => (
+          <div className="text-sm">
+            {format(new Date(row.getValue('entry-date')), 'dd.MM.yyyy', { locale: de })}
+          </div>
+        ),
+        meta: { group: 'entry' },
       },
       {
+        id: 'entry-price',
         accessorKey: 'entryPrice',
         header: ({ column }) => {
           return (
             <Button
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8"
             >
-              Einstieg
+              Preis
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           );
         },
         cell: ({ row }) => (
           <div className="text-sm">
-            <div>{formatCurrency(row.getValue('entryPrice'))}</div>
-            <div className="text-xs text-muted-foreground">
-              {format(new Date(row.original.entryDate), 'dd.MM.yyyy', { locale: de })}
-            </div>
+            {formatCurrency(row.getValue('entry-price'))}
           </div>
         ),
+        meta: { group: 'entry' },
       },
+      // === AUSSTIEG GROUP ===
       {
-        accessorKey: 'exitPrice',
-        header: 'Ausstieg',
+        id: 'exit-date',
+        accessorKey: 'exitDate',
+        header: 'Datum',
         cell: ({ row }) => {
-          const exitPrice = row.original.exitPrice;
           const exitDate = row.original.exitDate;
-          
-          if (!exitPrice) {
+          if (!exitDate) {
             return <span className="text-muted-foreground">-</span>;
           }
-          
           return (
             <div className="text-sm">
-              <div>{formatCurrency(exitPrice)}</div>
-              {exitDate && (
-                <div className="text-xs text-muted-foreground">
-                  {format(new Date(exitDate), 'dd.MM.yyyy', { locale: de })}
-                </div>
-              )}
+              {format(new Date(exitDate), 'dd.MM.yyyy', { locale: de })}
             </div>
           );
         },
+        meta: { group: 'exit' },
       },
       {
-        accessorKey: 'status',
-        header: 'Status',
-        cell: ({ row }) => (
-          <Badge variant={row.getValue('status') === 'open' ? 'default' : 'secondary'}>
-            {row.getValue('status') === 'open' ? 'Offen' : 'Geschlossen'}
-          </Badge>
-        ),
-        filterFn: (row, id, value) => {
-          return value === 'all' || row.getValue(id) === value;
+        id: 'exit-price',
+        accessorKey: 'exitPrice',
+        header: 'Preis',
+        cell: ({ row }) => {
+          const exitPrice = row.original.exitPrice;
+          if (!exitPrice) {
+            return <span className="text-muted-foreground">-</span>;
+          }
+          return (
+            <div className="text-sm">
+              {formatCurrency(exitPrice)}
+            </div>
+          );
         },
+        meta: { group: 'exit' },
       },
+      // === RENDITE GROUP ===
       {
+        id: 'rendite-pnl',
         accessorKey: 'pnl',
         header: ({ column }) => {
           return (
             <Button
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-              className="w-full justify-end"
+              className="h-8 w-full justify-start"
             >
               P&L
               <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -199,26 +238,39 @@ export default function TradesPage() {
         },
         cell: ({ row }) => {
           const pnl = row.original.pnl;
-          const pnlPercent = row.original.pnlPercent;
-          
           if (pnl === undefined) {
             return <span className="text-muted-foreground">-</span>;
           }
-          
           return (
-            <div className="text-right">
-              <div className={`font-medium ${
-                pnl >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {formatCurrency(pnl)}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {formatPercent(pnlPercent || 0)}
-              </div>
+            <div className={`font-medium ${
+              pnl >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {formatCurrency(pnl)}
             </div>
           );
         },
+        meta: { group: 'rendite' },
       },
+      {
+        id: 'rendite-percent',
+        accessorKey: 'pnlPercent',
+        header: '%',
+        cell: ({ row }) => {
+          const pnlPercent = row.original.pnlPercent;
+          if (pnlPercent === undefined) {
+            return <span className="text-muted-foreground">-</span>;
+          }
+          return (
+            <div className={`font-medium text-right ${
+              pnlPercent >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {formatPercent(pnlPercent)}
+            </div>
+          );
+        },
+        meta: { group: 'rendite' },
+      },
+      // === ACTIONS (no group) ===
       {
         id: 'actions',
         cell: ({ row }) => {
@@ -265,6 +317,7 @@ export default function TradesPage() {
             </DropdownMenu>
           );
         },
+        meta: { group: 'actions' },
       },
     ],
     [deleteTrade]
@@ -392,21 +445,49 @@ export default function TradesPage() {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
+                {/* Group Header Row */}
+                <TableRow>
+                  <TableHead colSpan={5} className="text-center bg-slate-50 font-semibold border-r">
+                    Information
+                  </TableHead>
+                  <TableHead colSpan={2} className="text-center bg-blue-50 font-semibold border-r">
+                    Einstieg
+                  </TableHead>
+                  <TableHead colSpan={2} className="text-center bg-amber-50 font-semibold border-r">
+                    Ausstieg
+                  </TableHead>
+                  <TableHead colSpan={2} className="text-center bg-green-50 font-semibold border-r">
+                    Rendite
+                  </TableHead>
+                  <TableHead className="bg-slate-100"></TableHead>
+                </TableRow>
+                {/* Column Header Row */}
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
+                    {headerGroup.headers.map((header) => {
+                      const group = (header.column.columnDef.meta as any)?.group;
+                      let bgClass = '';
+                      
+                      if (group === 'information') bgClass = 'bg-slate-50';
+                      else if (group === 'entry') bgClass = 'bg-blue-50';
+                      else if (group === 'exit') bgClass = 'bg-amber-50';
+                      else if (group === 'rendite') bgClass = 'bg-green-50';
+                      else if (group === 'actions') bgClass = 'bg-slate-100';
+
+                      return (
+                        <TableHead key={header.id} className={bgClass}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      );
+                    })}
                   </TableRow>
                 ))}
               </TableHeader>
