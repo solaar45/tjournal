@@ -11,11 +11,12 @@ let trades: Trade[] = mockTradesData.map(calculatePnL);
  */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   await new Promise(resolve => setTimeout(resolve, 200));
 
-  const trade = trades.find(t => t.id === params.id);
+  const trade = trades.find(t => t.id === id);
 
   if (!trade) {
     return NextResponse.json(
@@ -32,14 +33,15 @@ export async function GET(
  */
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body: UpdateTradeDto = await request.json();
 
     await new Promise(resolve => setTimeout(resolve, 400));
 
-    const tradeIndex = trades.findIndex(t => t.id === params.id);
+    const tradeIndex = trades.findIndex(t => t.id === id);
 
     if (tradeIndex === -1) {
       return NextResponse.json(
@@ -70,11 +72,12 @@ export async function PATCH(
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   await new Promise(resolve => setTimeout(resolve, 300));
 
-  const tradeIndex = trades.findIndex(t => t.id === params.id);
+  const tradeIndex = trades.findIndex(t => t.id === id);
 
   if (tradeIndex === -1) {
     return NextResponse.json(
