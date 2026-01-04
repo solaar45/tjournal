@@ -41,7 +41,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useCreateTrade } from '@/hooks/useTrades';
-import { TradeType, TradeSide, TradeStatus } from '@/types/trade';
+import { TradeType, TradeSide, TradeStatus, Broker } from '@/types/trade';
 
 // Zod Schema für Validierung
 const tradeFormSchema = z.object({
@@ -56,6 +56,7 @@ const tradeFormSchema = z.object({
   side: z.nativeEnum(TradeSide, {
     required_error: 'Bitte wähle Long oder Short',
   }),
+  broker: z.nativeEnum(Broker).optional(),
   entryShares: z
     .number({
       required_error: 'Anzahl beim Einstieg ist erforderlich',
@@ -86,7 +87,6 @@ const tradeFormSchema = z.object({
   exitDate: z.date().optional().or(z.literal(undefined)),
 }).refine(
   (data) => {
-    // Wenn exitPrice gesetzt ist, müssen exitShares und exitDate auch gesetzt sein
     if (data.exitPrice !== undefined) {
       return data.exitShares !== undefined && data.exitDate !== undefined;
     }
@@ -98,7 +98,6 @@ const tradeFormSchema = z.object({
   }
 ).refine(
   (data) => {
-    // exitShares darf nicht größer als entryShares sein
     if (data.exitShares !== undefined && data.entryShares !== undefined) {
       return data.exitShares <= data.entryShares;
     }
@@ -126,6 +125,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
       symbol: '',
       type: TradeType.AKTIE,
       side: TradeSide.LONG,
+      broker: undefined,
       entryShares: undefined,
       entryPrice: undefined,
       entryDate: new Date(),
@@ -135,21 +135,17 @@ export function TradeForm({ trigger }: TradeFormProps) {
     },
   });
 
-  // Watch exit fields to show hint
   const exitPrice = form.watch('exitPrice');
   const exitShares = form.watch('exitShares');
   const hasExitData = exitPrice !== undefined || exitShares !== undefined;
 
   async function onSubmit(data: TradeFormValues) {
-    // Status automatisch bestimmen
     const isFullyExited = 
       data.exitPrice !== undefined && 
       data.exitShares !== undefined && 
       data.exitShares === data.entryShares;
     
     const status = isFullyExited ? TradeStatus.CLOSED : TradeStatus.OPEN;
-    
-    // Shares = entryShares (bei Teilverkauf bleibt der Rest offen)
     const remainingShares = data.exitShares 
       ? data.entryShares - data.exitShares 
       : data.entryShares;
@@ -158,8 +154,9 @@ export function TradeForm({ trigger }: TradeFormProps) {
       symbol: data.symbol.toUpperCase(),
       type: data.type,
       side: data.side,
+      broker: data.broker,
       status: status,
-      shares: remainingShares, // Verbleibende Shares
+      shares: remainingShares,
       entryPrice: data.entryPrice,
       entryShares: data.entryShares,
       entryDate: data.entryDate.toISOString(),
@@ -260,34 +257,65 @@ export function TradeForm({ trigger }: TradeFormProps) {
               />
             </div>
 
-            {/* Side */}
-            <FormField
-              control={form.control}
-              name="side"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Seite *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Long oder Short" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Object.values(TradeSide).map((side) => (
-                        <SelectItem key={side} value={side}>
-                          {side}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Side & Broker */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="side"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Seite *</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Long oder Short" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(TradeSide).map((side) => (
+                          <SelectItem key={side} value={side}>
+                            {side}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="broker"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Broker</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Wähle einen Broker" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(Broker).map((broker) => (
+                          <SelectItem key={broker} value={broker}>
+                            {broker}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>Optional</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Divider */}
             <div className="border-t pt-4">
