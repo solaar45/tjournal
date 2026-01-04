@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Trade, CreateTradeDto } from '@/types/trade';
-import { calculatePnL } from '@/lib/tradeUtils';
-import mockTradesData from '@/data/mockTrades.json';
-
-// In-Memory Store (wird bei jedem Server-Neustart zurückgesetzt)
-// In Production: Durch Datenbank ersetzen
-let trades: Trade[] = mockTradesData.map(calculatePnL);
+import { tradesStore } from '@/lib/tradesStore';
 
 /**
  * GET /api/trades - Alle Trades abrufen
@@ -19,22 +14,10 @@ export async function GET(request: Request) {
   // Simuliere Netzwerk-Delay für Realismus
   await new Promise(resolve => setTimeout(resolve, 300));
 
-  let filteredTrades = [...trades];
-
-  // Filtern nach Status
-  if (status) {
-    filteredTrades = filteredTrades.filter(t => t.status === status);
-  }
-
-  // Filtern nach Typ
-  if (type) {
-    filteredTrades = filteredTrades.filter(t => t.type === type);
-  }
-
-  // Sortieren nach Datum (neueste zuerst)
-  filteredTrades.sort((a, b) => 
-    new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime()
-  );
+  const filteredTrades = tradesStore.filter({
+    status: status || undefined,
+    type: type || undefined,
+  });
 
   return NextResponse.json(filteredTrades);
 }
@@ -65,10 +48,9 @@ export async function POST(request: Request) {
       updatedAt: now,
     };
 
-    const tradeWithPnL = calculatePnL(newTrade);
-    trades.push(tradeWithPnL);
+    const createdTrade = tradesStore.add(newTrade);
 
-    return NextResponse.json(tradeWithPnL, { status: 201 });
+    return NextResponse.json(createdTrade, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { error: 'Ungültige Daten' },
