@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TradeForm } from '@/components/trade-form';
+import { QuickTradeForm } from '@/components/quick-trade-form';
 import { EditTradeDialog } from '@/components/edit-trade-dialog';
 import { toast } from 'sonner';
 
@@ -389,7 +390,10 @@ export default function TradesPage() {
             Verwalte und analysiere deine {trades?.length || 0} Trades
           </p>
         </div>
-        <TradeForm />
+        <div className="flex gap-2">
+          <QuickTradeForm />
+          <TradeForm />
+        </div>
       </div>
 
       {/* Filters & Search */}
