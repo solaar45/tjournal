@@ -6,6 +6,7 @@ import { de } from 'date-fns/locale';
 import {
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   getSortedRowModel,
   useReactTable,
   ColumnDef,
@@ -91,7 +92,10 @@ export function PositionTableTanstack({
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0"
-              onClick={() => row.toggleExpanded()}
+              onClick={(e) => {
+                e.stopPropagation();
+                row.toggleExpanded();
+              }}
             >
               {row.getIsExpanded() ? (
                 <ChevronDown className="h-4 w-4" />
@@ -322,6 +326,7 @@ export function PositionTableTanstack({
     onSortingChange: setSorting,
     onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(), // CRITICAL: This enables expansion!
     getSortedRowModel: getSortedRowModel(),
   });
 
