@@ -29,10 +29,20 @@ export async function POST(request: Request) {
   try {
     const body: CreateTradeDto = await request.json();
 
-    // Validierung
-    if (!body.symbol || !body.type || !body.shares || !body.entryPrice) {
+    console.log('Received trade data:', body);
+
+    // Validierung - prüfe auf erforderliche Felder
+    if (!body.symbol || !body.type || !body.side || !body.entryPrice || !body.entryShares || !body.entryDate) {
+      console.error('Validation failed - missing required fields:', {
+        symbol: body.symbol,
+        type: body.type,
+        side: body.side,
+        entryPrice: body.entryPrice,
+        entryShares: body.entryShares,
+        entryDate: body.entryDate,
+      });
       return NextResponse.json(
-        { error: 'Fehlende Pflichtfelder' },
+        { error: 'Fehlende Pflichtfelder: symbol, type, side, entryPrice, entryShares, entryDate sind erforderlich' },
         { status: 400 }
       );
     }
@@ -48,10 +58,13 @@ export async function POST(request: Request) {
       updatedAt: now,
     };
 
+    console.log('Creating trade:', newTrade);
+
     const createdTrade = tradesStore.add(newTrade);
 
     return NextResponse.json(createdTrade, { status: 201 });
   } catch (error) {
+    console.error('API Error:', error);
     return NextResponse.json(
       { error: 'Ungültige Daten' },
       { status: 400 }
