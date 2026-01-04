@@ -44,7 +44,7 @@ import { useCreateTrade } from '@/hooks/useTrades';
 import { TradeType, TradeSide, TradeStatus, Broker } from '@/types/trade';
 import { toast } from 'sonner';
 
-// Zod Schema für Validierung
+// Zod Schema für Validierung - use z.coerce for number fields
 const tradeFormSchema = z.object({
   symbol: z
     .string()
@@ -58,14 +58,14 @@ const tradeFormSchema = z.object({
     required_error: 'Bitte wähle Long oder Short',
   }),
   broker: z.nativeEnum(Broker).optional(),
-  entryShares: z
+  entryShares: z.coerce
     .number({
       required_error: 'Anzahl beim Einstieg ist erforderlich',
       invalid_type_error: 'Muss eine Zahl sein',
     })
     .positive('Anzahl muss größer als 0 sein')
     .int('Anzahl muss eine ganze Zahl sein'),
-  entryPrice: z
+  entryPrice: z.coerce
     .number({
       required_error: 'Einstiegspreis ist erforderlich',
       invalid_type_error: 'Muss eine Zahl sein',
@@ -74,22 +74,22 @@ const tradeFormSchema = z.object({
   entryDate: z.date({
     required_error: 'Einstiegsdatum ist erforderlich',
   }),
-  exitShares: z
+  exitShares: z.coerce
     .number()
     .positive('Anzahl muss größer als 0 sein')
     .int('Anzahl muss eine ganze Zahl sein')
     .optional()
-    .or(z.literal(undefined)),
-  exitPrice: z
+    .or(z.literal('')),
+  exitPrice: z.coerce
     .number()
     .positive('Ausstiegspreis muss größer als 0 sein')
     .optional()
-    .or(z.literal(undefined)),
-  exitDate: z.date().optional().or(z.literal(undefined)),
+    .or(z.literal('')),
+  exitDate: z.date().optional(),
 }).refine(
   (data) => {
-    if (data.exitPrice !== undefined) {
-      return data.exitShares !== undefined && data.exitDate !== undefined;
+    if (data.exitPrice && data.exitPrice !== '') {
+      return (data.exitShares && data.exitShares !== '') && data.exitDate !== undefined;
     }
     return true;
   },
@@ -99,7 +99,7 @@ const tradeFormSchema = z.object({
   }
 ).refine(
   (data) => {
-    if (data.exitShares !== undefined && data.entryShares !== undefined) {
+    if (data.exitShares && data.exitShares !== '' && data.entryShares) {
       return data.exitShares <= data.entryShares;
     }
     return true;
@@ -127,28 +127,32 @@ export function TradeForm({ trigger }: TradeFormProps) {
       type: TradeType.AKTIE,
       side: TradeSide.LONG,
       broker: undefined,
-      entryShares: undefined,
-      entryPrice: undefined,
+      entryShares: '' as any,
+      entryPrice: '' as any,
       entryDate: new Date(),
-      exitShares: undefined,
-      exitPrice: undefined,
+      exitShares: '' as any,
+      exitPrice: '' as any,
       exitDate: undefined,
     },
   });
 
   const exitPrice = form.watch('exitPrice');
   const exitShares = form.watch('exitShares');
-  const hasExitData = exitPrice !== undefined || exitShares !== undefined;
+  const hasExitData = (exitPrice && exitPrice !== '') || (exitShares && exitShares !== '');
 
   async function onSubmit(data: TradeFormValues) {
+    // Convert empty strings to undefined
+    const exitSharesNum = data.exitShares === '' ? undefined : data.exitShares;
+    const exitPriceNum = data.exitPrice === '' ? undefined : data.exitPrice;
+    
     const isFullyExited = 
-      data.exitPrice !== undefined && 
-      data.exitShares !== undefined && 
-      data.exitShares === data.entryShares;
+      exitPriceNum !== undefined && 
+      exitSharesNum !== undefined && 
+      exitSharesNum === data.entryShares;
     
     const status = isFullyExited ? TradeStatus.CLOSED : TradeStatus.OPEN;
-    const remainingShares = data.exitShares 
-      ? data.entryShares - data.exitShares 
+    const remainingShares = exitSharesNum 
+      ? data.entryShares - exitSharesNum 
       : data.entryShares;
 
     const payload = {
@@ -161,10 +165,12 @@ export function TradeForm({ trigger }: TradeFormProps) {
       entryPrice: data.entryPrice,
       entryShares: data.entryShares,
       entryDate: data.entryDate.toISOString(),
-      exitPrice: data.exitPrice,
-      exitShares: data.exitShares,
+      exitPrice: exitPriceNum,
+      exitShares: exitSharesNum,
       exitDate: data.exitDate?.toISOString(),
     };
+
+    console.log('Submitting payload:', payload);
 
     createTrade.mutate(payload, {
       onSuccess: () => {
@@ -173,6 +179,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
         toast.success('Trade erfolgreich erstellt');
       },
       onError: (error) => {
+        console.error('API Error:', error);
         toast.error('Fehler beim Erstellen des Trades: ' + error.message);
       },
     });
@@ -250,7 +257,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                     <FormLabel>Typ *</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -281,7 +288,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                     <FormLabel>Seite *</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -349,12 +356,6 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         type="number"
                         placeholder="50"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value ? Number(e.target.value) : undefined
-                          )
-                        }
-                        value={field.value ?? ''}
                       />
                     </FormControl>
                     <FormDescription>Anzahl beim Einstieg</FormDescription>
@@ -375,12 +376,6 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         step="0.01"
                         placeholder="180.50"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value ? Number(e.target.value) : undefined
-                          )
-                        }
-                        value={field.value ?? ''}
                       />
                     </FormControl>
                     <FormDescription>Preis pro Anteil in €</FormDescription>
@@ -454,12 +449,6 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         type="number"
                         placeholder="50"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value ? Number(e.target.value) : undefined
-                          )
-                        }
-                        value={field.value ?? ''}
                       />
                     </FormControl>
                     <FormDescription>
@@ -482,12 +471,6 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         step="0.01"
                         placeholder="185.20"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value ? Number(e.target.value) : undefined
-                          )
-                        }
-                        value={field.value ?? ''}
                       />
                     </FormControl>
                     <FormDescription>Preis pro Anteil in €</FormDescription>
