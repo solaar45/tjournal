@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import Link from "next/link";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,7 +25,7 @@ export default function RootLayout({
             <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <div className="container flex h-16 items-center">
                 <div className="mr-4 flex">
-                  <a className="mr-6 flex items-center space-x-2" href="/">
+                  <Link className="mr-6 flex items-center space-x-2" href="/">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
@@ -41,27 +42,27 @@ export default function RootLayout({
                       <path d="M8 17v-3" />
                     </svg>
                     <span className="font-bold">Trading Journal</span>
-                  </a>
+                  </Link>
                 </div>
                 <nav className="flex items-center space-x-6 text-sm font-medium">
-                  <a
+                  <Link
                     href="/"
-                    className="transition-colors hover:text-foreground/80 text-foreground"
+                    className="transition-colors hover:text-foreground/80 text-foreground/60"
                   >
                     Dashboard
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/trades"
                     className="transition-colors hover:text-foreground/80 text-foreground/60"
                   >
                     Trades
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/analytics"
                     className="transition-colors hover:text-foreground/80 text-foreground/60"
                   >
                     Analytics
-                  </a>
+                  </Link>
                 </nav>
               </div>
             </header>
