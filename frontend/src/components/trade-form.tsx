@@ -56,12 +56,9 @@ const tradeFormSchema = z.object({
   side: z.nativeEnum(TradeSide, {
     required_error: 'Bitte wähle Long oder Short',
   }),
-  status: z.nativeEnum(TradeStatus, {
-    required_error: 'Bitte wähle einen Status',
-  }),
-  shares: z
+  entryShares: z
     .number({
-      required_error: 'Anzahl ist erforderlich',
+      required_error: 'Anzahl beim Einstieg ist erforderlich',
       invalid_type_error: 'Muss eine Zahl sein',
     })
     .positive('Anzahl muss größer als 0 sein')
@@ -75,13 +72,43 @@ const tradeFormSchema = z.object({
   entryDate: z.date({
     required_error: 'Einstiegsdatum ist erforderlich',
   }),
+  exitShares: z
+    .number()
+    .positive('Anzahl muss größer als 0 sein')
+    .int('Anzahl muss eine ganze Zahl sein')
+    .optional()
+    .or(z.literal(undefined)),
   exitPrice: z
     .number()
     .positive('Ausstiegspreis muss größer als 0 sein')
     .optional()
     .or(z.literal(undefined)),
   exitDate: z.date().optional().or(z.literal(undefined)),
-});
+}).refine(
+  (data) => {
+    // Wenn exitPrice gesetzt ist, müssen exitShares und exitDate auch gesetzt sein
+    if (data.exitPrice !== undefined) {
+      return data.exitShares !== undefined && data.exitDate !== undefined;
+    }
+    return true;
+  },
+  {
+    message: 'Wenn ein Ausstiegspreis angegeben wird, müssen auch Anzahl und Datum ausgefüllt werden',
+    path: ['exitPrice'],
+  }
+).refine(
+  (data) => {
+    // exitShares darf nicht größer als entryShares sein
+    if (data.exitShares !== undefined && data.entryShares !== undefined) {
+      return data.exitShares <= data.entryShares;
+    }
+    return true;
+  },
+  {
+    message: 'Ausstiegsmenge darf nicht größer als Einstiegsmenge sein',
+    path: ['exitShares'],
+  }
+);
 
 type TradeFormValues = z.infer<typeof tradeFormSchema>;
 
@@ -99,28 +126,45 @@ export function TradeForm({ trigger }: TradeFormProps) {
       symbol: '',
       type: TradeType.AKTIE,
       side: TradeSide.LONG,
-      status: TradeStatus.OPEN,
-      shares: undefined,
+      entryShares: undefined,
       entryPrice: undefined,
       entryDate: new Date(),
+      exitShares: undefined,
       exitPrice: undefined,
       exitDate: undefined,
     },
   });
 
-  // Watch status field to show/hide exit fields
-  const status = form.watch('status');
+  // Watch exit fields to show hint
+  const exitPrice = form.watch('exitPrice');
+  const exitShares = form.watch('exitShares');
+  const hasExitData = exitPrice !== undefined || exitShares !== undefined;
 
   async function onSubmit(data: TradeFormValues) {
+    // Status automatisch bestimmen
+    const isFullyExited = 
+      data.exitPrice !== undefined && 
+      data.exitShares !== undefined && 
+      data.exitShares === data.entryShares;
+    
+    const status = isFullyExited ? TradeStatus.CLOSED : TradeStatus.OPEN;
+    
+    // Shares = entryShares (bei Teilverkauf bleibt der Rest offen)
+    const remainingShares = data.exitShares 
+      ? data.entryShares - data.exitShares 
+      : data.entryShares;
+
     const payload = {
       symbol: data.symbol.toUpperCase(),
       type: data.type,
       side: data.side,
-      status: data.status,
-      shares: data.shares,
+      status: status,
+      shares: remainingShares, // Verbleibende Shares
       entryPrice: data.entryPrice,
+      entryShares: data.entryShares,
       entryDate: data.entryDate.toISOString(),
       exitPrice: data.exitPrice,
+      exitShares: data.exitShares,
       exitDate: data.exitDate?.toISOString(),
     };
 
@@ -158,7 +202,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
         <DialogHeader>
           <DialogTitle>Neuen Trade erfassen</DialogTitle>
           <DialogDescription>
-            Erfasse die Details deines Trades. Alle Pflichtfelder sind markiert.
+            Erfasse die Details deines Trades. Einstiegsdaten sind Pflicht, Ausstiegsdaten optional.
           </DialogDescription>
         </DialogHeader>
 
@@ -216,69 +260,45 @@ export function TradeForm({ trigger }: TradeFormProps) {
               />
             </div>
 
-            {/* Side & Status */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="side"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Seite *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Long oder Short" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.values(TradeSide).map((side) => (
-                          <SelectItem key={side} value={side}>
-                            {side}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Offen oder Geschlossen" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={TradeStatus.OPEN}>Offen</SelectItem>
-                        <SelectItem value={TradeStatus.CLOSED}>
-                          Geschlossen
+            {/* Side */}
+            <FormField
+              control={form.control}
+              name="side"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Seite *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Long oder Short" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.values(TradeSide).map((side) => (
+                        <SelectItem key={side} value={side}>
+                          {side}
                         </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Divider */}
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium mb-4">Einstieg (Pflicht)</h3>
             </div>
 
-            {/* Shares & Entry Price */}
+            {/* Entry: Shares & Price */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="shares"
+                name="entryShares"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Anzahl *</FormLabel>
@@ -295,7 +315,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         value={field.value ?? ''}
                       />
                     </FormControl>
-                    <FormDescription>Anzahl der Anteile</FormDescription>
+                    <FormDescription>Anzahl beim Einstieg</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -371,79 +391,124 @@ export function TradeForm({ trigger }: TradeFormProps) {
               )}
             />
 
-            {/* Exit Fields (nur wenn Status = closed) */}
-            {status === TradeStatus.CLOSED && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="exitPrice"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ausstiegspreis</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="185.20"
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value ? Number(e.target.value) : undefined
-                              )
-                            }
-                            value={field.value ?? ''}
-                          />
-                        </FormControl>
-                        <FormDescription>Preis pro Anteil in €</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            {/* Divider */}
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium mb-2">Ausstieg (Optional)</h3>
+              <p className="text-xs text-muted-foreground mb-4">
+                Fülle diese Felder nur aus, wenn du bereits (teilweise) ausgestiegen bist.
+              </p>
+            </div>
 
-                  <FormField
-                    control={form.control}
-                    name="exitDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Ausstiegsdatum</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  'w-full pl-3 text-left font-normal',
-                                  !field.value && 'text-muted-foreground'
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, 'dd.MM.yyyy')
-                                ) : (
-                                  <span>Datum wählen</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date > new Date() || date < new Date('1900-01-01')
-                              }
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </>
+            {/* Exit: Shares & Price */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="exitShares"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Verkaufte Anzahl</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="50"
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value ? Number(e.target.value) : undefined
+                          )
+                        }
+                        value={field.value ?? ''}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Anzahl beim Ausstieg (max. Einstiegsmenge)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="exitPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ausstiegspreis</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="185.20"
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value ? Number(e.target.value) : undefined
+                          )
+                        }
+                        value={field.value ?? ''}
+                      />
+                    </FormControl>
+                    <FormDescription>Preis pro Anteil in €</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Exit Date */}
+            <FormField
+              control={form.control}
+              name="exitDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Ausstiegsdatum</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, 'dd.MM.yyyy')
+                          ) : (
+                            <span>Datum wählen</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date('1900-01-01')
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Status Hint */}
+            {hasExitData && (
+              <div className="rounded-md bg-blue-50 p-3">
+                <p className="text-sm text-blue-900">
+                  <strong>Hinweis:</strong> Da du Ausstiegsdaten eingegeben hast, wird dieser Trade 
+                  {exitShares === form.watch('entryShares') 
+                    ? ' als "Geschlossen" ' 
+                    : ' als "Offen" (Teilverkauf) '}
+                  markiert.
+                </p>
+              </div>
             )}
 
             <DialogFooter>

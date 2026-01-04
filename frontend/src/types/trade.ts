@@ -24,8 +24,10 @@ export interface Trade {
   side: TradeSide;
   entryDate: string; // ISO 8601 date string
   entryPrice: number;
+  entryShares?: number; // Anzahl beim Einstieg
   exitDate?: string;
   exitPrice?: number;
+  exitShares?: number; // Anzahl beim Ausstieg (Teilverkauf)
   pnl?: number; // calculated field
   pnlPercent?: number; // calculated field
   createdAt?: string;
@@ -40,8 +42,10 @@ export interface CreateTradeDto {
   side: TradeSide;
   entryDate: string;
   entryPrice: number;
+  entryShares?: number;
   exitDate?: string;
   exitPrice?: number;
+  exitShares?: number;
 }
 
 export interface UpdateTradeDto {
@@ -52,8 +56,10 @@ export interface UpdateTradeDto {
   side?: TradeSide;
   entryDate?: string;
   entryPrice?: number;
+  entryShares?: number;
   exitDate?: string;
   exitPrice?: number;
+  exitShares?: number;
 }
 
 export interface TradeStats {
