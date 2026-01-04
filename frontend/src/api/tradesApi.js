@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+// In development, use the proxy configured in package.json
+// In production, use the environment variable or fallback
+const API_BASE_URL = process.env.NODE_ENV === 'production'
+  ? (process.env.REACT_APP_API_URL || '/api')
+  : '/api';
 
 const tradesApi = {
   // Get all trades
