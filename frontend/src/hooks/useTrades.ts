@@ -106,8 +106,7 @@ export function useCreateTrade() {
     },
     onSuccess: (data) => {
       // Cache invalidieren -> automatisches Refetch
-      queryClient.invalidateQueries({ queryKey: tradeKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: tradeKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: tradeKeys.all });
       
       // Optimistic Update: Neuen Trade direkt in Cache schreiben
       queryClient.setQueryData(tradeKeys.detail(data.id), data);
@@ -145,9 +144,8 @@ export function useUpdateTrade() {
       return res.json();
     },
     onSuccess: (data, variables) => {
-      // Cache invalidieren
-      queryClient.invalidateQueries({ queryKey: tradeKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: tradeKeys.stats() });
+      // WICHTIG: Alle trade-bezogenen Queries invalidieren
+      queryClient.invalidateQueries({ queryKey: tradeKeys.all });
       
       // Spezifischen Trade im Cache aktualisieren
       queryClient.setQueryData(tradeKeys.detail(variables.id), data);
@@ -179,8 +177,7 @@ export function useDeleteTrade() {
     },
     onSuccess: (_, id) => {
       // Cache invalidieren
-      queryClient.invalidateQueries({ queryKey: tradeKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: tradeKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: tradeKeys.all });
       
       // Gelöschten Trade aus Cache entfernen
       queryClient.removeQueries({ queryKey: tradeKeys.detail(id) });

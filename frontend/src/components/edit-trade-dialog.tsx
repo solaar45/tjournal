@@ -118,6 +118,31 @@ interface EditTradeDialogProps {
 export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogProps) {
   const updateTrade = useUpdateTrade();
 
+  // Calculate exitShares from entry and remaining shares
+  const calculateExitShares = (trade: Trade): number | undefined => {
+    if (!trade.exitPrice) return undefined;
+    
+    const entryShares = trade.entryShares || trade.shares;
+    const exitShares = trade.exitShares;
+    
+    // If exitShares is explicitly set, use it
+    if (exitShares !== undefined) {
+      return exitShares;
+    }
+    
+    // Otherwise calculate from remaining shares (if status is closed)
+    if (trade.status === TradeStatus.CLOSED) {
+      return entryShares; // Full exit
+    }
+    
+    // For open trades with exit price but no exitShares, calculate from remaining
+    if (trade.shares < entryShares) {
+      return entryShares - trade.shares;
+    }
+    
+    return undefined;
+  };
+
   const form = useForm<EditTradeFormValues>({
     resolver: zodResolver(editTradeFormSchema),
     defaultValues: {
@@ -127,7 +152,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
       entryShares: trade.entryShares || trade.shares,
       entryPrice: trade.entryPrice,
       entryDate: new Date(trade.entryDate),
-      exitShares: trade.exitShares || undefined,
+      exitShares: calculateExitShares(trade),
       exitPrice: trade.exitPrice || undefined,
       exitDate: trade.exitDate ? new Date(trade.exitDate) : undefined,
     },
@@ -143,7 +168,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
         entryShares: trade.entryShares || trade.shares,
         entryPrice: trade.entryPrice,
         entryDate: new Date(trade.entryDate),
-        exitShares: trade.exitShares || undefined,
+        exitShares: calculateExitShares(trade),
         exitPrice: trade.exitPrice || undefined,
         exitDate: trade.exitDate ? new Date(trade.exitDate) : undefined,
       });
