@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TradeForm } from '@/components/trade-form';
+import { EditTradeDialog } from '@/components/edit-trade-dialog';
 import { toast } from 'sonner';
 
 export default function TradesPage() {
@@ -54,6 +55,7 @@ export default function TradesPage() {
   const [globalFilter, setGlobalFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
 
   // Spalten-Definition
   const columns = useMemo<ColumnDef<Trade>[]>(
@@ -222,6 +224,10 @@ export default function TradesPage() {
         cell: ({ row }) => {
           const trade = row.original;
 
+          const handleEdit = () => {
+            setEditingTrade(trade);
+          };
+
           const handleDelete = () => {
             if (window.confirm(`Trade ${trade.symbol} wirklich löschen?`)) {
               deleteTrade.mutate(trade.id);
@@ -244,7 +250,7 @@ export default function TradesPage() {
                   ID kopieren
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem disabled>
+                <DropdownMenuItem onClick={handleEdit}>
                   <Pencil className="mr-2 h-4 w-4" />
                   Bearbeiten
                 </DropdownMenuItem>
@@ -465,6 +471,15 @@ export default function TradesPage() {
           </Button>
         </div>
       </div>
+
+      {/* Edit Dialog */}
+      {editingTrade && (
+        <EditTradeDialog
+          trade={editingTrade}
+          open={!!editingTrade}
+          onOpenChange={(open) => !open && setEditingTrade(null)}
+        />
+      )}
     </div>
   );
 }
