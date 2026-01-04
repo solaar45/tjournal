@@ -275,7 +275,7 @@ export default function DashboardPage() {
                 <TableHeader>
                   {/* Main Header Row */}
                   <TableRow>
-                    <TableHead colSpan={5} className="text-center bg-slate-50 font-semibold">Information</TableHead>
+                    <TableHead colSpan={6} className="text-center bg-slate-50 font-semibold">Information</TableHead>
                     <TableHead colSpan={2} className="text-center bg-blue-50 font-semibold">Einstieg</TableHead>
                     <TableHead colSpan={2} className="text-center bg-amber-50 font-semibold">Ausstieg</TableHead>
                     <TableHead colSpan={2} className="text-center bg-green-50 font-semibold">Rendite</TableHead>
@@ -286,6 +286,7 @@ export default function DashboardPage() {
                     <TableHead className="bg-slate-50">Typ</TableHead>
                     <TableHead className="bg-slate-50">Status</TableHead>
                     <TableHead className="bg-slate-50">Seite</TableHead>
+                    <TableHead className="bg-slate-50">Broker</TableHead>
                     <TableHead className="bg-slate-50">Anzahl</TableHead>
                     <TableHead className="bg-blue-50">Datum</TableHead>
                     <TableHead className="bg-blue-50">Preis</TableHead>
@@ -312,6 +313,9 @@ export default function DashboardPage() {
                         <Badge variant={trade.side === TradeSide.LONG ? "default" : "secondary"}>
                           {trade.side}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {trade.broker || <span className="text-muted-foreground">-</span>}
                       </TableCell>
                       <TableCell>{trade.shares}</TableCell>
 
