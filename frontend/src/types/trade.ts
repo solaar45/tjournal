@@ -15,6 +15,23 @@ export enum TradeStatus {
   CLOSED = "closed"
 }
 
+export enum Broker {
+  TRADE_REPUBLIC = "Trade Republic",
+  SCALABLE_CAPITAL = "Scalable Capital",
+  INTERACTIVE_BROKERS = "Interactive Brokers",
+  DEGIRO = "DEGIRO",
+  COMDIRECT = "comdirect",
+  ING = "ING",
+  CONSORSBANK = "Consorsbank",
+  SMARTBROKER = "Smartbroker",
+  FLATEX = "flatex",
+  ETORO = "eToro",
+  BINANCE = "Binance",
+  KRAKEN = "Kraken",
+  COINBASE = "Coinbase",
+  SONSTIGE = "Sonstige"
+}
+
 export interface Trade {
   id: string;
   symbol: string;
@@ -22,6 +39,7 @@ export interface Trade {
   status: TradeStatus;
   shares: number;
   side: TradeSide;
+  broker?: Broker;
   entryDate: string; // ISO 8601 date string
   entryPrice: number;
   entryShares?: number; // Anzahl beim Einstieg
@@ -40,6 +58,7 @@ export interface CreateTradeDto {
   status: TradeStatus;
   shares: number;
   side: TradeSide;
+  broker?: Broker;
   entryDate: string;
   entryPrice: number;
   entryShares?: number;
@@ -54,6 +73,7 @@ export interface UpdateTradeDto {
   status?: TradeStatus;
   shares?: number;
   side?: TradeSide;
+  broker?: Broker;
   entryDate?: string;
   entryPrice?: number;
   entryShares?: number;
