@@ -21,6 +21,8 @@ import {
   Edit,
   Plus,
   ArrowUpDown,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react';
 import { Position, Transaction, TransactionType } from '@/types/position';
 import { formatCurrency, formatPercent } from '@/lib/tradeUtils';
@@ -145,22 +147,29 @@ export function PositionTableTanstack({
         ),
         cell: ({ row }) => <span className="font-bold">{row.original.symbol}</span>,
       },
-      // Side Column
+      // Side Column - Now subtle with diagonal arrow
       {
         id: 'side',
         accessorKey: 'side',
         header: 'Side',
-        size: 70,
-        cell: ({ row }) => (
-          <Badge
-            variant={row.original.side === 'Long' ? 'default' : 'secondary'}
-            className="text-xs"
-          >
-            {row.original.side === 'Long' ? '↑' : '↓'} {row.original.side}
-          </Badge>
-        ),
+        size: 80,
+        cell: ({ row }) => {
+          const isLong = row.original.side === 'Long';
+          return (
+            <div className="flex items-center gap-1">
+              {isLong ? (
+                <ArrowUpRight className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+              ) : (
+                <ArrowDownRight className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+              )}
+              <span className="text-xs text-muted-foreground">
+                {row.original.side}
+              </span>
+            </div>
+          );
+        },
       },
-      // Status Column - Now subtle text
+      // Status Column - Subtle text
       {
         id: 'status',
         accessorKey: 'status',
