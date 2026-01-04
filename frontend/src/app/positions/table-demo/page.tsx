@@ -446,7 +446,7 @@ export default function PositionTableDemoPage() {
       <div className="border-t pt-6 space-y-4">
         <h3 className="font-semibold">Features:</h3>
         <ul className="space-y-2 text-sm text-muted-foreground grid md:grid-cols-2 gap-2">
-          <li>• <strong>Expand/Collapse:</strong> Click auf Zeile oder [>] Button</li>
+          <li>• <strong>Expand/Collapse:</strong> Click auf Zeile oder Chevron Button</li>
           <li>• <strong>Kompakte Zahlen:</strong> 27.5K statt 27,500</li>
           <li>• <strong>Status Badges:</strong> [O] Offen, [P] Teilweise, [C] Geschlossen</li>
           <li>• <strong>Color Coding:</strong> Blau (Entry), Grün (Profit Exit), Rot (Loss Exit)</li>
