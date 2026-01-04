@@ -40,9 +40,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useUpdateTrade } from '@/hooks/useTrades';
-import { Trade, TradeType, TradeSide, TradeStatus } from '@/types/trade';
+import { Trade, TradeType, TradeSide, TradeStatus, Broker } from '@/types/trade';
 
-// Zod Schema für Validierung (identisch zum TradeForm)
 const editTradeFormSchema = z.object({
   symbol: z
     .string()
@@ -55,6 +54,7 @@ const editTradeFormSchema = z.object({
   side: z.nativeEnum(TradeSide, {
     required_error: 'Bitte wähle Long oder Short',
   }),
+  broker: z.nativeEnum(Broker).optional(),
   entryShares: z
     .number({
       required_error: 'Anzahl beim Einstieg ist erforderlich',
@@ -118,28 +118,13 @@ interface EditTradeDialogProps {
 export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogProps) {
   const updateTrade = useUpdateTrade();
 
-  // Calculate exitShares from entry and remaining shares
   const calculateExitShares = (trade: Trade): number | undefined => {
     if (!trade.exitPrice) return undefined;
-    
     const entryShares = trade.entryShares || trade.shares;
     const exitShares = trade.exitShares;
-    
-    // If exitShares is explicitly set, use it
-    if (exitShares !== undefined) {
-      return exitShares;
-    }
-    
-    // Otherwise calculate from remaining shares (if status is closed)
-    if (trade.status === TradeStatus.CLOSED) {
-      return entryShares; // Full exit
-    }
-    
-    // For open trades with exit price but no exitShares, calculate from remaining
-    if (trade.shares < entryShares) {
-      return entryShares - trade.shares;
-    }
-    
+    if (exitShares !== undefined) return exitShares;
+    if (trade.status === TradeStatus.CLOSED) return entryShares;
+    if (trade.shares < entryShares) return entryShares - trade.shares;
     return undefined;
   };
 
@@ -149,6 +134,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
       symbol: trade.symbol,
       type: trade.type,
       side: trade.side,
+      broker: trade.broker,
       entryShares: trade.entryShares || trade.shares,
       entryPrice: trade.entryPrice,
       entryDate: new Date(trade.entryDate),
@@ -158,13 +144,13 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
     },
   });
 
-  // Reset form when trade changes or dialog opens
   useEffect(() => {
     if (open) {
       form.reset({
         symbol: trade.symbol,
         type: trade.type,
         side: trade.side,
+        broker: trade.broker,
         entryShares: trade.entryShares || trade.shares,
         entryPrice: trade.entryPrice,
         entryDate: new Date(trade.entryDate),
@@ -175,22 +161,18 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
     }
   }, [trade, open, form]);
 
-  // Watch exit fields to show hint
   const exitPrice = form.watch('exitPrice');
   const exitShares = form.watch('exitShares');
   const entryShares = form.watch('entryShares');
   const hasExitData = exitPrice !== undefined || exitShares !== undefined;
 
   async function onSubmit(data: EditTradeFormValues) {
-    // Status automatisch bestimmen
     const isFullyExited = 
       data.exitPrice !== undefined && 
       data.exitShares !== undefined && 
       data.exitShares === data.entryShares;
     
     const status = isFullyExited ? TradeStatus.CLOSED : TradeStatus.OPEN;
-    
-    // Shares = entryShares - exitShares (verbleibend)
     const remainingShares = data.exitShares 
       ? data.entryShares - data.exitShares 
       : data.entryShares;
@@ -200,6 +182,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
       symbol: data.symbol.toUpperCase(),
       type: data.type,
       side: data.side,
+      broker: data.broker,
       status: status,
       shares: remainingShares,
       entryPrice: data.entryPrice,
@@ -229,7 +212,6 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Symbol & Type */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -281,41 +263,69 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
               />
             </div>
 
-            {/* Side */}
-            <FormField
-              control={form.control}
-              name="side"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Seite *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Long oder Short" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Object.values(TradeSide).map((side) => (
-                        <SelectItem key={side} value={side}>
-                          {side}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="side"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Seite *</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Long oder Short" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(TradeSide).map((side) => (
+                          <SelectItem key={side} value={side}>
+                            {side}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Divider */}
+              <FormField
+                control={form.control}
+                name="broker"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Broker</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Wähle einen Broker" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(Broker).map((broker) => (
+                          <SelectItem key={broker} value={broker}>
+                            {broker}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>Optional</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <div className="border-t pt-4">
               <h3 className="text-sm font-medium mb-4">Einstieg</h3>
             </div>
 
-            {/* Entry: Shares & Price */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -369,7 +379,6 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
               />
             </div>
 
-            {/* Entry Date */}
             <FormField
               control={form.control}
               name="entryDate"
@@ -412,7 +421,6 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
               )}
             />
 
-            {/* Divider */}
             <div className="border-t pt-4">
               <h3 className="text-sm font-medium mb-2">Ausstieg</h3>
               <p className="text-xs text-muted-foreground mb-4">
@@ -420,7 +428,6 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
               </p>
             </div>
 
-            {/* Exit: Shares & Price */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -476,7 +483,6 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
               />
             </div>
 
-            {/* Exit Date */}
             <FormField
               control={form.control}
               name="exitDate"
@@ -519,7 +525,6 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
               )}
             />
 
-            {/* Status Hint */}
             {hasExitData && (
               <div className="rounded-md bg-blue-50 p-3">
                 <p className="text-sm text-blue-900">
