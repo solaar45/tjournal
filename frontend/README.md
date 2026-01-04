@@ -1,70 +1,191 @@
-# Getting Started with Create React App
+# Trading Journal - Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React-basiertes Frontend für das Trading Journal, integriert mit Phoenix/Elixir Backend.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- ✅ **CRUD-Operationen** für Trades (Erstellen, Lesen, Bearbeiten, Löschen)
+- ✅ **Echtzeit-Statistiken** Dashboard mit P&L, Win-Rate, etc.
+- ✅ **Responsive Design** für Desktop und Mobile
+- ✅ **Dark Mode** UI
+- ✅ **Formular-Validierung**
+- ✅ **Error Handling** mit benutzerfreundlichen Meldungen
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **React 18.3.1**
+- **Axios** für HTTP-Requests
+- **Papa Parse** für CSV-Parsing (bereit für Import/Export)
+- **Create React App**
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Setup
 
-### `npm test`
+### 1. Dependencies installieren
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm install
+```
 
-### `npm run build`
+### 2. Umgebungsvariablen konfigurieren
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Kopiere `.env.example` zu `.env`:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+cp .env.example .env
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Passe die API-URL bei Bedarf an:
 
-### `npm run eject`
+```env
+REACT_APP_API_URL=http://localhost:4000/api
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 3. Backend starten
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Stelle sicher, dass das Phoenix-Backend läuft:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+cd ../backend_phoenix
+mix phx.server
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Backend sollte auf `http://localhost:4000` laufen.
 
-## Learn More
+### 4. Frontend starten
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm start
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Frontend öffnet sich auf `http://localhost:3000`.
 
-### Code Splitting
+## Verwendung
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Neuen Trade erstellen
 
-### Analyzing the Bundle Size
+1. Klicke auf **"+ Neuer Trade"** Button
+2. Fülle das Formular aus (Pflichtfelder: Symbol, Typ, Seite, Anzahl, Einstiegsdatum, Einstiegspreis)
+3. Klicke auf **"Erstellen"**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Trade bearbeiten
 
-### Making a Progressive Web App
+1. Klicke auf das Stift-Symbol (✏️) in der Trade-Zeile
+2. Bearbeite die Felder
+3. Klicke auf **"Speichern"**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Trade löschen
 
-### Advanced Configuration
+1. Klicke auf das Mülleimer-Symbol (🗑️) in der Trade-Zeile
+2. Bestätige die Löschung
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Trade schließen
 
-### Deployment
+1. Bearbeite den Trade
+2. Setze Status auf **"Geschlossen"**
+3. Füge **Ausstiegsdatum** und **Ausstiegspreis** hinzu
+4. P&L wird automatisch berechnet
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## Projekt-Struktur
 
-### `npm run build` fails to minify
+```
+frontend/
+├── public/              # Statische Dateien
+├── src/
+│   ├── api/            # API Service Layer
+│   │   └── tradesApi.js  # Phoenix Backend API Calls
+│   ├── components/     # React Komponenten
+│   │   ├── TradeForm.js    # Formular für Trade Create/Edit
+│   │   ├── TradeForm.css
+│   │   ├── TradeList.js    # Tabelle mit allen Trades
+│   │   └── TradeList.css
+│   ├── App.js          # Haupt-Komponente mit State-Management
+│   ├── App.css         # Haupt-Styles
+│   ├── index.js        # Entry Point
+│   └── index.css       # Global Styles
+├── .env.example        # Beispiel-Konfiguration
+├── package.json
+└── README.md
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## API Integration
+
+Das Frontend kommuniziert mit dem Phoenix-Backend über folgende Endpoints:
+
+- `GET /api/trades` - Alle Trades abrufen
+- `GET /api/trades/:id` - Einzelnen Trade abrufen
+- `POST /api/trades` - Neuen Trade erstellen
+- `PUT /api/trades/:id` - Trade aktualisieren
+- `DELETE /api/trades/:id` - Trade löschen
+- `GET /api/trades/statistics` - Statistiken abrufen
+
+### Beispiel API Request:
+
+```javascript
+import tradesApi from './api/tradesApi';
+
+// Trade erstellen
+const newTrade = {
+  symbol: 'AAPL',
+  type: 'Aktie',
+  side: 'Long',
+  status: 'open',
+  shares: 100,
+  entrydate: '2024-01-15',
+  entryprice: 150.50,
+  notes: 'Langfristiges Investment'
+};
+
+const createdTrade = await tradesApi.createTrade(newTrade);
+```
+
+## Verfügbare Scripts
+
+```bash
+# Development Server starten
+npm start
+
+# Production Build erstellen
+npm run build
+
+# Tests ausführen
+npm test
+
+# Linting
+npm run lint
+```
+
+## Troubleshooting
+
+### "Fehler beim Laden der Trades"
+
+- Überprüfe, ob das Phoenix-Backend läuft (`mix phx.server`)
+- Stelle sicher, dass die API-URL in `.env` korrekt ist
+- Überprüfe CORS-Einstellungen im Backend
+
+### "Network Error" / CORS-Fehler
+
+- Das Phoenix-Backend muss CORS für `http://localhost:3000` erlauben
+- Check `backend_phoenix/config/config.exs` für CORS-Konfiguration
+
+### Styling-Probleme
+
+- Stelle sicher, dass alle CSS-Dateien korrekt importiert sind
+- Browser-Cache leeren mit `Ctrl+Shift+R` (oder `Cmd+Shift+R` auf Mac)
+
+## Nächste Schritte
+
+- [ ] CSV Import/Export implementieren
+- [ ] Advanced Filtering (nach Datum, Symbol, Status)
+- [ ] Sortierung in Tabelle
+- [ ] Pagination für große Datensätze
+- [ ] Charts/Visualisierungen (Recharts)
+- [ ] TypeScript Migration
+- [ ] Unit Tests
+
+## Contributing
+
+Pull Requests sind willkommen! Für größere Änderungen bitte zuerst ein Issue erstellen.
+
+## License
+
+MIT
