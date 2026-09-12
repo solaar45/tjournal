@@ -15,12 +15,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { parseBrokerCsv, processCsvToTrades, ImportCandidate } from '@/lib/csvImporter';
-import { formatCurrency, formatPercent } from '@/lib/tradeUtils';
+import { formatCurrency, formatPercent, formatDateSafe } from '@/lib/tradeUtils';
 import { useCreateTrade } from '@/hooks/useTrades';
 import { toast } from 'sonner';
 import { Upload, FileText, CheckCircle2, ArrowRight, ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
-import { format } from 'date-fns';
-import { de } from 'date-fns/locale';
 
 interface CsvImportDialogProps {
   trigger?: React.ReactNode;
@@ -335,7 +333,7 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
                             <span className="font-medium">{candidate.entryShares} Stk.</span> @{' '}
                             <span>{formatCurrency(candidate.entryPrice)}</span>
                             <div className="text-[10px] text-muted-foreground">
-                              {candidate.entryDate ? format(new Date(candidate.entryDate), 'dd.MM.yyyy HH:mm', { locale: de }) : '-'}
+                              {formatDateSafe(candidate.entryDate, 'dd.MM.yyyy HH:mm')}
                             </div>
                           </div>
                         </TableCell>
@@ -347,7 +345,7 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
                               <span className="font-medium">{candidate.exitShares || candidate.entryShares} Stk.</span> @{' '}
                               <span>{formatCurrency(candidate.exitPrice)}</span>
                               <div className="text-[10px] text-muted-foreground">
-                                {candidate.exitDate ? format(new Date(candidate.exitDate), 'dd.MM.yyyy HH:mm', { locale: de }) : '-'}
+                                {formatDateSafe(candidate.exitDate, 'dd.MM.yyyy HH:mm')}
                               </div>
                             </div>
                           ) : (

@@ -25,7 +25,7 @@ import {
   ArrowDownRight,
 } from 'lucide-react';
 import { Position, Transaction, TransactionType } from '@/types/position';
-import { formatCurrency, formatPercent } from '@/lib/tradeUtils';
+import { formatCurrency, formatPercent, formatDateSafe } from '@/lib/tradeUtils';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -324,35 +324,40 @@ export function PositionTableTanstack({
       // Actions Column
       {
         id: 'actions',
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right pr-1">Aktionen</div>,
         size: 90,
         cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1">
+          <div className="flex items-center justify-end gap-1 min-w-[64px]">
             {onEdit && (
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-7 w-7 p-0"
+                title="Trade bearbeiten"
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit(row.original);
                 }}
               >
-                <Edit className="h-3 w-3" />
+                <Edit className="h-3.5 w-3.5" />
               </Button>
             )}
-            {onAddTransaction && row.original.remainingShares > 0 && (
+            {onAddTransaction && row.original.remainingShares > 0 ? (
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0"
+                className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700"
+                title="Transaktion (Teilverkauf / Nachkauf) hinzufügen"
                 onClick={(e) => {
                   e.stopPropagation();
                   onAddTransaction(row.original.id);
                 }}
               >
-                <Plus className="h-3 w-3" />
+                <Plus className="h-3.5 w-3.5" />
               </Button>
+            ) : (
+              /* Unsichtbarer Platzhalter, damit die Spaltenausrichtung auf den Pixel stabil bleibt */
+              <div className="w-7 h-7 shrink-0" aria-hidden="true" />
             )}
           </div>
         ),
@@ -427,7 +432,7 @@ export function PositionTableTanstack({
 
                       {/* Date */}
                       <TableCell className="py-1 pl-8 text-xs text-muted-foreground">
-                        {format(new Date(txn.date), 'dd.MM.yy', { locale: de })}
+                        {formatDateSafe(txn.date, 'dd.MM.yy')}
                       </TableCell>
 
                       {/* Transaction Type (Entry/Exit) - now just text */}

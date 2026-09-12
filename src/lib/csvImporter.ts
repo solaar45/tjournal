@@ -157,6 +157,70 @@ export function parseLocalizedNumber(value: any): number {
 }
 
 /**
+ * Normalisiert beliebige Datums-/Uhrzeitformate (z.B. "11.09.2026", "2026-09-11", "11/09/2026 15:54") in einen gültigen ISO-String
+ */
+export function normalizeDateToIso(dateStr?: string, timeStr?: string): string {
+  if (!dateStr || typeof dateStr !== 'string') return new Date().toISOString();
+
+  let cleanDate = dateStr.trim();
+  let cleanTime = (timeStr || '').trim();
+
+  // Falls Datum bereits Uhrzeit enthält: z.B. "2026-09-11 15:54:51" oder "11.09.2026 15:54"
+  if (cleanDate.includes(' ') || cleanDate.includes('T')) {
+    const parts = cleanDate.split(/[ T]/);
+    cleanDate = parts[0];
+    if (!cleanTime && parts[1]) {
+      cleanTime = parts[1];
+    }
+  }
+
+  // Format DD.MM.YYYY oder DD/MM/YYYY in YYYY-MM-DD umwandeln
+  if (cleanDate.includes('.')) {
+    const parts = cleanDate.split('.');
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      let year = parts[2];
+      if (year.length === 2) year = '20' + year;
+      cleanDate = `${year}-${month}-${day}`;
+    }
+  } else if (cleanDate.includes('/')) {
+    const parts = cleanDate.split('/');
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      let year = parts[2];
+      if (year.length === 2) year = '20' + year;
+      cleanDate = `${year}-${month}-${day}`;
+    }
+  }
+
+  // Uhrzeit formatieren HH:mm:ss
+  if (!cleanTime) {
+    cleanTime = '00:00:00';
+  } else {
+    // Falls nur HH:mm
+    const timeParts = cleanTime.split(':');
+    if (timeParts.length === 2) {
+      cleanTime = `${cleanTime}:00`;
+    }
+  }
+
+  const isoCandidate = `${cleanDate}T${cleanTime}Z`;
+  const parsed = new Date(isoCandidate);
+  if (isNaN(parsed.getTime())) {
+    // Fallback auf Standard Date parsing
+    const fallback = new Date(dateStr);
+    if (!isNaN(fallback.getTime())) {
+      return fallback.toISOString();
+    }
+    return new Date().toISOString();
+  }
+
+  return isoCandidate;
+}
+
+/**
  * Ermittelt Underlying, Ticker-Symbol, Asset-Typ und Richtung (Side) aus Beschreibung / ISIN
  */
 export function analyzeSecurity(description: string, isin: string): {
@@ -263,7 +327,9 @@ export function detectBroker(reference?: string): Broker {
  * Parst den CSV-Text in standardisierte Transaktionszeilen
  */
 export function parseBrokerCsv(csvText: string): RawCsvRow[] {
-  const lines = csvText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  // BOM entfernen falls vorhanden
+  const cleanCsv = csvText.replace(/^\uFEFF/, '').trim();
+  const lines = cleanCsv.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   if (lines.length < 2) return [];
 
   // Header analysieren
@@ -291,40 +357,74 @@ export function parseBrokerCsv(csvText: string): RawCsvRow[] {
     return values;
   };
 
-  const headers = splitCsvLine(headerLine).map(h => h.toLowerCase().trim());
+  const headers = splitCsvLine(headerLine).map(h => h.toLowerCase().trim().replace(/['"]/g, ''));
   const rows: RawCsvRow[] = [];
 
   for (let i = 1; i < lines.length; i++) {
     const rawValues = splitCsvLine(lines[i]);
-    if (rawValues.length < 5) continue;
+    if (rawValues.length < 3) continue;
 
     const rowObj: Record<string, string> = {};
     headers.forEach((h, index) => {
       rowObj[h] = rawValues[index] || '';
     });
 
-    const isin = rowObj['isin'] || '';
-    const description = rowObj['description'] || rowObj['name'] || rowObj['wertpapier'] || '';
-    const type = rowObj['type'] || rowObj['typ'] || rowObj['transaktionstyp'] || '';
-    const date = rowObj['date'] || rowObj['datum'] || '';
-    const time = rowObj['time'] || rowObj['zeit'] || '';
+    const isin = rowObj['isin'] || rowObj['wkn'] || '';
+    const description =
+      rowObj['description'] ||
+      rowObj['name'] ||
+      rowObj['wertpapier'] ||
+      rowObj['bezeichnung'] ||
+      rowObj['instrument'] ||
+      rowObj['titel'] ||
+      '';
+    const type =
+      rowObj['type'] ||
+      rowObj['typ'] ||
+      rowObj['transaktionstyp'] ||
+      rowObj['transaktion'] ||
+      rowObj['order-typ'] ||
+      rowObj['art'] ||
+      '';
+    const date =
+      rowObj['date'] ||
+      rowObj['datum'] ||
+      rowObj['ausführungsdatum'] ||
+      rowObj['ausfuehrungsdatum'] ||
+      rowObj['ausführungstag'] ||
+      rowObj['buchungsdatum'] ||
+      rowObj['valuta'] ||
+      rowObj['zeitstempel'] ||
+      '';
+    const time =
+      rowObj['time'] ||
+      rowObj['zeit'] ||
+      rowObj['uhrzeit'] ||
+      rowObj['ausführungszeit'] ||
+      '';
 
     if (!description && !isin) continue;
+
+    const sharesVal = parseLocalizedNumber(rowObj['shares'] || rowObj['stueck'] || rowObj['stück'] || rowObj['anzahl'] || rowObj['menge'] || rowObj['stk']);
+    const priceVal = parseLocalizedNumber(rowObj['price'] || rowObj['kurs'] || rowObj['preis'] || rowObj['ausführungskurs']);
+    const amountVal = parseLocalizedNumber(rowObj['amount'] || rowObj['betrag'] || rowObj['ausmachender_betrag'] || rowObj['gesamtbetrag']);
+    const feeVal = Math.abs(parseLocalizedNumber(rowObj['fee'] || rowObj['gebuehr'] || rowObj['gebühr'] || rowObj['kosten'] || rowObj['provision']));
+    const taxVal = parseLocalizedNumber(rowObj['tax'] || rowObj['steuer'] || rowObj['steuern'] || rowObj['abgeltungsteuer'] || rowObj['kapitalertragsteuer']);
 
     rows.push({
       date,
       time,
       status: rowObj['status'] || 'Executed',
-      reference: rowObj['reference'] || rowObj['order-id'] || '',
+      reference: rowObj['reference'] || rowObj['order-id'] || rowObj['auftragsnummer'] || '',
       description,
       assetType: rowObj['assettype'] || '',
       type: type.toLowerCase().includes('buy') || type.toLowerCase().includes('kauf') ? 'Buy' : 'Sell',
       isin,
-      shares: Math.abs(parseLocalizedNumber(rowObj['shares'] || rowObj['stueck'] || rowObj['anzahl'])),
-      price: parseLocalizedNumber(rowObj['price'] || rowObj['kurs'] || rowObj['preis']),
-      amount: parseLocalizedNumber(rowObj['amount'] || rowObj['betrag'] || rowObj['ausmachender_betrag']),
-      fee: Math.abs(parseLocalizedNumber(rowObj['fee'] || rowObj['gebuehr'] || rowObj['kosten'])),
-      tax: parseLocalizedNumber(rowObj['tax'] || rowObj['steuer'] || rowObj['abgeltungsteuer']),
+      shares: Math.abs(sharesVal),
+      price: priceVal,
+      amount: amountVal,
+      fee: feeVal,
+      tax: taxVal,
       currency: rowObj['currency'] || 'EUR',
     });
   }
@@ -341,9 +441,9 @@ export function processCsvToTrades(rows: RawCsvRow[]): ImportCandidate[] {
 
   // Chronologisch sortieren (älteste zuerst)
   executed.sort((a, b) => {
-    const timeA = `${a.date}T${a.time || '00:00:00'}`;
-    const timeB = `${b.date}T${b.time || '00:00:00'}`;
-    return new Date(timeA).getTime() - new Date(timeB).getTime();
+    const timeA = new Date(normalizeDateToIso(a.date, a.time)).getTime();
+    const timeB = new Date(normalizeDateToIso(b.date, b.time)).getTime();
+    return timeA - timeB;
   });
 
   // Nach ISIN gruppieren
@@ -361,6 +461,8 @@ export function processCsvToTrades(rows: RawCsvRow[]): ImportCandidate[] {
     const sells = items.filter(i => i.type === 'Sell');
 
     const firstItem = items[0];
+    if (!firstItem) continue;
+
     const { symbol, type, side, underlyingName } = analyzeSecurity(firstItem.description, firstItem.isin);
     const broker = detectBroker(firstItem.reference);
 
@@ -369,8 +471,8 @@ export function processCsvToTrades(rows: RawCsvRow[]): ImportCandidate[] {
       const buy = buys[0];
       const sell = sells[0];
 
-      const entryDate = buy.time ? `${buy.date}T${buy.time}Z` : `${buy.date}T00:00:00Z`;
-      const exitDate = sell.time ? `${sell.date}T${sell.time}Z` : `${sell.date}T00:00:00Z`;
+      const entryDate = normalizeDateToIso(buy.date, buy.time);
+      const exitDate = normalizeDateToIso(sell.date, sell.time);
 
       const shares = buy.shares;
       const entryPrice = buy.price;
@@ -381,7 +483,7 @@ export function processCsvToTrades(rows: RawCsvRow[]): ImportCandidate[] {
       const multiplier = side === TradeSide.LONG ? 1 : -1;
       const grossPnl = Number(((exitPrice - entryPrice) * shares * multiplier).toFixed(2));
       const netPnl = Number((grossPnl - totalFee - totalTax).toFixed(2));
-      const pnlPercent = Number((((exitPrice - entryPrice) / entryPrice) * 100 * multiplier).toFixed(2));
+      const pnlPercent = entryPrice > 0 ? Number((((exitPrice - entryPrice) / entryPrice) * 100 * multiplier).toFixed(2)) : 0;
 
       candidates.push({
         isin: firstItem.isin,
@@ -413,10 +515,10 @@ export function processCsvToTrades(rows: RawCsvRow[]): ImportCandidate[] {
     if (buys.length > 0 && sells.length === 0) {
       const totalShares = buys.reduce((sum, b) => sum + b.shares, 0);
       const totalCost = buys.reduce((sum, b) => sum + (b.shares * b.price), 0);
-      const avgPrice = Number((totalCost / totalShares).toFixed(4));
+      const avgPrice = totalShares > 0 ? Number((totalCost / totalShares).toFixed(4)) : 0;
       const totalFee = Number(buys.reduce((sum, b) => sum + b.fee, 0).toFixed(2));
       const totalTax = Number(buys.reduce((sum, b) => sum + b.tax, 0).toFixed(2));
-      const entryDate = buys[0].time ? `${buys[0].date}T${buys[0].time}Z` : `${buys[0].date}T00:00:00Z`;
+      const entryDate = normalizeDateToIso(buys[0].date, buys[0].time);
 
       candidates.push({
         isin: firstItem.isin,
@@ -443,7 +545,7 @@ export function processCsvToTrades(rows: RawCsvRow[]): ImportCandidate[] {
     const totalSellShares = sells.reduce((sum, s) => sum + s.shares, 0);
 
     const buyCost = buys.reduce((sum, b) => sum + (b.shares * b.price), 0);
-    const avgEntryPrice = buys.length > 0 ? Number((buyCost / remainingBuyShares).toFixed(4)) : 0;
+    const avgEntryPrice = remainingBuyShares > 0 ? Number((buyCost / remainingBuyShares).toFixed(4)) : 0;
 
     const sellRevenue = sells.reduce((sum, s) => sum + (s.shares * s.price), 0);
     const avgExitPrice = totalSellShares > 0 ? Number((sellRevenue / totalSellShares).toFixed(4)) : 0;
@@ -452,8 +554,8 @@ export function processCsvToTrades(rows: RawCsvRow[]): ImportCandidate[] {
     const totalTax = Number(items.reduce((sum, i) => sum + i.tax, 0).toFixed(2));
 
     const isClosed = totalSellShares >= remainingBuyShares && remainingBuyShares > 0;
-    const entryDate = buys[0]?.time ? `${buys[0].date}T${buys[0].time}Z` : `${buys[0]?.date || ''}T00:00:00Z`;
-    const exitDate = sells[sells.length - 1]?.time ? `${sells[sells.length - 1].date}T${sells[sells.length - 1].time}Z` : `${sells[sells.length - 1]?.date || ''}T00:00:00Z`;
+    const entryDate = normalizeDateToIso(buys[0]?.date, buys[0]?.time);
+    const exitDate = normalizeDateToIso(sells[sells.length - 1]?.date, sells[sells.length - 1]?.time);
 
     const closedShares = Math.min(remainingBuyShares, totalSellShares);
     const multiplier = side === TradeSide.LONG ? 1 : -1;

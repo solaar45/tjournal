@@ -1,4 +1,6 @@
 import { Trade, TradeStats } from '@/types/trade';
+import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
 
 /**
  * Berechnet P&L (Profit & Loss) für einen Trade
@@ -91,4 +93,39 @@ export function formatPercent(value: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value / 100);
+}
+
+/**
+ * Sicherer Datumsformatierer, der niemals einen RangeError wirft
+ */
+export function formatDateSafe(
+  dateVal?: string | Date | null,
+  formatStr: string = 'dd.MM.yyyy',
+  fallback: string = '-'
+): string {
+  if (!dateVal) return fallback;
+  try {
+    let d: Date;
+    if (dateVal instanceof Date) {
+      d = dateVal;
+    } else {
+      let str = String(dateVal).trim();
+      // Falls deutsches Format: DD.MM.YYYY [HH:mm[:ss]]
+      if (/^\d{1,2}\.\d{1,2}\.\d{2,4}/.test(str)) {
+        const parts = str.split(/[ T]/);
+        const dateParts = parts[0].split('.');
+        const day = dateParts[0].padStart(2, '0');
+        const month = dateParts[1].padStart(2, '0');
+        let year = dateParts[2];
+        if (year.length === 2) year = '20' + year;
+        const timePart = parts[1] ? (parts[1].split(':').length === 2 ? `${parts[1]}:00` : parts[1]) : '00:00:00';
+        str = `${year}-${month}-${day}T${timePart}`;
+      }
+      d = new Date(str);
+    }
+    if (isNaN(d.getTime())) return fallback;
+    return format(d, formatStr, { locale: de });
+  } catch {
+    return fallback;
+  }
 }

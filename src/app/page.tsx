@@ -1,15 +1,13 @@
 "use client";
 
 import { useTrades, useTradeStats } from '@/hooks/useTrades';
-import { formatCurrency, formatPercent } from '@/lib/tradeUtils';
+import { formatCurrency, formatPercent, formatDateSafe } from '@/lib/tradeUtils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TradeForm } from '@/components/trade-form';
 import { CsvImportDialog } from '@/components/csv-import-dialog';
-import { format } from 'date-fns';
-import { de } from 'date-fns/locale';
 import { TradeType, TradeSide } from '@/types/trade';
 
 export default function DashboardPage() {
@@ -335,7 +333,7 @@ export default function DashboardPage() {
 
                         {/* Einstieg Group */}
                         <TableCell className="text-sm">
-                          {format(new Date(trade.entryDate), 'dd.MM.yyyy', { locale: de })}
+                          {formatDateSafe(trade.entryDate, 'dd.MM.yyyy')}
                         </TableCell>
                         <TableCell className="text-sm">
                           {formatCurrency(trade.entryPrice)}
@@ -343,10 +341,7 @@ export default function DashboardPage() {
 
                         {/* Ausstieg Group */}
                         <TableCell className="text-sm">
-                          {trade.exitDate
-                            ? format(new Date(trade.exitDate), 'dd.MM.yyyy', { locale: de })
-                            : <span className="text-muted-foreground">-</span>
-                          }
+                          {formatDateSafe(trade.exitDate, 'dd.MM.yyyy')}
                         </TableCell>
                         <TableCell className="text-sm">
                           {trade.exitPrice
