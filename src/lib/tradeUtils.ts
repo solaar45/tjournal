@@ -155,3 +155,239 @@ export function formatDateSafe(
     return fallback;
   }
 }
+
+export interface StreakStats {
+  bestWinStreak: number;
+  currentWinStreak: number;
+  maxLossStreak: number;
+  currentLossStreak: number;
+}
+
+/**
+ * Berechnet Gewinn- und Verlust-Serien (Streaks)
+ */
+export function calculateStreakStats(trades: Trade[]): StreakStats {
+  const closedTrades = trades
+    .filter(t => t.status === 'closed' && (t.netPnl !== undefined || t.pnl !== undefined))
+    .sort((a, b) => {
+      const timeA = new Date(a.exitDate || a.entryDate).getTime();
+      const timeB = new Date(b.exitDate || b.entryDate).getTime();
+      return timeA - timeB;
+    });
+
+  let bestWinStreak = 0;
+  let currentWinStreak = 0;
+  let maxLossStreak = 0;
+  let currentLossStreak = 0;
+
+  for (const t of closedTrades) {
+    const pnl = t.netPnl !== undefined ? t.netPnl : (t.pnl || 0);
+    if (pnl > 0) {
+      currentWinStreak++;
+      currentLossStreak = 0;
+      if (currentWinStreak > bestWinStreak) {
+        bestWinStreak = currentWinStreak;
+      }
+    } else if (pnl < 0) {
+      currentLossStreak++;
+      currentWinStreak = 0;
+      if (currentLossStreak > maxLossStreak) {
+        maxLossStreak = currentLossStreak;
+      }
+    }
+  }
+
+  return {
+    bestWinStreak,
+    currentWinStreak,
+    maxLossStreak,
+    currentLossStreak,
+  };
+}
+
+export interface LongShortStats {
+  long: { count: number; pnl: number; wins: number; winRate: number };
+  short: { count: number; pnl: number; wins: number; winRate: number };
+}
+
+/**
+ * Teilt Performance nach Long vs Short auf
+ */
+export function calculateLongShortStats(trades: Trade[]): LongShortStats {
+  const closedTrades = trades.filter(t => t.status === 'closed' && (t.netPnl !== undefined || t.pnl !== undefined));
+
+  const longTrades = closedTrades.filter(t => t.side === TradeSide.LONG || (t.side as string) === 'Long');
+  const shortTrades = closedTrades.filter(t => t.side === TradeSide.SHORT || (t.side as string) === 'Short');
+
+  const longPnl = longTrades.reduce((sum, t) => sum + (t.netPnl !== undefined ? t.netPnl : (t.pnl || 0)), 0);
+  const shortPnl = shortTrades.reduce((sum, t) => sum + (t.netPnl !== undefined ? t.netPnl : (t.pnl || 0)), 0);
+
+  const longWins = longTrades.filter(t => (t.netPnl !== undefined ? t.netPnl : (t.pnl || 0)) > 0).length;
+  const shortWins = shortTrades.filter(t => (t.netPnl !== undefined ? t.netPnl : (t.pnl || 0)) > 0).length;
+
+  return {
+    long: {
+      count: longTrades.length,
+      pnl: Number(longPnl.toFixed(2)),
+      wins: longWins,
+      winRate: longTrades.length > 0 ? (longWins / longTrades.length) * 100 : 0,
+    },
+    short: {
+      count: shortTrades.length,
+      pnl: Number(shortPnl.toFixed(2)),
+      wins: shortWins,
+      winRate: shortTrades.length > 0 ? (shortWins / shortTrades.length) * 100 : 0,
+    },
+  };
+}
+
+export interface DayCalendarData {
+  date: Date;
+  dateStr: string; // YYYY-MM-DD
+  dayNumber: number;
+  isCurrentMonth: boolean;
+  pnl: number;
+  tradesCount: number;
+  trades: Trade[];
+}
+
+export interface WeekCalendarRow {
+  weekNumber: number;
+  days: DayCalendarData[];
+  weeklyPnl: number;
+  weeklyTradesCount: number;
+}
+
+/**
+ * Erstellt die Monatsraster-Daten für den Handelskalender (Mo-So mit Wochensummen)
+ */
+export function calculateDailyCalendarData(
+  trades: Trade[],
+  currentDate: Date = new Date()
+): WeekCalendarRow[] {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth(); // 0-indexed
+
+  // Erster und letzter Tag des Monats
+  const firstDayOfMonth = new Date(year, month, 1);
+  const lastDayOfMonth = new Date(year, month + 1, 0);
+
+  // Finde Montag vor oder am 1. des Monats (Mo = 1, So = 0)
+  const startDayOfWeek = firstDayOfMonth.getDay(); // 0 (Sun) .. 6 (Sat)
+  // Differenz zu Montag (1)
+  const daysBefore = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+  const calendarStartDate = new Date(year, month, 1 - daysBefore);
+
+  // Finde Sonntag nach oder am letzten Tag des Monats
+  const endDayOfWeek = lastDayOfMonth.getDay();
+  const daysAfter = endDayOfWeek === 0 ? 0 : 7 - endDayOfWeek;
+  const calendarEndDate = new Date(year, month + 1, daysAfter);
+
+  // Map von YYYY-MM-DD zu Trades
+  const tradesByDay: Record<string, Trade[]> = {};
+  trades.forEach(t => {
+    const rawDate = t.exitDate || t.entryDate;
+    if (!rawDate) return;
+    const d = new Date(rawDate);
+    if (isNaN(d.getTime())) return;
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (!tradesByDay[dateKey]) tradesByDay[dateKey] = [];
+    tradesByDay[dateKey].push(t);
+  });
+
+  const weeks: WeekCalendarRow[] = [];
+  let currentWeekDays: DayCalendarData[] = [];
+  let currentIterDate = new Date(calendarStartDate);
+  let weekIndex = 1;
+
+  while (currentIterDate <= calendarEndDate) {
+    const iterYear = currentIterDate.getFullYear();
+    const iterMonth = currentIterDate.getMonth();
+    const iterDay = currentIterDate.getDate();
+    const dateStr = `${iterYear}-${String(iterMonth + 1).padStart(2, '0')}-${String(iterDay).padStart(2, '0')}`;
+    const dayTrades = tradesByDay[dateStr] || [];
+
+    const dayClosedTrades = dayTrades.filter(t => t.status === 'closed');
+    const dayPnl = dayClosedTrades.reduce((sum, t) => sum + (t.netPnl !== undefined ? t.netPnl : (t.pnl || 0)), 0);
+
+    currentWeekDays.push({
+      date: new Date(currentIterDate),
+      dateStr,
+      dayNumber: iterDay,
+      isCurrentMonth: iterMonth === month,
+      pnl: Number(dayPnl.toFixed(2)),
+      tradesCount: dayTrades.length,
+      trades: dayTrades,
+    });
+
+    if (currentWeekDays.length === 7) {
+      const weeklyPnl = currentWeekDays.reduce((sum, d) => sum + (d.isCurrentMonth ? d.pnl : 0), 0);
+      const weeklyTradesCount = currentWeekDays.reduce((sum, d) => sum + (d.isCurrentMonth ? d.tradesCount : 0), 0);
+      weeks.push({
+        weekNumber: weekIndex++,
+        days: currentWeekDays,
+        weeklyPnl: Number(weeklyPnl.toFixed(2)),
+        weeklyTradesCount,
+      });
+      currentWeekDays = [];
+    }
+
+    currentIterDate.setDate(currentIterDate.getDate() + 1);
+  }
+
+  return weeks;
+}
+
+export interface EquityPoint {
+  date: string;
+  dateLabel: string;
+  cumulativePnl: number;
+  drawdown: number;
+}
+
+/**
+ * Berechnet die kumulative P&L-Kurve und Drawdown über die Zeit
+ */
+export function calculateEquityCurve(trades: Trade[]): EquityPoint[] {
+  const closedTrades = trades
+    .filter(t => t.status === 'closed' && (t.netPnl !== undefined || t.pnl !== undefined))
+    .sort((a, b) => {
+      const timeA = new Date(a.exitDate || a.entryDate).getTime();
+      const timeB = new Date(b.exitDate || b.entryDate).getTime();
+      return timeA - timeB;
+    });
+
+  if (closedTrades.length === 0) {
+    return [
+      { date: new Date().toISOString(), dateLabel: 'Start', cumulativePnl: 0, drawdown: 0 }
+    ];
+  }
+
+  const points: EquityPoint[] = [
+    { date: closedTrades[0].entryDate, dateLabel: 'Start', cumulativePnl: 0, drawdown: 0 }
+  ];
+
+  let cumulativePnl = 0;
+  let peakPnl = 0;
+
+  closedTrades.forEach((t) => {
+    const pnl = t.netPnl !== undefined ? t.netPnl : (t.pnl || 0);
+    cumulativePnl = Number((cumulativePnl + pnl).toFixed(2));
+    if (cumulativePnl > peakPnl) {
+      peakPnl = cumulativePnl;
+    }
+    const drawdown = Number((cumulativePnl - peakPnl).toFixed(2));
+    const rawDate = t.exitDate || t.entryDate;
+    const d = new Date(rawDate);
+    const dateLabel = isNaN(d.getTime()) ? '-' : format(d, 'MMM dd');
+
+    points.push({
+      date: rawDate,
+      dateLabel,
+      cumulativePnl,
+      drawdown,
+    });
+  });
+
+  return points;
+}

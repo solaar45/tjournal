@@ -1,292 +1,248 @@
 "use client";
 
+import React, { useState, useMemo } from 'react';
 import { useTrades, useTradeStats } from '@/hooks/useTrades';
-import { formatCurrency, formatPercent, formatDateSafe, formatTax } from '@/lib/tradeUtils';
+import {
+  formatCurrency,
+  formatPercent,
+  formatDateSafe,
+  formatTax,
+  calculateTradeStats,
+  calculateStreakStats,
+  calculateLongShortStats,
+  calculateEquityCurve,
+} from '@/lib/tradeUtils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TradeForm } from '@/components/trade-form';
-import { CsvImportDialog } from '@/components/csv-import-dialog';
-import { TradeType, TradeSide } from '@/types/trade';
+import { TradeType, TradeSide, Trade } from '@/types/trade';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ArrowUp, ArrowDown, ArrowRight, X } from 'lucide-react';
 import Link from 'next/link';
+
+// New Dashboard Components inspired by TradeSync
+import { FilterToolbar, TimeframeFilter } from '@/components/dashboard/filter-toolbar';
+import { KpiStrip } from '@/components/dashboard/kpi-strip';
+import { SparklineCards } from '@/components/dashboard/sparkline-cards';
+import { TradingCalendar } from '@/components/dashboard/trading-calendar';
 
 export default function DashboardPage() {
   const { t, locale, language } = useTranslation();
-  const dateFormat = language === 'de' ? 'dd.MM.yy' : 'MM/dd/yy';
-  const { data: trades, isLoading: tradesLoading, error: tradesError } = useTrades();
-  const { data: stats, isLoading: statsLoading, error: statsError } = useTradeStats();
+  const { data: rawTrades, isLoading: tradesLoading, error: tradesError } = useTrades();
+
+  // Filters State
+  const [timeframe, setTimeframe] = useState<TimeframeFilter>('all');
+  const [assetType, setAssetType] = useState<string>('all');
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  const allTrades = rawTrades || [];
+
+  // Filtered Trades Logic
+  const filteredTrades = useMemo(() => {
+    return allTrades.filter(trade => {
+      // 1. Asset Type Filter
+      if (assetType !== 'all' && trade.type !== assetType) {
+        return false;
+      }
+
+      // 2. Calendar Specific Day Filter
+      if (selectedDate) {
+        const rawDate = trade.exitDate || trade.entryDate;
+        if (!rawDate) return false;
+        const d = new Date(rawDate);
+        if (isNaN(d.getTime())) return false;
+        const dayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        return dayStr === selectedDate;
+      }
+
+      // 3. Timeframe Filter
+      if (timeframe !== 'all') {
+        const rawDate = trade.exitDate || trade.entryDate;
+        if (!rawDate) return false;
+        const d = new Date(rawDate);
+        if (isNaN(d.getTime())) return false;
+        const now = new Date();
+
+        if (timeframe === 'today') {
+          return (
+            d.getFullYear() === now.getFullYear() &&
+            d.getMonth() === now.getMonth() &&
+            d.getDate() === now.getDate()
+          );
+        }
+        if (timeframe === 'week') {
+          const diffDays = (now.getTime() - d.getTime()) / (1000 * 3600 * 24);
+          return diffDays >= 0 && diffDays <= 7;
+        }
+        if (timeframe === 'month') {
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+        }
+        if (timeframe === 'year') {
+          return d.getFullYear() === now.getFullYear();
+        }
+      }
+
+      return true;
+    });
+  }, [allTrades, assetType, selectedDate, timeframe]);
+
+  // Dynamic Statistics based on filtered trades
+  const dynamicStats = useMemo(() => calculateTradeStats(filteredTrades), [filteredTrades]);
+  const streakStats = useMemo(() => calculateStreakStats(filteredTrades), [filteredTrades]);
+  const longShortStats = useMemo(() => calculateLongShortStats(filteredTrades), [filteredTrades]);
+  const equityPoints = useMemo(() => calculateEquityCurve(filteredTrades), [filteredTrades]);
+
+  // Export CSV Handler
+  const handleExportCsv = () => {
+    if (filteredTrades.length === 0) return;
+    const headers = [
+      'Symbol',
+      'Type',
+      'Status',
+      'Side',
+      'Shares',
+      'Entry Date',
+      'Entry Price',
+      'Exit Date',
+      'Exit Price',
+      'Fee',
+      'Tax',
+      'Net PnL',
+      'Gross PnL',
+    ];
+    const rows = filteredTrades.map((tr) => [
+      tr.symbol,
+      tr.type,
+      tr.status,
+      tr.side,
+      tr.entryShares || tr.shares,
+      tr.entryDate || '',
+      tr.entryPrice || 0,
+      tr.exitDate || '',
+      tr.exitPrice || '',
+      tr.fee || 0,
+      tr.tax || 0,
+      tr.netPnl !== undefined ? tr.netPnl : (tr.pnl || 0),
+      tr.pnl || 0,
+    ]);
+    const csvContent = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `trades-export-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Loading State
-  if (tradesLoading || statsLoading) {
+  if (tradesLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">{t.common.loading}</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3"></div>
+          <p className="text-xs text-muted-foreground">{t.common.loading}</p>
         </div>
       </div>
     );
   }
 
   // Error State
-  if (tradesError || statsError) {
+  if (tradesError) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <p className="text-destructive mb-2">Error loading data</p>
-          <p className="text-sm text-muted-foreground">
-            {tradesError?.message || statsError?.message}
-          </p>
+          <p className="text-destructive font-medium mb-1">Error loading data</p>
+          <p className="text-xs text-muted-foreground">{tradesError.message}</p>
         </div>
       </div>
     );
   }
 
-  // Recent Trades (5 most recent)
-  const recentTrades = trades?.slice(0, 5) || [];
+  // Display top 10 trades from current filter
+  const displayedTrades = filteredTrades.slice(0, 10);
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t.navigation.dashboard}</h1>
-          <p className="text-muted-foreground">
-            {t.navigation.tagline}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <CsvImportDialog />
-          <TradeForm />
-        </div>
-      </div>
+    <div className="space-y-4">
+      {/* 1. Quick Filter & Action Toolbar */}
+      <FilterToolbar
+        timeframe={timeframe}
+        onTimeframeChange={(tf) => {
+          setTimeframe(tf);
+          setSelectedDate(null);
+        }}
+        assetType={assetType}
+        onAssetTypeChange={(at) => {
+          setAssetType(at);
+          setSelectedDate(null);
+        }}
+        onExportCsv={filteredTrades.length > 0 ? handleExportCsv : undefined}
+        filteredTradesCount={filteredTrades.length}
+      />
 
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Total P&L */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t.dashboard.totalPnLNet}
+      {/* 2. KPI Hero Cards Strip */}
+      <KpiStrip
+        stats={dynamicStats}
+        streakStats={streakStats}
+        longShortStats={longShortStats}
+        locale={locale}
+      />
+
+      {/* 3. Mini Sparklines: Daily Cumulative PnL & Drawdown */}
+      <SparklineCards
+        equityPoints={equityPoints}
+        locale={locale}
+      />
+
+      {/* 4. Trading Performance Calendar */}
+      <TradingCalendar
+        trades={allTrades.filter(t => assetType === 'all' || t.type === assetType)}
+        selectedDate={selectedDate}
+        onSelectDate={(dateStr) => setSelectedDate(dateStr)}
+        locale={locale}
+      />
+
+      {/* 5. Trades Table */}
+      <Card className="border-border/60 bg-card/60 backdrop-blur-xs">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3 px-4 border-b border-border/40">
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold">
+              {selectedDate ? (
+                <span className="flex items-center gap-2">
+                  <span>Trades for {selectedDate}</span>
+                  <Badge variant="outline" className="text-xs font-mono">
+                    {filteredTrades.length}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedDate(null)}
+                    className="h-6 px-1.5 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Clear
+                  </Button>
+                </span>
+              ) : (
+                t.dashboard.recentTrades
+              )}
             </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${
-              (stats?.totalNetPnL !== undefined ? stats.totalNetPnL : (stats?.totalPnL || 0)) >= 0 ? 'text-emerald-600' : 'text-rose-600'
-            }`}>
-              {formatCurrency(stats?.totalNetPnL !== undefined ? stats.totalNetPnL : (stats?.totalPnL || 0), locale)}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-2">
-              <span>{t.common.gross}: {formatCurrency(stats?.totalPnL || 0, locale)}</span>
-              {(stats?.totalFees || stats?.totalTax) ? (
-                <span>({t.common.fee}: {formatCurrency(stats?.totalFees || 0, locale)}, {t.common.tax}: {formatCurrency(stats?.totalTax || 0, locale)})</span>
-              ) : null}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Win Rate */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t.dashboard.winRate}
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.winRate.toFixed(1)}%
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {t.dashboard.avgWinRateDesc} ({stats?.closedTrades || 0} {t.dashboard.closedTradesCount})
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Open Trades */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t.dashboard.openTrades}
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <rect width="20" height="14" x="2" y="5" rx="2" />
-              <path d="M2 10h20" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.openTrades || 0}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Active open positions
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Total Trades */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t.dashboard.totalTrades}
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.totalTrades || 0}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              All logged trades
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Performance Metrics */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance Highlights</CardTitle>
-            <CardDescription>
-              Largest and average win/loss metrics
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Largest Win</span>
-              <span className="text-sm font-medium text-emerald-600">
-                {formatCurrency(stats?.largestWin || 0, locale)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Largest Loss</span>
-              <span className="text-sm font-medium text-rose-600">
-                {formatCurrency(stats?.largestLoss || 0, locale)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between pt-4 border-t">
-              <span className="text-sm text-muted-foreground">Average Win</span>
-              <span className="text-sm font-medium">
-                {formatCurrency(stats?.avgWin || 0, locale)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Average Loss</span>
-              <span className="text-sm font-medium">
-                {formatCurrency(stats?.avgLoss || 0, locale)}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t.dashboard.distributionByType}</CardTitle>
-            <CardDescription>
-              Breakdown by position status and asset class
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{t.common.closed}</span>
-              <span className="text-sm font-medium">
-                {stats?.closedTrades || 0} {t.common.trades}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{t.common.open}</span>
-              <span className="text-sm font-medium">
-                {stats?.openTrades || 0} {t.common.trades}
-              </span>
-            </div>
-            <div className="pt-4 border-t">
-              <div className="flex flex-wrap gap-2">
-                {Object.values(TradeType).map((type) => {
-                  const count = trades?.filter(t => t.type === type).length || 0;
-                  if (count === 0) return null;
-                  return (
-                    <Badge key={type} variant="outline">
-                      {type}: {count}
-                    </Badge>
-                  );
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Trades Table */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <div>
-            <CardTitle>{t.dashboard.recentTrades}</CardTitle>
-            <CardDescription className="mt-1">
-              {t.dashboard.recentTradesDesc}
-            </CardDescription>
           </div>
           <Link href="/trades">
-            <Button variant="ghost" size="sm" className="gap-1 text-xs">
+            <Button variant="ghost" size="sm" className="gap-1 text-xs h-7 text-muted-foreground hover:text-foreground">
               <span>{t.common.trades}</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </Link>
         </CardHeader>
-        <CardContent>
-          {recentTrades.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">{t.dashboard.noTradesYet}</p>
-              <TradeForm trigger={<Button>{t.dashboard.createFirstTrade}</Button>} />
+        <CardContent className="p-0">
+          {displayedTrades.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-xs text-muted-foreground mb-3">{t.dashboard.noTradesYet}</p>
+              <TradeForm trigger={<Button size="sm" className="text-xs">{t.dashboard.createFirstTrade}</Button>} />
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -309,54 +265,57 @@ export default function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentTrades.map((trade) => {
+                  {displayedTrades.map((trade) => {
                     const netPnl = trade.netPnl !== undefined ? trade.netPnl : trade.pnl;
                     const isClosed = trade.status === 'closed';
 
                     return (
-                      <TableRow key={trade.id}>
+                      <TableRow key={trade.id} className="text-xs hover:bg-muted/40 transition-colors">
                         {/* Information */}
                         <TableCell className="font-medium">{trade.symbol}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{trade.type}</Badge>
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{trade.type}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={trade.status === 'open' ? 'default' : 'secondary'}>
+                          <Badge
+                            variant={trade.status === 'open' ? 'default' : 'secondary'}
+                            className="text-[10px] px-1.5 py-0"
+                          >
                             {trade.status === 'open' ? t.common.open : t.common.closed}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-center">
                           {trade.side === TradeSide.LONG || (trade.side as string) === 'Long' ? (
                             <span
-                              className="inline-flex items-center justify-center w-6 h-6 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                              className="inline-flex items-center justify-center w-5 h-5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                               title="Long"
                             >
-                              <ArrowUp className="h-4 w-4" />
+                              <ArrowUp className="h-3.5 w-3.5" />
                             </span>
                           ) : (
                             <span
-                              className="inline-flex items-center justify-center w-6 h-6 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                              className="inline-flex items-center justify-center w-5 h-5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400"
                               title="Short"
                             >
-                              <ArrowDown className="h-4 w-4" />
+                              <ArrowDown className="h-3.5 w-3.5" />
                             </span>
                           )}
                         </TableCell>
-                        <TableCell>{trade.entryShares || trade.shares}</TableCell>
+                        <TableCell className="font-mono">{trade.entryShares || trade.shares}</TableCell>
 
                         {/* Entry */}
-                        <TableCell className="text-sm">
+                        <TableCell className="text-muted-foreground">
                           {formatDateSafe(trade.entryDate, 'MMM dd, yyyy')}
                         </TableCell>
-                        <TableCell className="text-sm">
+                        <TableCell className="font-mono">
                           {formatCurrency(trade.entryPrice, locale)}
                         </TableCell>
 
                         {/* Exit */}
-                        <TableCell className="text-sm">
+                        <TableCell className="text-muted-foreground">
                           {formatDateSafe(trade.exitDate, 'MMM dd, yyyy')}
                         </TableCell>
-                        <TableCell className="text-sm">
+                        <TableCell className="font-mono">
                           {trade.exitPrice
                             ? formatCurrency(trade.exitPrice, locale)
                             : <span className="text-muted-foreground">-</span>
@@ -364,17 +323,17 @@ export default function DashboardPage() {
                         </TableCell>
 
                         {/* Costs & Tax */}
-                        <TableCell className="text-xs font-mono">
+                        <TableCell className="font-mono">
                           {formatCurrency(trade.fee || 0, locale)}
                         </TableCell>
-                        <TableCell className="text-xs font-mono font-medium text-foreground">
+                        <TableCell className="font-mono font-medium text-foreground">
                           {formatTax(trade.tax, locale)}
                         </TableCell>
 
                         {/* Return */}
                         <TableCell>
                           {isClosed && netPnl !== undefined ? (
-                            <div className={`font-bold text-sm ${
+                            <div className={`font-bold font-mono ${
                               netPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'
                             }`}>
                               {formatCurrency(netPnl, locale)}
@@ -383,14 +342,14 @@ export default function DashboardPage() {
                             <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right font-mono">
                           {isClosed && trade.pnl !== undefined ? (
-                            <div className="text-xs">
+                            <div>
                               <span className={`font-medium ${trade.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                 {formatCurrency(trade.pnl, locale)}
                               </span>
                               {trade.pnlPercent !== undefined && (
-                                <span className="text-muted-foreground ml-1">
+                                <span className="text-muted-foreground ml-1 text-[11px]">
                                   ({formatPercent(trade.pnlPercent, locale)})
                                 </span>
                               )}

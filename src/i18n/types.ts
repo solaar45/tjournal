@@ -150,4 +150,39 @@ export interface Translations {
     errorNoPositions: string;
     errorParsing: string;
   };
+  calendar: {
+    title: string;
+    weekly: string;
+    trades: string;
+    trade: string;
+    dayWin: string;
+    dayLoss: string;
+    clearFilter: string;
+    selectedDay: string;
+  };
+  kpi: {
+    winRate: string;
+    avgWinLoss: string;
+    perTrade: string;
+    longVsShort: string;
+    maxStreaks: string;
+    bestWinStreak: string;
+    consecutiveWins: string;
+    consecutiveLosses: string;
+    totalPnL: string;
+    dailyCumulativePnL: string;
+    drawdown: string;
+    currentDrawdown: string;
+    wins: string;
+    losses: string;
+  };
+  filters: {
+    allTime: string;
+    thisYear: string;
+    thisMonth: string;
+    thisWeek: string;
+    today: string;
+    allTypes: string;
+    exportCsv: string;
+  };
 }
