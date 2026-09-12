@@ -104,147 +104,54 @@ function tradeToPosition(trade: Trade): Position {
 }
 
 import { useTranslation } from '@/i18n/LanguageContext';
-import {
-  formatCurrency,
-  formatSignedCurrency,
-  formatTax,
-  getAmountColorClass,
-  getTaxColorClass,
-} from '@/lib/tradeUtils';
+import { useTradeFilters } from '@/context/trade-filter-context';
+import { FilterToolbar } from '@/components/dashboard/filter-toolbar';
 
 export default function TradesPage() {
-  const { t, locale } = useTranslation();
-  const { data: trades, isLoading } = useTrades();
+  const { t } = useTranslation();
+  const { allTrades, filteredTrades, isLoading } = useTradeFilters();
   const deleteTrade = useDeleteTrade();
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
 
-  // Convert trades to positions for display
+  // Convert filtered trades to positions for display
   const positions = useMemo(() => {
-    if (!trades) return [];
-    return trades.map(tradeToPosition);
-  }, [trades]);
-
-  // Stats
-  const stats = useMemo(() => {
-    if (!trades) return { total: 0, open: 0, closed: 0, totalPnL: 0, totalNetPnL: 0, totalFees: 0, totalTax: 0 };
-    
-    return {
-      total: trades.length,
-      open: trades.filter((t) => t.status === 'open').length,
-      closed: trades.filter((t) => t.status === 'closed').length,
-      totalPnL: trades.reduce((sum, t) => sum + (t.pnl || 0), 0),
-      totalNetPnL: trades.reduce((sum, t) => sum + (t.netPnl !== undefined ? t.netPnl : (t.pnl || 0)), 0),
-      totalFees: trades.reduce((sum, t) => sum + (t.fee || 0), 0),
-      totalTax: trades.reduce((sum, t) => sum + (t.tax || 0), 0),
-    };
-  }, [trades]);
+    return filteredTrades.map(tradeToPosition);
+  }, [filteredTrades]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">{t.common.loading}</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3"></div>
+          <p className="text-xs text-muted-foreground">{t.common.loading}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t.tradesPage.title}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {t.tradesPage.subtitle}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <CsvImportDialog />
-          <QuickTradeForm />
-          <TradeForm />
-        </div>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="p-4 bg-card border-border/70 shadow-eggplore hover:shadow-eggplore-card transition-all">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-            {t.tradesPage.totalTrades}
-          </div>
-          <div className="text-2xl font-bold font-mono tracking-tight text-foreground">
-            {stats.total}
-          </div>
-          <div className="text-[11px] text-muted-foreground mt-0.5 font-mono">
-            {stats.closed} {t.common.closed} · {stats.open} {t.common.open}
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-card border-border/70 shadow-eggplore hover:shadow-eggplore-card transition-all">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-            {t.tradesPage.openTrades}
-          </div>
-          <div className="text-2xl font-bold font-mono tracking-tight text-[#6979F8]">
-            {stats.open}
-          </div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">
-            Active positions
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-card border-border/70 shadow-eggplore hover:shadow-eggplore-card transition-all">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-            {t.tradesPage.closedTrades}
-          </div>
-          <div className="text-2xl font-bold font-mono tracking-tight text-foreground">
-            {stats.closed}
-          </div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">
-            Completed trades
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-card border-border/70 shadow-eggplore hover:shadow-eggplore-card transition-all">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-            {t.tradesPage.totalPnL} (NET)
-          </div>
-          <div
-            className={`text-2xl font-bold font-mono tracking-tight ${getAmountColorClass(stats.totalNetPnL)}`}
-          >
-            {formatSignedCurrency(stats.totalNetPnL, locale)}
-          </div>
-          <div className="text-[10px] text-muted-foreground mt-1 font-mono flex flex-wrap gap-x-2">
-            <span>
-              {t.common.gross}: <span className={getAmountColorClass(stats.totalPnL)}>{formatSignedCurrency(stats.totalPnL, locale)}</span>
-            </span>
-            <span>
-              {t.common.tax}: <span className={getTaxColorClass(stats.totalTax)}>{formatTax(stats.totalTax, locale)}</span>
-            </span>
-          </div>
-        </Card>
-      </div>
+    <div className="space-y-4">
+      {/* Universal Filter & Actions Header */}
+      <FilterToolbar />
 
       {/* Position Table */}
       <Card className="border-border/70 bg-card shadow-eggplore overflow-hidden">
         <CardContent className="p-0">
-          <div className="p-5 sm:p-6 border-b border-border/60">
-            <h3 className="font-semibold text-lg tracking-tight text-foreground">{t.tradesPage.tableTitle}</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+          <div className="p-4 sm:p-5 border-b border-border/60">
+            <h2 className="font-semibold text-base tracking-tight text-foreground">{t.tradesPage.tableTitle}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
               {t.tradesPage.tableSubtitle}
             </p>
           </div>
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <PositionTableTanstack
               positions={positions}
               onEdit={(position) => {
-                // Find original trade
-                const trade = trades?.find((t) => t.id === position.id);
+                const trade = allTrades.find((t) => t.id === position.id);
                 if (trade) setEditingTrade(trade);
               }}
               onAddTransaction={(id) => {
                 console.log('Add transaction to:', id);
-                // Future: Add transaction dialog
               }}
               onDelete={(position) => {
                 if (window.confirm(`${t.tradesPage.confirmDelete} (${position.symbol})`)) {
@@ -255,7 +162,6 @@ export default function TradesPage() {
           </div>
         </CardContent>
       </Card>
-
 
       {/* Edit Dialog */}
       {editingTrade && (
@@ -268,3 +174,4 @@ export default function TradesPage() {
     </div>
   );
 }
+
