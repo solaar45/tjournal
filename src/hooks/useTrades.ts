@@ -35,7 +35,8 @@ export function useTrades(filters?: { status?: string; type?: string }) {
       const res = await fetch(url);
       
       if (!res.ok) {
-        throw new Error('Fehler beim Laden der Trades');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Fehler beim Laden der Trades (${res.status})`);
       }
       
       return res.json();
@@ -56,7 +57,8 @@ export function useTrade(id: string) {
         if (res.status === 404) {
           throw new Error('Trade nicht gefunden');
         }
-        throw new Error('Fehler beim Laden des Trades');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Fehler beim Laden des Trades (${res.status})`);
       }
       
       return res.json();
@@ -75,7 +77,8 @@ export function useTradeStats() {
       const res = await fetch(`${API_BASE}/trades/stats`);
       
       if (!res.ok) {
-        throw new Error('Fehler beim Laden der Statistiken');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Fehler beim Laden der Statistiken (${res.status})`);
       }
       
       return res.json();
