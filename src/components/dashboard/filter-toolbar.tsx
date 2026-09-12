@@ -56,16 +56,16 @@ export function FilterToolbar(props: FilterToolbarProps) {
   ];
 
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-2 border-b border-border/60">
+    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-2 border-b border-border/60 w-full max-w-full min-w-0">
       {/* Left: Filter Pills */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 w-full md:w-auto min-w-0 max-w-full">
         {/* Timeframe Pills */}
-        <div className="flex items-center p-1 rounded-full bg-muted/70 border border-border/50 text-xs">
+        <div className="flex items-center p-1 rounded-full bg-muted/70 border border-border/50 text-xs overflow-x-auto max-w-full scrollbar-none">
           {timeframes.map((tf) => (
             <button
               key={tf.id}
               onClick={() => onTimeframeChange(tf.id)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
                 timeframe === tf.id
                   ? 'bg-card text-foreground shadow-xs font-bold'
                   : 'text-muted-foreground hover:text-foreground'
@@ -77,7 +77,7 @@ export function FilterToolbar(props: FilterToolbarProps) {
         </div>
 
         {/* Asset Type Pills */}
-        <div className="flex items-center p-1 rounded-full bg-muted/70 border border-border/50 text-xs overflow-x-auto">
+        <div className="flex items-center p-1 rounded-full bg-muted/70 border border-border/50 text-xs overflow-x-auto max-w-full scrollbar-none">
           {assetTypes.map((at) => (
             <button
               key={at.id}
@@ -113,7 +113,7 @@ export function FilterToolbar(props: FilterToolbarProps) {
       </div>
 
       {/* Right: Action Buttons */}
-      <div className="flex flex-wrap items-center gap-2 self-end md:self-auto">
+      <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
         <Button
           variant="outline"
           size="sm"

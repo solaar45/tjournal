@@ -27,14 +27,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${ibmPlexMono.variable} ${inter.className} font-sans antialiased`}>
+      <body className={`${inter.variable} ${ibmPlexMono.variable} ${inter.className} font-sans antialiased overflow-x-hidden w-full max-w-full`}>
         <Providers>
-          <div className="min-h-screen bg-background flex flex-col justify-between selection:bg-[#E5E7FA] selection:text-[#6979F8]">
+          <div className="min-h-screen bg-background flex flex-col justify-between selection:bg-[#E5E7FA] selection:text-[#6979F8] overflow-x-hidden w-full max-w-full">
             {/* Header */}
             <LayoutHeader />
 
             {/* Main Content */}
-            <main className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 flex-1">
+            <main className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-10 py-4 sm:py-8 flex-1 min-w-0">
               {children}
             </main>
 

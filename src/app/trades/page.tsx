@@ -134,13 +134,13 @@ export default function TradesPage() {
       {/* Position Table */}
       <Card className="border-border/70 bg-card shadow-eggplore overflow-hidden">
         <CardContent className="p-0">
-          <div className="p-4 sm:p-5 border-b border-border/60">
-            <h2 className="font-semibold text-lg tracking-tight text-foreground">{t.tradesPage.tableTitle}</h2>
-            <p className="text-sm text-muted-foreground mt-1">
+          <div className="p-3.5 sm:p-5 border-b border-border/60">
+            <h2 className="font-semibold text-base sm:text-lg tracking-tight text-foreground">{t.tradesPage.tableTitle}</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
               {t.tradesPage.tableSubtitle}
             </p>
           </div>
-          <div className="p-4 sm:p-6">
+          <div className="p-2.5 sm:p-6">
             <PositionTableTanstack
               positions={positions}
               onEdit={(position) => {
