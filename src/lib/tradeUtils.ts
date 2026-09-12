@@ -1,4 +1,4 @@
-import { Trade, TradeStats } from '@/types/trade';
+import { Trade, TradeStats, TradeType, TradeSide } from '@/types/trade';
 import { format } from 'date-fns';
 import { enUS, de } from 'date-fns/locale';
 
@@ -13,9 +13,19 @@ export function calculatePnL(trade: Trade): Trade {
   // Use exitShares if available, otherwise fall back to entryShares for full exit
   const exitShares = trade.exitShares ?? trade.entryShares ?? trade.shares;
   
-  const multiplier = trade.side === 'Long' ? 1 : -1;
+  // For derivatives (Zertifikat, Optionsschein), the certificate itself is bought long and sold.
+  // The certificate price movement already reflects the underlying direction (e.g. Short Turbo rises when underlying drops).
+  // Therefore, (exitPrice - entryPrice) is always the return.
+  // Only for direct short selling (Aktie / Krypto where the security was shorted at entry and covered at exit)
+  // does the inverted multiplier apply.
+  const isDerivative = trade.type === TradeType.ZERTIFIKAT || trade.type === TradeType.OPTIONSSCHEIN;
+  const isDirectShort = !isDerivative && (trade.side === TradeSide.SHORT || (trade.side as string) === 'Short');
+  const multiplier = isDirectShort ? -1 : 1;
+
   const pnl = (trade.exitPrice - trade.entryPrice) * exitShares * multiplier;
-  const pnlPercent = ((trade.exitPrice - trade.entryPrice) / trade.entryPrice) * 100 * multiplier;
+  const pnlPercent = trade.entryPrice > 0
+    ? ((trade.exitPrice - trade.entryPrice) / trade.entryPrice) * 100 * multiplier
+    : 0;
   const fee = trade.fee || 0;
   const tax = trade.tax || 0;
   const netPnl = pnl - fee - tax;

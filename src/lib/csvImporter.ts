@@ -480,7 +480,9 @@ export function processCsvToTrades(rows: RawCsvRow[]): ImportCandidate[] {
       const totalFee = Number((buy.fee + sell.fee).toFixed(2));
       const totalTax = Number((buy.tax + sell.tax).toFixed(2));
 
-      const multiplier = side === TradeSide.LONG ? 1 : -1;
+      const isDerivative = type === TradeType.ZERTIFIKAT || type === TradeType.OPTIONSSCHEIN;
+      const isDirectShort = !isDerivative && side === TradeSide.SHORT;
+      const multiplier = isDirectShort ? -1 : 1;
       const grossPnl = Number(((exitPrice - entryPrice) * shares * multiplier).toFixed(2));
       const netPnl = Number((grossPnl - totalFee - totalTax).toFixed(2));
       const pnlPercent = entryPrice > 0 ? Number((((exitPrice - entryPrice) / entryPrice) * 100 * multiplier).toFixed(2)) : 0;
@@ -558,7 +560,9 @@ export function processCsvToTrades(rows: RawCsvRow[]): ImportCandidate[] {
     const exitDate = normalizeDateToIso(sells[sells.length - 1]?.date, sells[sells.length - 1]?.time);
 
     const closedShares = Math.min(remainingBuyShares, totalSellShares);
-    const multiplier = side === TradeSide.LONG ? 1 : -1;
+    const isDerivative = type === TradeType.ZERTIFIKAT || type === TradeType.OPTIONSSCHEIN;
+    const isDirectShort = !isDerivative && side === TradeSide.SHORT;
+    const multiplier = isDirectShort ? -1 : 1;
     const grossPnl = closedShares > 0 ? Number(((avgExitPrice - avgEntryPrice) * closedShares * multiplier).toFixed(2)) : 0;
     const netPnl = Number((grossPnl - totalFee - totalTax).toFixed(2));
     const pnlPercent = avgEntryPrice > 0 ? Number((((avgExitPrice - avgEntryPrice) / avgEntryPrice) * 100 * multiplier).toFixed(2)) : 0;
