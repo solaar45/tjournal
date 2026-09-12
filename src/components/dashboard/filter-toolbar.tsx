@@ -107,7 +107,7 @@ export function FilterToolbar(props: FilterToolbarProps) {
           </div>
         )}
 
-        <Badge variant="secondary" className="text-[11px] font-mono h-6 px-2.5 rounded-full ml-1">
+        <Badge variant="secondary" className="text-xs font-mono h-7 px-3 rounded-full ml-1 font-medium">
           {filteredTradesCount} {filteredTradesCount === 1 ? t.calendar.trade : t.calendar.trades}
         </Badge>
       </div>

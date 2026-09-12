@@ -109,13 +109,13 @@ export function TradingCalendar({
       <CardContent className="p-0 overflow-x-auto">
         <div className="min-w-[600px]">
           {/* Weekday column headers (Mo-Fr + Weekly) */}
-          <div className="grid grid-cols-6 border-b border-border/60 bg-[#F7F5F9]/80 dark:bg-muted/30 text-[11px] font-semibold text-muted-foreground text-center">
+          <div className="grid grid-cols-6 border-b border-border/60 bg-[#F7F5F9]/80 dark:bg-muted/30 text-xs font-semibold text-muted-foreground text-center">
             {dayNames.map((d, idx) => (
-              <div key={idx} className="py-2 border-r border-border/40 last:border-r-0">
+              <div key={idx} className="py-2.5 border-r border-border/40 last:border-r-0">
                 {d}
               </div>
             ))}
-            <div className="py-2 bg-muted/50 text-foreground font-bold">
+            <div className="py-2.5 bg-muted/50 text-foreground font-bold">
               {t.calendar.weekly}
             </div>
           </div>
@@ -123,7 +123,7 @@ export function TradingCalendar({
           {/* Month grid rows (5 days + weekly = 6 cols) */}
           <div className="divide-y divide-border/40">
             {weeks.map((week, wIdx) => (
-              <div key={wIdx} className="grid grid-cols-6 min-h-[64px]">
+              <div key={wIdx} className="grid grid-cols-6 min-h-[68px]">
                 {week.days.map((day, dIdx) => {
                   const isSelected = selectedDate === day.dateStr;
                   const hasTrades = day.tradesCount > 0;
@@ -138,7 +138,7 @@ export function TradingCalendar({
                           onSelectDate(isSelected ? null : day.dateStr);
                         }
                       }}
-                      className={`relative p-2 border-r border-border/30 flex flex-col justify-between transition-all select-none ${
+                      className={`relative p-2.5 border-r border-border/30 flex flex-col justify-between transition-all select-none ${
                         !day.isCurrentMonth ? 'opacity-30 bg-muted/10' : ''
                       } ${
                         hasTrades ? 'cursor-pointer hover:bg-muted/30' : ''
@@ -151,28 +151,28 @@ export function TradingCalendar({
                       }`}
                     >
                       {/* Day Number */}
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className={`font-mono ${isSelected ? 'font-bold text-[#6979F8]' : 'text-muted-foreground'}`}>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className={`font-mono font-medium ${isSelected ? 'font-bold text-[#6979F8]' : 'text-muted-foreground'}`}>
                           {day.dayNumber}
                         </span>
                       </div>
 
                       {/* Day PnL & Trade Count */}
-                      <div className="my-auto text-center">
+                      <div className="my-auto text-center py-0.5">
                         {hasTrades ? (
                           <>
                             <div
-                              className={`text-xs font-bold font-mono tracking-tight ${getAmountColorClass(day.pnl)}`}
+                              className={`text-sm font-bold font-mono tracking-tight ${getAmountColorClass(day.pnl)}`}
                             >
                               {formatSignedCurrency(day.pnl, locale)}
                             </div>
-                            <div className="text-[10px] text-muted-foreground font-mono">
+                            <div className="text-xs text-muted-foreground font-mono mt-0.5">
                               {day.tradesCount} {day.tradesCount === 1 ? t.calendar.trade : t.calendar.trades}
                             </div>
                           </>
                         ) : (
                           <div className="h-6 flex items-center justify-center">
-                            <span className="text-[11px] text-muted-foreground/30">-</span>
+                            <span className="text-xs text-muted-foreground/30">-</span>
                           </div>
                         )}
                       </div>
@@ -181,20 +181,20 @@ export function TradingCalendar({
                 })}
 
                 {/* 6th Column: Weekly Total */}
-                <div className="p-2 bg-muted/20 flex flex-col justify-center items-center text-center">
+                <div className="p-2.5 bg-muted/20 flex flex-col justify-center items-center text-center">
                   {week.weeklyTradesCount > 0 ? (
                     <>
                       <div
-                        className={`text-xs font-bold font-mono tracking-tight ${getAmountColorClass(week.weeklyPnl)}`}
+                        className={`text-sm font-bold font-mono tracking-tight ${getAmountColorClass(week.weeklyPnl)}`}
                       >
                         {formatSignedCurrency(week.weeklyPnl, locale)}
                       </div>
-                      <div className="text-[10px] text-muted-foreground font-mono">
+                      <div className="text-xs text-muted-foreground font-mono mt-0.5">
                         {week.weeklyTradesCount} {week.weeklyTradesCount === 1 ? t.calendar.trade : t.calendar.trades}
                       </div>
                     </>
                   ) : (
-                    <span className="text-[11px] text-muted-foreground/30">-</span>
+                    <span className="text-xs text-muted-foreground/30">-</span>
                   )}
                 </div>
               </div>

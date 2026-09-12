@@ -81,7 +81,7 @@ function getTransactionRowBg(type: TransactionType, pnl?: number): string {
  * Get background color for header columns (Eggplore subtle slate-neutral)
  */
 function getHeaderBg(_columnId?: string): string {
-  return 'bg-[#F7F5F9]/80 dark:bg-muted/30 text-muted-foreground font-semibold text-[11px] uppercase tracking-wider';
+  return 'bg-[#F7F5F9]/80 dark:bg-muted/40 text-muted-foreground font-semibold text-xs py-3';
 }
 
 /**
@@ -135,13 +135,13 @@ export function PositionTableTanstack({
             <ArrowUpDown className="ml-1 h-3 w-3" />
           </Button>
         ),
-        cell: ({ row }) => <span className="font-medium">{row.original.symbol}</span>,
+        cell: ({ row }) => <span className="font-bold text-sm text-foreground">{row.original.symbol}</span>,
       },
       {
         id: 'type',
         accessorKey: 'type',
         header: t.common.type,
-        cell: ({ row }) => <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-full font-medium">{row.original.type}</Badge>,
+        cell: ({ row }) => <Badge variant="outline" className="text-xs px-2.5 py-0.5 rounded-full font-medium">{row.original.type}</Badge>,
       },
       {
         id: 'status',
@@ -149,7 +149,7 @@ export function PositionTableTanstack({
         cell: ({ row }) => {
           const isOpen = row.original.remainingShares > 0;
           return (
-            <Badge variant={isOpen ? 'blue' : 'secondary'} className="text-[10px] px-2 py-0.5 rounded-full">
+            <Badge variant={isOpen ? 'blue' : 'secondary'} className="text-xs px-2.5 py-0.5 rounded-full font-medium">
               {isOpen ? t.common.open : t.common.closed}
             </Badge>
           );
@@ -165,17 +165,17 @@ export function PositionTableTanstack({
             <div className="flex items-center">
               {isLong ? (
                 <span
-                  className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#D5F2EA] text-[#00C48C] dark:bg-[#122B24] dark:text-[#7DDFC3]"
+                  className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#D5F2EA] text-[#00C48C] dark:bg-[#122B24] dark:text-[#7DDFC3]"
                   title="Long"
                 >
-                  <ArrowUp className="h-3 w-3 stroke-[2.5]" />
+                  <ArrowUp className="h-3.5 w-3.5 stroke-[2.5]" />
                 </span>
               ) : (
                 <span
-                  className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#FBE4E8] text-[#FF647C] dark:bg-[#33151D] dark:text-[#FDAFBB]"
+                  className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FBE4E8] text-[#FF647C] dark:bg-[#33151D] dark:text-[#FDAFBB]"
                   title="Short"
                 >
-                  <ArrowDown className="h-3 w-3 stroke-[2.5]" />
+                  <ArrowDown className="h-3.5 w-3.5 stroke-[2.5]" />
                 </span>
               )}
             </div>
@@ -187,7 +187,7 @@ export function PositionTableTanstack({
         accessorKey: 'totalEntryShares',
         header: t.common.shares,
         cell: ({ row }) => (
-          <span className="text-sm font-medium">
+          <span className="text-sm font-mono font-medium">
             {row.original.totalEntryShares}
           </span>
         ),
@@ -196,7 +196,7 @@ export function PositionTableTanstack({
         id: 'entryDate',
         header: `${t.dashboard.entryGroup} ${t.common.date}`,
         cell: ({ row }) => (
-          <span className="text-sm">
+          <span className="text-sm font-mono text-muted-foreground">
             {formatDateSafe(row.original.firstEntryDate, 'MMM dd, yyyy')}
           </span>
         ),
@@ -209,14 +209,14 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="h-8 text-xs font-semibold"
+            className="-ml-3 h-8 text-xs font-semibold"
           >
             {t.dashboard.entryGroup} {t.common.price}
             <ArrowUpDown className="ml-1 h-3 w-3" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-sm">
+          <span className="text-sm font-mono font-medium">
             {formatCurrency(row.original.avgEntryPrice, locale)}
           </span>
         ),
@@ -225,7 +225,7 @@ export function PositionTableTanstack({
         id: 'exitDate',
         header: `${t.dashboard.exitGroup} ${t.common.date}`,
         cell: ({ row }) => (
-          <span className="text-sm">
+          <span className="text-sm font-mono text-muted-foreground">
             {row.original.lastExitDate
               ? formatDateSafe(row.original.lastExitDate, 'MMM dd, yyyy')
               : <span className="text-muted-foreground">-</span>}
@@ -236,7 +236,7 @@ export function PositionTableTanstack({
         id: 'exitPrice',
         header: `${t.dashboard.exitGroup} ${t.common.price}`,
         cell: ({ row }) => (
-          <span className="text-sm">
+          <span className="text-sm font-mono font-medium">
             {row.original.avgExitPrice
               ? formatCurrency(row.original.avgExitPrice, locale)
               : <span className="text-muted-foreground">-</span>}
@@ -247,7 +247,7 @@ export function PositionTableTanstack({
         id: 'fee',
         header: t.common.fee,
         cell: ({ row }) => (
-          <span className="text-xs font-mono">
+          <span className="text-sm font-mono text-muted-foreground">
             {formatCurrency(row.original.fee || 0, locale)}
           </span>
         ),
@@ -256,7 +256,7 @@ export function PositionTableTanstack({
         id: 'tax',
         header: t.common.tax,
         cell: ({ row }) => (
-          <span className={cn("text-xs font-mono font-medium", getTaxColorClass(row.original.tax))}>
+          <span className={cn("text-sm font-mono font-medium", getTaxColorClass(row.original.tax))}>
             {formatTax(row.original.tax, locale)}
           </span>
         ),
@@ -269,7 +269,7 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="h-8 text-xs font-semibold"
+            className="-ml-3 h-8 text-xs font-semibold"
           >
             Net P&L
             <ArrowUpDown className="ml-1 h-3 w-3" />
@@ -283,7 +283,7 @@ export function PositionTableTanstack({
               {formatSignedCurrency(netPnl, locale)}
             </div>
           ) : (
-            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground font-mono text-sm">-</span>
           );
         },
       },
@@ -296,7 +296,7 @@ export function PositionTableTanstack({
               variant="ghost"
               size="sm"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-              className="h-8 text-xs font-semibold"
+              className="-mr-3 h-8 text-xs font-semibold"
             >
               Gross P&L (%)
               <ArrowUpDown className="ml-1 h-3 w-3" />
@@ -306,18 +306,18 @@ export function PositionTableTanstack({
         cell: ({ row }) => {
           const isClosed = row.original.remainingShares === 0 || row.original.status === PositionStatus.CLOSED;
           return isClosed && row.original.totalPnL !== undefined ? (
-            <div className="text-xs text-right font-mono">
-              <span className={cn('font-medium', getAmountColorClass(row.original.totalPnL))}>
+            <div className="text-sm text-right font-mono">
+              <span className={cn('font-semibold', getAmountColorClass(row.original.totalPnL))}>
                 {formatSignedCurrency(row.original.totalPnL, locale)}
               </span>
               {row.original.totalPnLPercent !== undefined && (
-                <span className={cn('ml-1', getAmountColorClass(row.original.totalPnLPercent))}>
+                <span className={cn('ml-1.5 font-medium', getAmountColorClass(row.original.totalPnLPercent))}>
                   ({formatSignedPercent(row.original.totalPnLPercent, locale)})
                 </span>
               )}
             </div>
           ) : (
-            <div className="text-right text-muted-foreground">-</div>
+            <div className="text-right text-muted-foreground font-mono text-sm">-</div>
           );
         },
       },
@@ -472,76 +472,76 @@ export function PositionTableTanstack({
                         <TableCell>
                           <Badge
                             variant={isEntry ? 'outline' : 'secondary'}
-                            className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                            className="text-xs px-2.5 py-0.5 rounded-full font-medium"
                           >
                             {isEntry ? 'Entry' : 'Exit'}
                           </Badge>
                         </TableCell>
 
                         {/* 4. Status placeholder */}
-                        <TableCell className="text-muted-foreground">-</TableCell>
+                        <TableCell className="text-muted-foreground font-mono text-xs">-</TableCell>
 
                         {/* 5. Side placeholder */}
-                        <TableCell className="text-muted-foreground">-</TableCell>
+                        <TableCell className="text-muted-foreground font-mono text-xs">-</TableCell>
 
                         {/* 6. Shares */}
-                        <TableCell className="font-medium">
+                        <TableCell className="font-mono text-xs font-medium">
                           {isExit && '-'}{txn.shares}
                         </TableCell>
 
                         {/* 7. Entry Date */}
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-muted-foreground font-mono text-xs">
                           {isEntry ? formatDateSafe(txn.date, 'MMM dd, yyyy') : '-'}
                         </TableCell>
 
                         {/* 8. Entry Price */}
-                        <TableCell className="font-mono">
+                        <TableCell className="font-mono text-xs">
                           {isEntry ? formatCurrency(txn.price, locale) : '-'}
                         </TableCell>
 
                         {/* 9. Exit Date */}
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-muted-foreground font-mono text-xs">
                           {isExit ? formatDateSafe(txn.date, 'MMM dd, yyyy') : '-'}
                         </TableCell>
 
                         {/* 10. Exit Price */}
-                        <TableCell className="font-mono">
+                        <TableCell className="font-mono text-xs">
                           {isExit ? formatCurrency(txn.price, locale) : '-'}
                         </TableCell>
 
                         {/* 11. Fee */}
-                        <TableCell className="font-mono">
+                        <TableCell className="font-mono text-xs text-muted-foreground">
                           {txn.fee !== undefined ? formatCurrency(txn.fee, locale) : '-'}
                         </TableCell>
 
                         {/* 12. Tax */}
-                        <TableCell className={cn("font-mono font-medium", getTaxColorClass(txn.tax))}>
+                        <TableCell className={cn("font-mono text-xs font-medium", getTaxColorClass(txn.tax))}>
                           {formatTax(txn.tax, locale)}
                         </TableCell>
 
                         {/* 13. Net P&L */}
                         <TableCell>
                           {isExit && netPnl !== undefined ? (
-                            <div className={cn('font-bold font-mono', getAmountColorClass(netPnl))}>
+                            <div className={cn('font-bold font-mono text-xs', getAmountColorClass(netPnl))}>
                               {formatSignedCurrency(netPnl, locale)}
                             </div>
                           ) : !isExit ? (
-                            <span className="text-muted-foreground font-mono">
+                            <span className="text-muted-foreground font-mono text-xs">
                               ø {formatCurrency(txn.positionAvgPrice, locale)}
                             </span>
                           ) : (
-                            <span className="text-muted-foreground">-</span>
+                            <span className="text-muted-foreground font-mono text-xs">-</span>
                           )}
                         </TableCell>
 
                         {/* 14. Gross P&L */}
                         <TableCell className="text-right">
                           {isExit && txn.pnl !== undefined ? (
-                            <div className={cn('font-medium font-mono', getAmountColorClass(txn.pnl))}>
+                            <div className={cn('font-semibold font-mono text-xs', getAmountColorClass(txn.pnl))}>
                               {formatSignedCurrency(txn.pnl, locale)}
                             </div>
                           ) : (
-                            <span className="text-muted-foreground">-</span>
+                            <span className="text-muted-foreground font-mono text-xs">-</span>
                           )}
                         </TableCell>
 
