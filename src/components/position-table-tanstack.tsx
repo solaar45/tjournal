@@ -20,6 +20,8 @@ import {
   TrendingDown,
   Edit,
   Plus,
+  MoreHorizontal,
+  Trash2,
   ArrowUpDown,
   ArrowUpRight,
   ArrowDownRight,
@@ -27,6 +29,13 @@ import {
 import { Position, Transaction, TransactionType } from '@/types/position';
 import { formatCurrency, formatPercent, formatDateSafe } from '@/lib/tradeUtils';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -41,6 +50,7 @@ interface PositionTableTanstackProps {
   positions: Position[];
   onEdit?: (position: Position) => void;
   onAddTransaction?: (positionId: string) => void;
+  onDelete?: (position: Position) => void;
 }
 
 /**
@@ -101,6 +111,7 @@ export function PositionTableTanstack({
   positions,
   onEdit,
   onAddTransaction,
+  onDelete,
 }: PositionTableTanstackProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({}); // Empty = all collapsed
@@ -321,49 +332,82 @@ export function PositionTableTanstack({
           );
         },
       },
-      // Actions Column
+      // Actions Column (Option C: Kompaktes Dropdown-Menü)
       {
         id: 'actions',
-        header: () => <div className="text-right pr-1">Aktionen</div>,
-        size: 90,
-        cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1 min-w-[64px]">
-            {onEdit && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
-                title="Trade bearbeiten"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(row.original);
-                }}
-              >
-                <Edit className="h-3.5 w-3.5" />
-              </Button>
-            )}
-            {onAddTransaction && row.original.remainingShares > 0 ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700"
-                title="Transaktion (Teilverkauf / Nachkauf) hinzufügen"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddTransaction(row.original.id);
-                }}
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </Button>
-            ) : (
-              /* Unsichtbarer Platzhalter, damit die Spaltenausrichtung auf den Pixel stabil bleibt */
-              <div className="w-7 h-7 shrink-0" aria-hidden="true" />
-            )}
-          </div>
-        ),
+        header: () => <div className="text-right pr-2">Aktionen</div>,
+        size: 60,
+        cell: ({ row }) => {
+          const isClosed = row.original.remainingShares === 0;
+
+          return (
+            <div className="flex items-center justify-end">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                    onClick={(e) => e.stopPropagation()}
+                    title="Aktionen anzeigen"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">Aktionen</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56" onClick={(e) => e.stopPropagation()}>
+                  {onEdit && (
+                    <DropdownMenuItem
+                      onClick={() => onEdit(row.original)}
+                      className="cursor-pointer"
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      <span>Trade bearbeiten</span>
+                    </DropdownMenuItem>
+                  )}
+
+                  <DropdownMenuItem
+                    disabled={isClosed}
+                    onClick={() => {
+                      if (!isClosed && onAddTransaction) {
+                        onAddTransaction(row.original.id);
+                      }
+                    }}
+                    className={cn(
+                      "cursor-pointer",
+                      isClosed && "opacity-50 cursor-not-allowed text-muted-foreground focus:bg-transparent"
+                    )}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    <span>Transaktion hinzufügen</span>
+                    {isClosed && (
+                      <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-normal">
+                        Geschlossen
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+
+                  {onDelete && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => onDelete(row.original)}
+                        className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Trade löschen</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
       },
     ],
-    [onEdit, onAddTransaction]
+    [onEdit, onAddTransaction, onDelete]
   );
 
   const table = useReactTable({

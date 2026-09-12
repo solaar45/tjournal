@@ -215,6 +215,11 @@ export default function TradesPage() {
                 console.log('Add transaction to:', id);
                 // Future: Add transaction dialog
               }}
+              onDelete={(position) => {
+                if (window.confirm(`Möchtest du den Trade für "${position.symbol}" wirklich löschen?`)) {
+                  deleteTrade.mutate(position.id);
+                }
+              }}
             />
           </div>
         </CardContent>
