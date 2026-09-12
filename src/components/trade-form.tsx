@@ -314,7 +314,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-6 sm:p-8">
         <DialogHeader>
           <DialogTitle>Neuen Trade erfassen</DialogTitle>
           <DialogDescription>
@@ -646,7 +646,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
               </div>
             )}
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="flex-wrap items-center justify-end gap-2 pt-2">
               <Button
                 type="button"
                 variant="outline"

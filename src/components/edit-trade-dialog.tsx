@@ -200,7 +200,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-6 sm:p-8">
         <DialogHeader>
           <DialogTitle>Trade bearbeiten</DialogTitle>
           <DialogDescription>
