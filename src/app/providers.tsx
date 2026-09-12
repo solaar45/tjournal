@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeProvider } from 'next-themes';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from '@/lib/queryClient';
@@ -11,6 +12,7 @@ import { TradeFilterProvider } from '@/context/trade-filter-context';
  * Global Providers für die App
  * 
  * Enthält:
+ * - ThemeProvider: next-themes für Dark/Light Mode
  * - LanguageProvider: i18n Übersetzungen
  * - QueryClientProvider: TanStack Query für Server State Management
  * - TradeFilterProvider: Globaler Filter- & Trade-State für alle Seiten
@@ -19,14 +21,16 @@ import { TradeFilterProvider } from '@/context/trade-filter-context';
  */
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <LanguageProvider>
-      <QueryClientProvider client={queryClient}>
-        <TradeFilterProvider>
-          {children}
-        </TradeFilterProvider>
-        <Toaster richColors position="top-right" />
-        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
-      </QueryClientProvider>
-    </LanguageProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <LanguageProvider>
+        <QueryClientProvider client={queryClient}>
+          <TradeFilterProvider>
+            {children}
+          </TradeFilterProvider>
+          <Toaster richColors position="top-right" />
+          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
+        </QueryClientProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }

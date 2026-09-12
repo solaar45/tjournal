@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LanguageToggle } from '@/components/language-toggle';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { TrendingUp, Layers, Calendar, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/i18n/LanguageContext';
@@ -80,7 +81,9 @@ export function LayoutHeader() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <ThemeToggle />
+          <div className="h-4 w-px bg-border/60" />
           <LanguageToggle />
         </div>
       </div>

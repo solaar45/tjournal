@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${ibmPlexMono.variable} ${inter.className} font-sans antialiased`}>
         <Providers>
           <div className="min-h-screen bg-background flex flex-col justify-between selection:bg-[#E5E7FA] selection:text-[#6979F8]">

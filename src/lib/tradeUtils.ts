@@ -311,7 +311,8 @@ export interface WeekCalendarRow {
 }
 
 /**
- * Erstellt die Monatsraster-Daten für den Handelskalender (Mo-So mit Wochensummen)
+ * Erstellt die Monatsraster-Daten für den Handelskalender (Mo-Fr mit Wochensummen)
+ * Samstage und Sonntage werden ausgeschlossen.
  */
 export function calculateDailyCalendarData(
   trades: Trade[],
@@ -330,10 +331,17 @@ export function calculateDailyCalendarData(
   const daysBefore = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
   const calendarStartDate = new Date(year, month, 1 - daysBefore);
 
-  // Finde Sonntag nach oder am letzten Tag des Monats
+  // Finde Freitag nach oder am letzten Tag des Monats
   const endDayOfWeek = lastDayOfMonth.getDay();
-  const daysAfter = endDayOfWeek === 0 ? 0 : 7 - endDayOfWeek;
-  const calendarEndDate = new Date(year, month + 1, daysAfter);
+  let daysToFriday = 0;
+  if (endDayOfWeek === 0) {
+    daysToFriday = -2;
+  } else if (endDayOfWeek === 6) {
+    daysToFriday = -1;
+  } else {
+    daysToFriday = 5 - endDayOfWeek;
+  }
+  const calendarEndDate = new Date(year, month, lastDayOfMonth.getDate() + daysToFriday);
 
   // Map von YYYY-MM-DD zu Trades
   const tradesByDay: Record<string, Trade[]> = {};
@@ -353,6 +361,18 @@ export function calculateDailyCalendarData(
   let weekIndex = 1;
 
   while (currentIterDate <= calendarEndDate) {
+    const dayOfWeek = currentIterDate.getDay();
+
+    // Überspringe Samstag (6) und Sonntag (0)
+    if (dayOfWeek === 6) {
+      currentIterDate.setDate(currentIterDate.getDate() + 2);
+      continue;
+    }
+    if (dayOfWeek === 0) {
+      currentIterDate.setDate(currentIterDate.getDate() + 1);
+      continue;
+    }
+
     const iterYear = currentIterDate.getFullYear();
     const iterMonth = currentIterDate.getMonth();
     const iterDay = currentIterDate.getDate();
@@ -372,7 +392,7 @@ export function calculateDailyCalendarData(
       trades: dayTrades,
     });
 
-    if (currentWeekDays.length === 7) {
+    if (currentWeekDays.length === 5) {
       const weeklyPnl = currentWeekDays.reduce((sum, d) => sum + (d.isCurrentMonth ? d.pnl : 0), 0);
       const weeklyTradesCount = currentWeekDays.reduce((sum, d) => sum + (d.isCurrentMonth ? d.tradesCount : 0), 0);
       weeks.push({
@@ -385,6 +405,18 @@ export function calculateDailyCalendarData(
     }
 
     currentIterDate.setDate(currentIterDate.getDate() + 1);
+  }
+
+  // Falls die letzte Woche unvollständig war (sicherheitshalber)
+  if (currentWeekDays.length > 0) {
+    const weeklyPnl = currentWeekDays.reduce((sum, d) => sum + (d.isCurrentMonth ? d.pnl : 0), 0);
+    const weeklyTradesCount = currentWeekDays.reduce((sum, d) => sum + (d.isCurrentMonth ? d.tradesCount : 0), 0);
+    weeks.push({
+      weekNumber: weekIndex++,
+      days: currentWeekDays,
+      weeklyPnl: Number(weeklyPnl.toFixed(2)),
+      weeklyTradesCount,
+    });
   }
 
   return weeks;

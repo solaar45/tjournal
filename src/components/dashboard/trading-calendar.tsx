@@ -57,8 +57,8 @@ export function TradingCalendar({
   const weeks = calculateDailyCalendarData(trades, currentMonthDate);
 
   const dayNames = language === 'de'
-    ? ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
-    : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    ? ['Mo', 'Di', 'Mi', 'Do', 'Fr']
+    : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
   return (
     <Card className="border-border/60 bg-card/60 backdrop-blur-xs overflow-hidden">
@@ -107,9 +107,9 @@ export function TradingCalendar({
       </CardHeader>
 
       <CardContent className="p-0 overflow-x-auto">
-        <div className="min-w-[700px]">
-          {/* Weekday column headers */}
-          <div className="grid grid-cols-8 border-b border-border/60 bg-[#F7F5F9]/80 dark:bg-muted/30 text-[11px] font-semibold text-muted-foreground text-center">
+        <div className="min-w-[600px]">
+          {/* Weekday column headers (Mo-Fr + Weekly) */}
+          <div className="grid grid-cols-6 border-b border-border/60 bg-[#F7F5F9]/80 dark:bg-muted/30 text-[11px] font-semibold text-muted-foreground text-center">
             {dayNames.map((d, idx) => (
               <div key={idx} className="py-2 border-r border-border/40 last:border-r-0">
                 {d}
@@ -120,10 +120,10 @@ export function TradingCalendar({
             </div>
           </div>
 
-          {/* Month grid rows */}
+          {/* Month grid rows (5 days + weekly = 6 cols) */}
           <div className="divide-y divide-border/40">
             {weeks.map((week, wIdx) => (
-              <div key={wIdx} className="grid grid-cols-8 min-h-[64px]">
+              <div key={wIdx} className="grid grid-cols-6 min-h-[64px]">
                 {week.days.map((day, dIdx) => {
                   const isSelected = selectedDate === day.dateStr;
                   const hasTrades = day.tradesCount > 0;
@@ -180,7 +180,7 @@ export function TradingCalendar({
                   );
                 })}
 
-                {/* 8th Column: Weekly Total */}
+                {/* 6th Column: Weekly Total */}
                 <div className="p-2 bg-muted/20 flex flex-col justify-center items-center text-center">
                   {week.weeklyTradesCount > 0 ? (
                     <>
