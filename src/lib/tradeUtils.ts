@@ -14,10 +14,14 @@ export function calculatePnL(trade: Trade): Trade {
   const multiplier = trade.side === 'Long' ? 1 : -1;
   const pnl = (trade.exitPrice - trade.entryPrice) * exitShares * multiplier;
   const pnlPercent = ((trade.exitPrice - trade.entryPrice) / trade.entryPrice) * 100 * multiplier;
+  const fee = trade.fee || 0;
+  const tax = trade.tax || 0;
+  const netPnl = pnl - fee - tax;
 
   return {
     ...trade,
     pnl: Number(pnl.toFixed(2)),
+    netPnl: Number(netPnl.toFixed(2)),
     pnlPercent: Number(pnlPercent.toFixed(2)),
   };
 }

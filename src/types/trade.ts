@@ -46,8 +46,12 @@ export interface Trade {
   exitDate?: string;
   exitPrice?: number;
   exitShares?: number; // Anzahl beim Ausstieg (Teilverkauf)
-  pnl?: number; // calculated field
+  fee?: number; // Transaktionsgebühren
+  tax?: number; // Einbehaltene Steuern (z.B. Abgeltungsteuer)
+  pnl?: number; // Brutto P&L
+  netPnl?: number; // Netto P&L nach Gebühren und Steuern
   pnlPercent?: number; // calculated field
+  notes?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -65,6 +69,9 @@ export interface CreateTradeDto {
   exitDate?: string;
   exitPrice?: number;
   exitShares?: number;
+  fee?: number;
+  tax?: number;
+  notes?: string;
 }
 
 export interface UpdateTradeDto {
@@ -80,6 +87,9 @@ export interface UpdateTradeDto {
   exitDate?: string;
   exitPrice?: number;
   exitShares?: number;
+  fee?: number;
+  tax?: number;
+  notes?: string;
 }
 
 export interface TradeStats {

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TradeForm } from '@/components/trade-form';
+import { CsvImportDialog } from '@/components/csv-import-dialog';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { TradeType, TradeSide } from '@/types/trade';
@@ -54,7 +55,10 @@ export default function DashboardPage() {
             Übersicht über deine Trading-Performance
           </p>
         </div>
-        <TradeForm />
+        <div className="flex flex-wrap items-center gap-2">
+          <CsvImportDialog />
+          <TradeForm />
+        </div>
       </div>
 
       {/* KPI Cards */}

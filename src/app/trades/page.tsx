@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { TradeForm } from '@/components/trade-form';
 import { QuickTradeForm } from '@/components/quick-trade-form';
 import { EditTradeDialog } from '@/components/edit-trade-dialog';
+import { CsvImportDialog } from '@/components/csv-import-dialog';
 
 /**
  * Convert Trade to Position format for display
@@ -137,7 +138,8 @@ export default function TradesPage() {
             Verwalte und analysiere deine {stats.total} Trades
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <CsvImportDialog />
           <QuickTradeForm />
           <TradeForm />
         </div>

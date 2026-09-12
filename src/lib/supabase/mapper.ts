@@ -16,6 +16,8 @@ export interface TradeRow {
   exit_date?: string | null;
   exit_price?: number | null;
   exit_shares?: number | null;
+  fee?: number | null;
+  tax?: number | null;
   notes?: string | null;
   created_at: string;
   updated_at: string;
@@ -39,6 +41,9 @@ export function mapRowToTrade(row: TradeRow): Trade {
     exitDate: row.exit_date || undefined,
     exitPrice: row.exit_price != null ? Number(row.exit_price) : undefined,
     exitShares: row.exit_shares != null ? Number(row.exit_shares) : undefined,
+    fee: row.fee != null ? Number(row.fee) : undefined,
+    tax: row.tax != null ? Number(row.tax) : undefined,
+    notes: row.notes || undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -63,6 +68,9 @@ export function mapCreateDtoToRow(dto: CreateTradeDto) {
     exit_date: dto.exitDate || null,
     exit_price: dto.exitPrice != null ? dto.exitPrice : null,
     exit_shares: dto.exitShares != null ? dto.exitShares : null,
+    fee: dto.fee != null ? dto.fee : 0,
+    tax: dto.tax != null ? dto.tax : 0,
+    notes: dto.notes || null,
   };
 }
 
@@ -84,6 +92,9 @@ export function mapUpdateDtoToRow(dto: UpdateTradeDto): Record<string, any> {
   if (dto.exitDate !== undefined) row.exit_date = dto.exitDate;
   if (dto.exitPrice !== undefined) row.exit_price = dto.exitPrice;
   if (dto.exitShares !== undefined) row.exit_shares = dto.exitShares;
+  if (dto.fee !== undefined) row.fee = dto.fee;
+  if (dto.tax !== undefined) row.tax = dto.tax;
+  if (dto.notes !== undefined) row.notes = dto.notes;
 
   return row;
 }

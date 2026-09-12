@@ -21,10 +21,16 @@ create table if not exists public.trades (
   exit_date timestamptz,
   exit_price numeric,
   exit_shares numeric,
+  fee numeric default 0,
+  tax numeric default 0,
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Falls Tabelle bereits existiert: Spalten nachrüsten
+alter table public.trades add column if not exists fee numeric default 0;
+alter table public.trades add column if not exists tax numeric default 0;
 
 -- 2. Performance-Indizes anlegen
 create index if not exists idx_trades_user_id on public.trades(user_id);
