@@ -27,7 +27,7 @@ import {
 import { useCreateTrade } from '@/hooks/useTrades';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { toast } from 'sonner';
-import { Upload, FileText, CheckCircle2, ArrowRight, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { Download, Upload, FileText, CheckCircle2, ArrowRight, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CsvImportDialogProps {
@@ -165,7 +165,7 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
             size="sm"
             className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
           >
-            <Upload className="h-3.5 w-3.5" />
+            <Download className="h-3.5 w-3.5" />
             {t.csvImport.triggerButton}
           </Button>
         )}

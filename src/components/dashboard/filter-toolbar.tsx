@@ -7,7 +7,7 @@ import { TradeForm } from '@/components/trade-form';
 import { CsvImportDialog } from '@/components/csv-import-dialog';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { TradeType } from '@/types/trade';
-import { Download, X } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { useTradeFilters, TimeframeFilter } from '@/context/trade-filter-context';
 
 export type { TimeframeFilter };
@@ -121,7 +121,7 @@ export function FilterToolbar(props: FilterToolbarProps) {
           disabled={filteredTradesCount === 0}
           className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
         >
-          <Download className="h-3.5 w-3.5" />
+          <Upload className="h-3.5 w-3.5" />
           <span>{t.filters.exportCsv}</span>
         </Button>
         <CsvImportDialog />
