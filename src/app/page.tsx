@@ -292,26 +292,16 @@ export default function DashboardPage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  {/* Main Header Row */}
-                  <TableRow>
-                    <TableHead colSpan={6} className="text-center bg-slate-50 dark:bg-slate-900 font-semibold">{t.dashboard.infoGroup}</TableHead>
-                    <TableHead colSpan={2} className="text-center bg-blue-50 dark:bg-blue-950/40 font-semibold">{t.dashboard.entryGroup}</TableHead>
-                    <TableHead colSpan={2} className="text-center bg-amber-50 dark:bg-amber-950/40 font-semibold">{t.dashboard.exitGroup}</TableHead>
-                    <TableHead colSpan={2} className="text-center bg-purple-50 dark:bg-purple-950/40 font-semibold">{t.dashboard.costsGroup}</TableHead>
-                    <TableHead colSpan={2} className="text-center bg-green-50 dark:bg-green-950/40 font-semibold">{t.dashboard.returnGroup}</TableHead>
-                  </TableRow>
-                  {/* Sub-Header Row */}
                   <TableRow className="border-b text-xs">
                     <TableHead className="bg-slate-50 dark:bg-slate-900">{t.common.symbol}</TableHead>
                     <TableHead className="bg-slate-50 dark:bg-slate-900">{t.common.type}</TableHead>
                     <TableHead className="bg-slate-50 dark:bg-slate-900">{t.common.status}</TableHead>
                     <TableHead className="bg-slate-50 dark:bg-slate-900">{t.common.side}</TableHead>
-                    <TableHead className="bg-slate-50 dark:bg-slate-900">{t.common.broker}</TableHead>
                     <TableHead className="bg-slate-50 dark:bg-slate-900">{t.common.shares}</TableHead>
-                    <TableHead className="bg-blue-50 dark:bg-blue-950/40">{t.common.date}</TableHead>
-                    <TableHead className="bg-blue-50 dark:bg-blue-950/40">{t.common.price}</TableHead>
-                    <TableHead className="bg-amber-50 dark:bg-amber-950/40">{t.common.date}</TableHead>
-                    <TableHead className="bg-amber-50 dark:bg-amber-950/40">{t.common.price}</TableHead>
+                    <TableHead className="bg-blue-50 dark:bg-blue-950/40">{t.dashboard.entryGroup} {t.common.date}</TableHead>
+                    <TableHead className="bg-blue-50 dark:bg-blue-950/40">{t.dashboard.entryGroup} {t.common.price}</TableHead>
+                    <TableHead className="bg-amber-50 dark:bg-amber-950/40">{t.dashboard.exitGroup} {t.common.date}</TableHead>
+                    <TableHead className="bg-amber-50 dark:bg-amber-950/40">{t.dashboard.exitGroup} {t.common.price}</TableHead>
                     <TableHead className="bg-purple-50 dark:bg-purple-950/40">{t.common.fee}</TableHead>
                     <TableHead className="bg-purple-50 dark:bg-purple-950/40">{t.common.tax}</TableHead>
                     <TableHead className="bg-green-50 dark:bg-green-950/40">Net P&L</TableHead>
@@ -325,7 +315,7 @@ export default function DashboardPage() {
 
                     return (
                       <TableRow key={trade.id}>
-                        {/* Information Group */}
+                        {/* Information */}
                         <TableCell className="font-medium">{trade.symbol}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{trade.type}</Badge>
@@ -340,12 +330,9 @@ export default function DashboardPage() {
                             {trade.side}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm">
-                          {trade.broker || <span className="text-muted-foreground">-</span>}
-                        </TableCell>
-                        <TableCell>{trade.shares}</TableCell>
+                        <TableCell>{trade.entryShares || trade.shares}</TableCell>
 
-                        {/* Entry Group */}
+                        {/* Entry */}
                         <TableCell className="text-sm">
                           {formatDateSafe(trade.entryDate, 'MMM dd, yyyy')}
                         </TableCell>
@@ -353,7 +340,7 @@ export default function DashboardPage() {
                           {formatCurrency(trade.entryPrice, locale)}
                         </TableCell>
 
-                        {/* Exit Group */}
+                        {/* Exit */}
                         <TableCell className="text-sm">
                           {formatDateSafe(trade.exitDate, 'MMM dd, yyyy')}
                         </TableCell>
@@ -378,7 +365,7 @@ export default function DashboardPage() {
                           )}
                         </TableCell>
 
-                        {/* Return Group */}
+                        {/* Return */}
                         <TableCell>
                           {isClosed && netPnl !== undefined ? (
                             <div className={`font-bold text-sm ${

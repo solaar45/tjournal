@@ -229,32 +229,6 @@ export default function TradesPage() {
         </CardContent>
       </Card>
 
-      {/* Feature Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">⚡ Neue Features</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-green-600">✓</span>
-              <span><strong>Kompakte Ansicht:</strong> Details nur bei Bedarf durch Expand/Collapse</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-green-600">✓</span>
-              <span><strong>Sortierung:</strong> Click auf Symbol, Preis oder P/L um zu sortieren</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-green-600">✓</span>
-              <span><strong>Schneller Überblick:</strong> Alle wichtigen Metriken auf einen Blick</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600">➜</span>
-              <span><strong>Bald:</strong> Multiple Entries/Exits pro Trade, Filterung, Export</span>
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
 
       {/* Edit Dialog */}
       {editingTrade && (
