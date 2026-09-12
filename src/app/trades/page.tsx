@@ -103,7 +103,11 @@ function tradeToPosition(trade: Trade): Position {
   };
 }
 
+import { useTranslation } from '@/i18n/LanguageContext';
+import { formatCurrency } from '@/lib/tradeUtils';
+
 export default function TradesPage() {
+  const { t, locale } = useTranslation();
   const { data: trades, isLoading } = useTrades();
   const deleteTrade = useDeleteTrade();
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
@@ -134,7 +138,7 @@ export default function TradesPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Lade Trades...</p>
+          <p className="text-muted-foreground">{t.common.loading}</p>
         </div>
       </div>
     );
@@ -145,9 +149,9 @@ export default function TradesPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Alle Trades</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t.tradesPage.title}</h1>
           <p className="text-muted-foreground">
-            Verwalte und analysiere deine {stats.total} Trades
+            {t.tradesPage.subtitle}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -161,34 +165,34 @@ export default function TradesPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Gesamt</CardDescription>
+            <CardDescription>{t.tradesPage.totalTrades}</CardDescription>
             <CardTitle className="text-3xl">{stats.total}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Offen [O]</CardDescription>
+            <CardDescription>{t.tradesPage.openTrades}</CardDescription>
             <CardTitle className="text-3xl text-blue-600">{stats.open}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Geschlossen [C]</CardDescription>
+            <CardDescription>{t.tradesPage.closedTrades}</CardDescription>
             <CardTitle className="text-3xl text-gray-600">{stats.closed}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Gesamt P/L (Netto / Brutto)</CardDescription>
+            <CardDescription>{t.tradesPage.totalPnL}</CardDescription>
             <CardTitle
               className={`text-2xl ${
                 stats.totalNetPnL >= 0 ? 'text-emerald-600' : 'text-rose-600'
               }`}
             >
-              {stats.totalNetPnL.toFixed(2)} € <span className="text-xs font-normal text-muted-foreground">Netto</span>
+              {formatCurrency(stats.totalNetPnL, locale)} <span className="text-xs font-normal text-muted-foreground">{t.common.net}</span>
             </CardTitle>
             <div className="text-xs text-muted-foreground mt-1">
-              Brutto: {stats.totalPnL.toFixed(2)} € (Geb: {stats.totalFees.toFixed(2)} € | St: {stats.totalTax.toFixed(2)} €)
+              {t.common.gross}: {formatCurrency(stats.totalPnL, locale)} ({t.common.fees}: {formatCurrency(stats.totalFees, locale)} | {t.common.taxes}: {formatCurrency(stats.totalTax, locale)})
             </div>
           </CardHeader>
         </Card>
@@ -198,9 +202,9 @@ export default function TradesPage() {
       <Card>
         <CardContent className="p-0">
           <div className="p-6 border-b">
-            <h3 className="font-semibold text-lg">Trade Übersicht</h3>
+            <h3 className="font-semibold text-lg">{t.tradesPage.tableTitle}</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Klicke auf eine Zeile, um Entry/Exit Details anzuzeigen. Sortiere durch Click auf Spalten-Header.
+              {t.tradesPage.tableSubtitle}
             </p>
           </div>
           <div className="p-6">
@@ -216,7 +220,7 @@ export default function TradesPage() {
                 // Future: Add transaction dialog
               }}
               onDelete={(position) => {
-                if (window.confirm(`Möchtest du den Trade für "${position.symbol}" wirklich löschen?`)) {
+                if (window.confirm(`${t.tradesPage.confirmDelete} (${position.symbol})`)) {
                   deleteTrade.mutate(position.id);
                 }
               }}

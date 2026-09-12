@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/popover';
 import { useCreateTrade } from '@/hooks/useTrades';
 import { TradeType, TradeSide, TradeStatus, Broker } from '@/types/trade';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { toast } from 'sonner';
 
 // LocalStorage keys for smart defaults
@@ -77,43 +78,43 @@ const saveSmartDefaults = (broker?: Broker, type?: TradeType, shares?: number) =
   if (shares) localStorage.setItem(STORAGE_KEYS.LAST_SHARES, shares.toString());
 };
 
-// Zod Schema für Validierung - use z.coerce for number fields
+// Zod Schema for validation - use z.coerce for number fields
 const tradeFormSchema = z.object({
   symbol: z
     .string()
-    .min(1, 'Symbol ist erforderlich')
-    .max(10, 'Symbol darf maximal 10 Zeichen lang sein')
-    .regex(/^[A-Z0-9]+$/, 'Symbol muss aus Großbuchstaben und Zahlen bestehen'),
+    .min(1, 'Symbol is required')
+    .max(10, 'Symbol cannot exceed 10 characters')
+    .regex(/^[A-Z0-9]+$/, 'Symbol must contain only uppercase letters and digits'),
   type: z.nativeEnum(TradeType, {
-    message: 'Bitte wähle einen Trade-Typ',
+    message: 'Please select an asset type',
   }),
   side: z.nativeEnum(TradeSide, {
-    message: 'Bitte wähle Long oder Short',
+    message: 'Please select Long or Short',
   }),
   broker: z.nativeEnum(Broker).optional(),
   entryShares: z.coerce
     .number({
-      message: 'Anzahl beim Einstieg ist erforderlich und muss eine Zahl sein',
+      message: 'Entry shares must be a number',
     })
-    .positive('Anzahl muss größer als 0 sein')
-    .int('Anzahl muss eine ganze Zahl sein'),
+    .positive('Shares must be greater than 0')
+    .int('Shares must be an integer'),
   entryPrice: z.coerce
     .number({
-      message: 'Einstiegspreis ist erforderlich und muss eine Zahl sein',
+      message: 'Entry price must be a number',
     })
-    .positive('Preis muss größer als 0 sein'),
+    .positive('Price must be greater than 0'),
   entryDate: z.date({
-    message: 'Einstiegsdatum ist erforderlich',
+    message: 'Entry date is required',
   }),
   exitShares: z.coerce
     .number()
-    .positive('Anzahl muss größer als 0 sein')
-    .int('Anzahl muss eine ganze Zahl sein')
+    .positive('Shares must be greater than 0')
+    .int('Shares must be an integer')
     .optional()
     .or(z.literal('')),
   exitPrice: z.coerce
     .number()
-    .positive('Ausstiegspreis muss größer als 0 sein')
+    .positive('Exit price must be greater than 0')
     .optional()
     .or(z.literal('')),
   exitDate: z.date().optional(),
@@ -127,7 +128,7 @@ const tradeFormSchema = z.object({
     return true;
   },
   {
-    message: 'Wenn ein Ausstiegspreis angegeben wird, müssen auch Anzahl und Datum ausgefüllt werden',
+    message: 'When exit price is specified, exit shares and date are also required',
     path: ['exitPrice'],
   }
 ).refine(
@@ -138,7 +139,7 @@ const tradeFormSchema = z.object({
     return true;
   },
   {
-    message: 'Ausstiegsmenge darf nicht größer als Einstiegsmenge sein',
+    message: 'Exit shares cannot exceed entry shares',
     path: ['exitShares'],
   }
 );
@@ -150,10 +151,26 @@ interface TradeFormProps {
 }
 
 export function TradeForm({ trigger }: TradeFormProps) {
+  const { t, language } = useTranslation();
   const [open, setOpen] = useState(false);
   const [saveAndNew, setSaveAndNew] = useState(false);
   const createTrade = useCreateTrade();
   const symbolInputRef = useRef<HTMLInputElement>(null);
+
+  const getTradeTypeLabel = (type: TradeType) => {
+    switch (type) {
+      case TradeType.AKTIE:
+        return t.forms.stock;
+      case TradeType.ZERTIFIKAT:
+        return t.forms.certificate;
+      case TradeType.OPTIONSSCHEIN:
+        return t.forms.warrant;
+      case TradeType.KRYPTO:
+        return t.forms.crypto;
+      default:
+        return type;
+    }
+  };
 
   // Get smart defaults
   const smartDefaults = getSmartDefaults();
@@ -243,7 +260,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
 
     createTrade.mutate(payload, {
       onSuccess: () => {
-        toast.success('Trade erfolgreich erstellt');
+        toast.success(t.forms.successCreated);
         
         if (saveAndNew) {
           // Reset form but keep smart defaults
@@ -269,7 +286,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
       },
       onError: (error) => {
         console.error('API Error:', error);
-        toast.error('Fehler beim Erstellen des Trades: ' + error.message);
+        toast.error((language === 'de' ? 'Fehler beim Erstellen des Trades: ' : 'Error creating trade: ') + error.message);
       },
     });
   }
@@ -280,7 +297,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
     const errorMessages = Object.entries(errors)
       .map(([field, error]: [string, any]) => `${field}: ${error.message}`)
       .join(', ');
-    toast.error('Formularfehler: ' + errorMessages);
+    toast.error((language === 'de' ? 'Formularfehler: ' : 'Form errors: ') + errorMessages);
   };
 
   // Handle Save & New
@@ -307,7 +324,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
               <path d="M5 12h14" />
               <path d="M12 5v14" />
             </svg>
-            Neuer Trade
+            {t.forms.newTrade}
             <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
               <span className="text-xs">⌘</span>N
             </kbd>
@@ -316,10 +333,12 @@ export function TradeForm({ trigger }: TradeFormProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-6 sm:p-8">
         <DialogHeader>
-          <DialogTitle>Neuen Trade erfassen</DialogTitle>
+          <DialogTitle>{t.forms.newTrade}</DialogTitle>
           <DialogDescription>
-            Erfasse die Details deines Trades. Einstiegsdaten sind Pflicht, Ausstiegsdaten optional.
-            <span className="block mt-1 text-xs opacity-75">⌨️ Tipp: Tab zum nächsten Feld, Enter zum Speichern, Esc zum Abbrechen</span>
+            {language === 'de' ? 'Erfasse die Details deines Trades. Einstiegsdaten sind Pflicht, Ausstiegsdaten optional.' : 'Log the details of your trade. Entry details are required, exit details are optional.'}
+            <span className="block mt-1 text-xs opacity-75">
+              {language === 'de' ? '⌨️ Tipp: Tab zum nächsten Feld, Enter zum Speichern, Esc zum Abbrechen' : '⌨️ Tip: Tab for next field, Enter to save, Esc to cancel'}
+            </span>
           </DialogDescription>
         </DialogHeader>
 
@@ -332,7 +351,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 name="symbol"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Symbol *</FormLabel>
+                    <FormLabel>{t.common.symbol} *</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="AAPL"
@@ -349,7 +368,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         }
                       />
                     </FormControl>
-                    <FormDescription>Ticker-Symbol (z.B. AAPL, BTC)</FormDescription>
+                    <FormDescription>{language === 'de' ? 'Ticker-Symbol (z.B. AAPL, BTC)' : 'Ticker symbol (e.g. AAPL, BTC)'}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -360,20 +379,20 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Typ *</FormLabel>
+                    <FormLabel>{t.common.type} *</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Wähle einen Typ" />
+                          <SelectValue placeholder={t.forms.assetType} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {Object.values(TradeType).map((type) => (
                           <SelectItem key={type} value={type}>
-                            {type}
+                            {getTradeTypeLabel(type)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -391,22 +410,23 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 name="side"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Seite *</FormLabel>
+                    <FormLabel>{t.common.side} *</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Long oder Short" />
+                          <SelectValue placeholder={language === 'de' ? 'Long oder Short' : 'Long or Short'} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {Object.values(TradeSide).map((side) => (
-                          <SelectItem key={side} value={side}>
-                            {side}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value={TradeSide.LONG}>
+                          {t.common.long}
+                        </SelectItem>
+                        <SelectItem value={TradeSide.SHORT}>
+                          {t.common.short}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -419,14 +439,14 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 name="broker"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Broker</FormLabel>
+                    <FormLabel>{t.common.broker}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Wähle einen Broker" />
+                          <SelectValue placeholder={t.forms.selectBroker} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -437,7 +457,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>Optional</FormDescription>
+                    <FormDescription>{language === 'de' ? 'Optional' : 'Optional'}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -446,7 +466,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
 
             {/* Divider */}
             <div className="border-t pt-4">
-              <h3 className="text-sm font-medium mb-4">Einstieg (Pflicht)</h3>
+              <h3 className="text-sm font-medium mb-4">{t.dashboard.entryGroup} ({language === 'de' ? 'Pflicht' : 'Required'})</h3>
             </div>
 
             {/* Entry: Shares & Price */}
@@ -456,7 +476,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 name="entryShares"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Anzahl *</FormLabel>
+                    <FormLabel>{t.forms.entryShares} *</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -465,7 +485,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>Anzahl beim Einstieg</FormDescription>
+                    <FormDescription>{language === 'de' ? 'Anzahl beim Einstieg' : 'Number of shares/units'}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -476,7 +496,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 name="entryPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Einstiegspreis *</FormLabel>
+                    <FormLabel>{t.forms.entryPrice} *</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -486,7 +506,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>Preis pro Anteil in €</FormDescription>
+                    <FormDescription>{language === 'de' ? 'Preis pro Anteil in €' : 'Price per share in €'}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -499,7 +519,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
               name="entryDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Einstiegsdatum *</FormLabel>
+                  <FormLabel>{t.forms.entryDate} *</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -511,9 +531,9 @@ export function TradeForm({ trigger }: TradeFormProps) {
                           )}
                         >
                           {field.value ? (
-                            format(field.value, 'dd.MM.yyyy')
+                            format(field.value, language === 'de' ? 'dd.MM.yyyy' : 'MMM dd, yyyy')
                           ) : (
-                            <span>Datum wählen</span>
+                            <span>{language === 'de' ? 'Datum wählen' : 'Pick a date'}</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -538,9 +558,9 @@ export function TradeForm({ trigger }: TradeFormProps) {
 
             {/* Divider */}
             <div className="border-t pt-4">
-              <h3 className="text-sm font-medium mb-2">Ausstieg (Optional)</h3>
+              <h3 className="text-sm font-medium mb-2">{t.dashboard.exitGroup} ({language === 'de' ? 'Optional' : 'Optional'})</h3>
               <p className="text-xs text-muted-foreground mb-4">
-                Fülle diese Felder nur aus, wenn du bereits (teilweise) ausgestiegen bist.
+                {language === 'de' ? 'Fülle diese Felder nur aus, wenn du bereits (teilweise) ausgestiegen bist.' : 'Only fill these fields if you have already (partially) exited.'}
               </p>
             </div>
 
@@ -551,7 +571,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 name="exitShares"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Verkaufte Anzahl</FormLabel>
+                    <FormLabel>{t.forms.exitShares}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -561,7 +581,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                       />
                     </FormControl>
                     <FormDescription>
-                      Anzahl beim Ausstieg (max. Einstiegsmenge)
+                      {language === 'de' ? 'Anzahl beim Ausstieg (max. Einstiegsmenge)' : 'Shares sold (max. entry shares)'}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -573,7 +593,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 name="exitPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ausstiegspreis</FormLabel>
+                    <FormLabel>{t.forms.exitPrice}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -583,7 +603,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>Preis pro Anteil in €</FormDescription>
+                    <FormDescription>{language === 'de' ? 'Preis pro Anteil in €' : 'Price per share in €'}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -596,7 +616,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
               name="exitDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Ausstiegsdatum</FormLabel>
+                  <FormLabel>{t.forms.exitDate}</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -608,9 +628,9 @@ export function TradeForm({ trigger }: TradeFormProps) {
                           )}
                         >
                           {field.value ? (
-                            format(field.value, 'dd.MM.yyyy')
+                            format(field.value, language === 'de' ? 'dd.MM.yyyy' : 'MMM dd, yyyy')
                           ) : (
-                            <span>Datum wählen</span>
+                            <span>{language === 'de' ? 'Datum wählen' : 'Pick a date'}</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -637,11 +657,10 @@ export function TradeForm({ trigger }: TradeFormProps) {
             {hasExitData && (
               <div className="rounded-md bg-blue-50 p-3">
                 <p className="text-sm text-blue-900">
-                  <strong>Hinweis:</strong> Da du Ausstiegsdaten eingegeben hast, wird dieser Trade 
+                  <strong>{language === 'de' ? 'Hinweis:' : 'Note:'}</strong>{' '}
                   {exitShares === form.watch('entryShares') 
-                    ? ' als "Geschlossen" ' 
-                    : ' als "Offen" (Teilverkauf) '}
-                  markiert.
+                    ? (language === 'de' ? 'Da du Ausstiegsdaten eingegeben hast, wird dieser Trade als "Geschlossen" markiert.' : 'Since exit data was entered, this trade will be marked as "Closed".')
+                    : (language === 'de' ? 'Da du Ausstiegsdaten eingegeben hast, wird dieser Trade als "Offen" (Teilverkauf) markiert.' : 'Since partial exit data was entered, this trade remains "Open" (Partial Exit).')}
                 </p>
               </div>
             )}
@@ -653,7 +672,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 onClick={() => setOpen(false)}
                 disabled={createTrade.isPending}
               >
-                Abbrechen
+                {t.common.cancel}
                 <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
                   Esc
                 </kbd>
@@ -686,11 +705,11 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Wird erstellt...
+                    {t.forms.saving}
                   </>
                 ) : (
                   <>
-                    Speichern & Neu
+                    {language === 'de' ? 'Speichern & Neu' : 'Save & New'}
                     <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
                       <span className="text-xs">⌘</span>⏎
                     </kbd>
@@ -720,11 +739,11 @@ export function TradeForm({ trigger }: TradeFormProps) {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Wird erstellt...
+                    {t.forms.saving}
                   </>
                 ) : (
                   <>
-                    Speichern
+                    {t.forms.saveTrade}
                     <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
                       ⏎
                     </kbd>

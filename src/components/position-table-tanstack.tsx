@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { de } from 'date-fns/locale';
+import { de, enUS } from 'date-fns/locale';
 import {
   flexRender,
   getCoreRowModel,
@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 import { Position, Transaction, TransactionType } from '@/types/position';
 import { formatCurrency, formatPercent, formatDateSafe } from '@/lib/tradeUtils';
+import { useTranslation } from '@/i18n/LanguageContext';
+import { Translations } from '@/i18n/types';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -81,11 +83,11 @@ function getTransactionRowBg(type: TransactionType, pnl?: number): string {
 /**
  * Get status text and color classes based on P&L
  */
-function getStatusDisplay(position: Position): { text: string; className: string } {
+function getStatusDisplay(position: Position, t: Translations): { text: string; className: string } {
   // If position is still open (has remaining shares)
   if (position.remainingShares > 0) {
     return {
-      text: 'Open',
+      text: t.common.open,
       className: 'text-muted-foreground',
     };
   }
@@ -93,12 +95,12 @@ function getStatusDisplay(position: Position): { text: string; className: string
   // Closed position - Win or Loss based on P&L
   if (position.totalPnL >= 0) {
     return {
-      text: 'Win',
+      text: t.common.win,
       className: 'text-green-600 dark:text-green-400',
     };
   } else {
     return {
-      text: 'Loss',
+      text: t.common.loss,
       className: 'text-red-600 dark:text-red-400',
     };
   }
@@ -113,8 +115,11 @@ export function PositionTableTanstack({
   onAddTransaction,
   onDelete,
 }: PositionTableTanstackProps) {
+  const { t, language } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({}); // Empty = all collapsed
+  const locale = language === 'de' ? 'de-DE' : 'en-US';
+  const dateFormat = language === 'de' ? 'dd.MM.yy' : 'MM/dd/yy';
 
   // Define columns
   const columns = useMemo<ColumnDef<Position>[]>(
@@ -154,7 +159,7 @@ export function PositionTableTanstack({
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="-ml-3 h-8 text-xs"
           >
-            Symbol
+            {t.table.symbol}
             <ArrowUpDown className="ml-1 h-3 w-3" />
           </Button>
         ),
@@ -182,10 +187,10 @@ export function PositionTableTanstack({
       // Status Column - Win/Loss/Open
       {
         id: 'status',
-        header: 'Status',
+        header: t.table.status,
         size: 60,
         cell: ({ row }) => {
-          const { text, className } = getStatusDisplay(row.original);
+          const { text, className } = getStatusDisplay(row.original, t);
           return (
             <span className={cn('text-xs font-medium', className)}>
               {text}
@@ -205,21 +210,21 @@ export function PositionTableTanstack({
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
               className="h-8 text-xs"
             >
-              ø Price
+              {t.table.avgPrice}
               <ArrowUpDown className="ml-1 h-3 w-3" />
             </Button>
           </div>
         ),
         cell: ({ row }) => (
           <div className="text-right font-medium text-sm">
-            {formatCurrency(row.original.avgEntryPrice)}
+            {formatCurrency(row.original.avgEntryPrice, locale)}
           </div>
         ),
       },
       // Shares Column
       {
         id: 'shares',
-        header: () => <div className="text-right">Shares</div>,
+        header: () => <div className="text-right">{t.table.shares}</div>,
         cell: ({ row }) => (
           <div className="text-right text-sm">
             <span className="font-medium">{row.original.remainingShares}</span>
@@ -230,7 +235,7 @@ export function PositionTableTanstack({
       // Entries Summary
       {
         id: 'entries',
-        header: () => <div className="text-right">Entries</div>,
+        header: () => <div className="text-right">{t.table.entries}</div>,
         cell: ({ row }) => {
           const entryCount = row.original.transactions.filter(
             (t) => t.type === TransactionType.ENTRY
@@ -245,7 +250,7 @@ export function PositionTableTanstack({
       // Exits Summary
       {
         id: 'exits',
-        header: () => <div className="text-right">Exits</div>,
+        header: () => <div className="text-right">{t.table.exits}</div>,
         cell: ({ row }) => {
           const exitCount = row.original.transactions.filter(
             (t) => t.type === TransactionType.EXIT
@@ -262,24 +267,24 @@ export function PositionTableTanstack({
       // Kosten & Steuer Column
       {
         id: 'costs',
-        header: () => <div className="text-right">Kosten & Steuer</div>,
+        header: () => <div className="text-right">{t.table.costsAndTax}</div>,
         cell: ({ row }) => {
           const fee = row.original.fee || 0;
           const tax = row.original.tax || 0;
           return (
             <div className="text-right text-xs">
               <div>
-                <span className="text-muted-foreground text-[11px]">Geb: </span>
-                <span className="font-mono">{formatCurrency(fee)}</span>
+                <span className="text-muted-foreground text-[11px]">{t.table.feeShort}: </span>
+                <span className="font-mono">{formatCurrency(fee, locale)}</span>
               </div>
               <div>
-                <span className="text-muted-foreground text-[11px]">St: </span>
+                <span className="text-muted-foreground text-[11px]">{t.table.taxShort}: </span>
                 {tax < 0 ? (
-                  <span className="font-mono text-emerald-600 font-medium" title="Steuererstattung (wird zum Nettoergebnis addiert)">
-                    +{formatCurrency(Math.abs(tax))}
+                  <span className="font-mono text-emerald-600 font-medium" title={t.common.taxCredit}>
+                    +{formatCurrency(Math.abs(tax), locale)}
                   </span>
                 ) : (
-                  <span className="font-mono">{formatCurrency(tax)}</span>
+                  <span className="font-mono">{formatCurrency(tax, locale)}</span>
                 )}
               </div>
             </div>
@@ -298,7 +303,7 @@ export function PositionTableTanstack({
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
               className="h-8 text-xs"
             >
-              P/L (Netto / Brutto)
+              {t.table.pnlNetGross}
               <ArrowUpDown className="ml-1 h-3 w-3" />
             </Button>
           </div>
@@ -321,11 +326,11 @@ export function PositionTableTanstack({
                     isProfitable ? 'text-emerald-600' : 'text-rose-600'
                   )}
                 >
-                  {formatCurrency(netPnL)}
+                  {formatCurrency(netPnL, locale)}
                 </span>
               </div>
               <div className="text-xs text-muted-foreground">
-                Brutto: <span className={grossPnL >= 0 ? 'text-emerald-600/90 font-medium' : 'text-rose-600/90 font-medium'}>{formatCurrency(grossPnL)}</span>
+                {t.table.grossShort}: <span className={grossPnL >= 0 ? 'text-emerald-600/90 font-medium' : 'text-rose-600/90 font-medium'}>{formatCurrency(grossPnL, locale)}</span>
                 <span className="ml-1">({formatPercent(row.original.totalPnLPercent)})</span>
               </div>
             </div>
@@ -335,7 +340,7 @@ export function PositionTableTanstack({
       // Actions Column (Option C: Kompaktes Dropdown-Menü)
       {
         id: 'actions',
-        header: () => <div className="text-right pr-2">Aktionen</div>,
+        header: () => <div className="text-right pr-2">{t.table.actions}</div>,
         size: 60,
         cell: ({ row }) => {
           const isClosed = row.original.remainingShares === 0;
@@ -349,10 +354,10 @@ export function PositionTableTanstack({
                     size="sm"
                     className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                     onClick={(e) => e.stopPropagation()}
-                    title="Aktionen anzeigen"
+                    title={t.common.actions}
                   >
                     <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">Aktionen</span>
+                    <span className="sr-only">{t.common.actions}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56" onClick={(e) => e.stopPropagation()}>
@@ -362,7 +367,7 @@ export function PositionTableTanstack({
                       className="cursor-pointer"
                     >
                       <Edit className="mr-2 h-4 w-4" />
-                      <span>Trade bearbeiten</span>
+                      <span>{t.table.editTrade}</span>
                     </DropdownMenuItem>
                   )}
 
@@ -379,10 +384,10 @@ export function PositionTableTanstack({
                     )}
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    <span>Transaktion hinzufügen</span>
+                    <span>{t.table.addTransaction}</span>
                     {isClosed && (
                       <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-normal">
-                        Geschlossen
+                        {t.table.closedBadge}
                       </span>
                     )}
                   </DropdownMenuItem>
@@ -396,7 +401,7 @@ export function PositionTableTanstack({
                         className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Trade löschen</span>
+                        <span>{t.table.deleteTrade}</span>
                       </DropdownMenuItem>
                     </>
                   )}
@@ -407,7 +412,7 @@ export function PositionTableTanstack({
         },
       },
     ],
-    [onEdit, onAddTransaction, onDelete]
+    [onEdit, onAddTransaction, onDelete, t, locale]
   );
 
   const table = useReactTable({
@@ -476,7 +481,7 @@ export function PositionTableTanstack({
 
                       {/* Date */}
                       <TableCell className="py-1 pl-8 text-xs text-muted-foreground">
-                        {formatDateSafe(txn.date, 'dd.MM.yy')}
+                        {formatDateSafe(txn.date, dateFormat)}
                       </TableCell>
 
                       {/* Transaction Type (Entry/Exit) - now just text */}
@@ -493,23 +498,23 @@ export function PositionTableTanstack({
 
                       {/* Price */}
                       <TableCell className="py-1 text-right text-xs font-mono">
-                        {formatCurrency(txn.price)}
+                        {formatCurrency(txn.price, locale)}
                       </TableCell>
 
                       {/* Shares */}
                       <TableCell className="py-1 text-right text-xs font-medium">
                         {txn.type === TransactionType.EXIT && '-'}
-                        {txn.shares} Stk
+                        {txn.shares} {language === 'de' ? 'Stk' : 'shares'}
                       </TableCell>
 
                       {/* Value (Entries column) */}
                       <TableCell className="py-1 text-right text-xs text-muted-foreground">
-                        {txn.type === TransactionType.ENTRY ? formatCurrency(txn.value) : '-'}
+                        {txn.type === TransactionType.ENTRY ? formatCurrency(txn.value, locale) : '-'}
                       </TableCell>
 
                       {/* Exits column */}
                       <TableCell className="py-1 text-right text-xs text-muted-foreground">
-                        {txn.type === TransactionType.EXIT ? formatCurrency(txn.value) : '-'}
+                        {txn.type === TransactionType.EXIT ? formatCurrency(txn.value, locale) : '-'}
                       </TableCell>
 
                       {/* Kosten & Steuer */}
@@ -517,14 +522,14 @@ export function PositionTableTanstack({
                         {txn.fee !== undefined || txn.tax !== undefined ? (
                           <div className="text-[11px]">
                             {txn.fee !== undefined && (
-                              <div><span className="text-muted-foreground">Geb: </span><span className="font-mono">{formatCurrency(txn.fee)}</span></div>
+                              <div><span className="text-muted-foreground">{t.table.feeShort}: </span><span className="font-mono">{formatCurrency(txn.fee, locale)}</span></div>
                             )}
                             {txn.tax !== undefined && (
-                              <div><span className="text-muted-foreground">St: </span>
+                              <div><span className="text-muted-foreground">{t.table.taxShort}: </span>
                                 {txn.tax < 0 ? (
-                                  <span className="font-mono text-emerald-600 font-medium">+{formatCurrency(Math.abs(txn.tax))}</span>
+                                  <span className="font-mono text-emerald-600 font-medium">+{formatCurrency(Math.abs(txn.tax), locale)}</span>
                                 ) : (
-                                  <span className="font-mono">{formatCurrency(txn.tax)}</span>
+                                  <span className="font-mono">{formatCurrency(txn.tax, locale)}</span>
                                 )}
                               </div>
                             )}
@@ -544,15 +549,15 @@ export function PositionTableTanstack({
                                 (txn.netPnl !== undefined ? txn.netPnl : txn.pnl) >= 0 ? 'text-emerald-600' : 'text-rose-600'
                               )}
                             >
-                              {formatCurrency(txn.netPnl !== undefined ? txn.netPnl : txn.pnl)}
+                              {formatCurrency(txn.netPnl !== undefined ? txn.netPnl : txn.pnl, locale)}
                             </div>
                             <div className="text-[10px] text-muted-foreground">
-                              Brutto: {formatCurrency(txn.pnl)}
+                              {t.table.grossShort}: {formatCurrency(txn.pnl, locale)}
                             </div>
                           </div>
                         ) : (
                           <span className="text-xs text-muted-foreground font-mono">
-                            ø {formatCurrency(txn.positionAvgPrice)}
+                            ø {formatCurrency(txn.positionAvgPrice, locale)}
                           </span>
                         )}
                       </TableCell>
@@ -566,7 +571,7 @@ export function PositionTableTanstack({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                Keine Positionen vorhanden
+                {t.table.noPositions}
               </TableCell>
             </TableRow>
           )}

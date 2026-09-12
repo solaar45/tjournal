@@ -1,6 +1,6 @@
 import { Trade, TradeStats } from '@/types/trade';
 import { format } from 'date-fns';
-import { de } from 'date-fns/locale';
+import { enUS, de } from 'date-fns/locale';
 
 /**
  * Berechnet P&L (Profit & Loss) für einen Trade
@@ -75,20 +75,20 @@ export function calculateTradeStats(trades: Trade[]): TradeStats {
 }
 
 /**
- * Formatiert einen Geldbetrag
+ * Formatiert einen Geldbetrag (Standard: englische Finanzformatierung €1,234.56)
  */
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('de-DE', {
+export function formatCurrency(amount: number, locale: string = 'en-US', currency: string = 'EUR'): string {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'EUR',
+    currency,
   }).format(amount);
 }
 
 /**
  * Formatiert einen Prozentsatz
  */
-export function formatPercent(value: number): string {
-  return new Intl.NumberFormat('de-DE', {
+export function formatPercent(value: number, locale: string = 'en-US'): string {
+  return new Intl.NumberFormat(locale, {
     style: 'percent',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -96,12 +96,13 @@ export function formatPercent(value: number): string {
 }
 
 /**
- * Sicherer Datumsformatierer, der niemals einen RangeError wirft
+ * Sicherer Datumsformatierer, der niemals einen RangeError wirft (Standard: MMM dd, yyyy)
  */
 export function formatDateSafe(
   dateVal?: string | Date | null,
-  formatStr: string = 'dd.MM.yyyy',
-  fallback: string = '-'
+  formatStr: string = 'MMM dd, yyyy',
+  fallback: string = '-',
+  localeObj = enUS
 ): string {
   if (!dateVal) return fallback;
   try {
@@ -124,7 +125,7 @@ export function formatDateSafe(
       d = new Date(str);
     }
     if (isNaN(d.getTime())) return fallback;
-    return format(d, formatStr, { locale: de });
+    return format(d, formatStr, { locale: localeObj });
   } catch {
     return fallback;
   }

@@ -27,6 +27,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useCreateTrade } from '@/hooks/useTrades';
 import { TradeType, TradeSide, TradeStatus, Broker } from '@/types/trade';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { toast } from 'sonner';
 import { Zap } from 'lucide-react';
 
@@ -67,17 +68,17 @@ const saveSmartDefaults = (broker?: Broker, type?: TradeType, shares?: number) =
 const quickTradeSchema = z.object({
   symbol: z
     .string()
-    .min(1, 'Symbol erforderlich')
-    .max(10, 'Max. 10 Zeichen')
-    .regex(/^[A-Z0-9]+$/, 'Nur Großbuchstaben & Zahlen'),
+    .min(1, 'Symbol required')
+    .max(10, 'Max. 10 chars')
+    .regex(/^[A-Z0-9]+$/, 'Uppercase & digits only'),
   side: z.nativeEnum(TradeSide),
   entryShares: z.coerce
-    .number({ message: 'Nur Zahlen' })
-    .positive('Muss > 0 sein')
-    .int('Nur ganze Zahlen'),
+    .number({ message: 'Numbers only' })
+    .positive('Must be > 0')
+    .int('Integers only'),
   entryPrice: z.coerce
-    .number({ message: 'Nur Zahlen' })
-    .positive('Muss > 0 sein'),
+    .number({ message: 'Numbers only' })
+    .positive('Must be > 0'),
 });
 
 type QuickTradeValues = z.infer<typeof quickTradeSchema>;
@@ -87,6 +88,7 @@ interface QuickTradeFormProps {
 }
 
 export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
+  const { t, language } = useTranslation();
   const [open, setOpen] = useState(false);
   const [saveAndNew, setSaveAndNew] = useState(false);
   const createTrade = useCreateTrade();
@@ -153,7 +155,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
 
     createTrade.mutate(payload, {
       onSuccess: () => {
-        toast.success('✅ Trade erstellt');
+        toast.success(language === 'de' ? '✅ Trade erstellt' : '✅ Trade created');
         
         if (saveAndNew) {
           // Reset form but keep smart defaults
@@ -171,7 +173,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
         }
       },
       onError: (error) => {
-        toast.error('❌ Fehler: ' + error.message);
+        toast.error((language === 'de' ? '❌ Fehler: ' : '❌ Error: ') + error.message);
       },
     });
   }
@@ -202,7 +204,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
         {trigger || (
           <Button variant="default" size="sm">
             <Zap className="mr-2 h-4 w-4" />
-            Quick Entry
+            {t.forms.quickTrade}
             <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
               <span className="text-xs">⌘</span>Q
             </kbd>
@@ -213,11 +215,13 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-yellow-500" />
-            Quick Entry
+            {t.forms.quickTrade}
           </DialogTitle>
           <DialogDescription>
-            Schnelleingabe für neue Trades. Nur die wichtigsten Felder.
-            <span className="block mt-1 text-xs opacity-75">⌨️ Tab → Enter zum Speichern | Ctrl+Enter für Speichern & Neu</span>
+            {language === 'de' ? 'Schnelleingabe für neue Trades. Nur die wichtigsten Felder.' : 'Quick trade entry. Only essential fields.'}
+            <span className="block mt-1 text-xs opacity-75">
+              {language === 'de' ? '⌨️ Tab → Enter zum Speichern | Ctrl+Enter für Speichern & Neu' : '⌨️ Tab → Enter to save | Ctrl+Enter to Save & New'}
+            </span>
           </DialogDescription>
         </DialogHeader>
 
@@ -229,7 +233,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
               name="symbol"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base">Symbol *</FormLabel>
+                  <FormLabel className="text-base">{t.common.symbol} *</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -276,7 +280,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
               name="side"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base">Seite *</FormLabel>
+                  <FormLabel className="text-base">{t.common.side} *</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -286,13 +290,13 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                       <div className="flex items-center space-x-2 flex-1">
                         <RadioGroupItem value={TradeSide.LONG} id="long" className="h-5 w-5" />
                         <Label htmlFor="long" className="text-base font-medium cursor-pointer flex-1 py-3 px-4 rounded-md border-2 border-input hover:border-primary transition-colors">
-                          <span className="text-green-600 font-semibold">📈 Long</span>
+                          <span className="text-green-600 font-semibold">📈 {t.common.long}</span>
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2 flex-1">
                         <RadioGroupItem value={TradeSide.SHORT} id="short" className="h-5 w-5" />
                         <Label htmlFor="short" className="text-base font-medium cursor-pointer flex-1 py-3 px-4 rounded-md border-2 border-input hover:border-primary transition-colors">
-                          <span className="text-red-600 font-semibold">📉 Short</span>
+                          <span className="text-red-600 font-semibold">📉 {t.common.short}</span>
                         </Label>
                       </div>
                     </RadioGroup>
@@ -309,7 +313,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                 name="entryShares"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base">Anzahl *</FormLabel>
+                    <FormLabel className="text-base">{t.forms.entryShares} *</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
@@ -349,7 +353,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                 name="entryPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base">Preis (€) *</FormLabel>
+                    <FormLabel className="text-base">{t.forms.entryPrice} (€) *</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
@@ -390,13 +394,15 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
               <p className="flex items-center gap-2">
                 <span>ℹ️</span>
                 <span>
-                  Typ: <strong>{smartDefaults.type}</strong> | 
-                  Datum: <strong>Heute</strong> | 
-                  Status: <strong>Offen</strong>
+                  {language === 'de' ? 'Typ:' : 'Type:'} <strong>{smartDefaults.type}</strong> | 
+                  {t.common.date}: <strong>{language === 'de' ? 'Heute' : 'Today'}</strong> | 
+                  {t.common.status}: <strong>{t.common.open}</strong>
                 </span>
               </p>
               <p className="text-xs mt-1 opacity-75">
-                Diese Standardwerte kannst du in der ausführlichen Eingabe ändern.
+                {language === 'de' 
+                  ? 'Diese Standardwerte kannst du in der ausführlichen Eingabe ändern.' 
+                  : 'You can customize defaults in the full trade entry dialog.'}
               </p>
             </div>
 
@@ -409,7 +415,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                 disabled={createTrade.isPending}
                 className="flex-1"
               >
-                Abbrechen
+                {t.common.cancel}
                 <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
                   Esc
                 </kbd>
@@ -427,11 +433,11 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Speichert...
+                    {t.forms.saving}
                   </>
                 ) : (
                   <>
-                    & Neu
+                    {language === 'de' ? '& Neu' : '& New'}
                     <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
                       <span className="text-xs">⌘</span>↵
                     </kbd>
@@ -449,11 +455,11 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Speichert...
+                    {t.forms.saving}
                   </>
                 ) : (
                   <>
-                    Speichern
+                    {t.common.save}
                     <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
                       ↵
                     </kbd>

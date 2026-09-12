@@ -9,8 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { TradeForm } from '@/components/trade-form';
 import { CsvImportDialog } from '@/components/csv-import-dialog';
 import { TradeType, TradeSide } from '@/types/trade';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 export default function DashboardPage() {
+  const { t, locale } = useTranslation();
   const { data: trades, isLoading: tradesLoading, error: tradesError } = useTrades();
   const { data: stats, isLoading: statsLoading, error: statsError } = useTradeStats();
 
@@ -20,7 +22,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Lade Daten...</p>
+          <p className="text-muted-foreground">{t.common.loading}</p>
         </div>
       </div>
     );
@@ -31,7 +33,7 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <p className="text-destructive mb-2">Fehler beim Laden der Daten</p>
+          <p className="text-destructive mb-2">Error loading data</p>
           <p className="text-sm text-muted-foreground">
             {tradesError?.message || statsError?.message}
           </p>
@@ -40,7 +42,7 @@ export default function DashboardPage() {
     );
   }
 
-  // Recent Trades (letzte 5)
+  // Recent Trades (5 most recent)
   const recentTrades = trades?.slice(0, 5) || [];
 
   return (
@@ -48,9 +50,9 @@ export default function DashboardPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t.navigation.dashboard}</h1>
           <p className="text-muted-foreground">
-            Übersicht über deine Trading-Performance
+            {t.navigation.tagline}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -65,7 +67,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Gesamt P&L (Netto)
+              {t.dashboard.totalPnLNet}
             </CardTitle>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -84,12 +86,12 @@ export default function DashboardPage() {
             <div className={`text-2xl font-bold ${
               (stats?.totalNetPnL !== undefined ? stats.totalNetPnL : (stats?.totalPnL || 0)) >= 0 ? 'text-emerald-600' : 'text-rose-600'
             }`}>
-              {formatCurrency(stats?.totalNetPnL !== undefined ? stats.totalNetPnL : (stats?.totalPnL || 0))}
+              {formatCurrency(stats?.totalNetPnL !== undefined ? stats.totalNetPnL : (stats?.totalPnL || 0), locale)}
             </div>
             <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-2">
-              <span>Brutto: {formatCurrency(stats?.totalPnL || 0)}</span>
+              <span>{t.common.gross}: {formatCurrency(stats?.totalPnL || 0, locale)}</span>
               {(stats?.totalFees || stats?.totalTax) ? (
-                <span>(Geb: {formatCurrency(stats?.totalFees || 0)}, St: {formatCurrency(stats?.totalTax || 0)})</span>
+                <span>({t.common.fee}: {formatCurrency(stats?.totalFees || 0, locale)}, {t.common.tax}: {formatCurrency(stats?.totalTax || 0, locale)})</span>
               ) : null}
             </div>
           </CardContent>
@@ -99,7 +101,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Win Rate
+              {t.dashboard.winRate}
             </CardTitle>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -119,7 +121,7 @@ export default function DashboardPage() {
               {stats?.winRate.toFixed(1)}%
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Durchschnittliche Gewinnrate
+              {t.dashboard.avgWinRateDesc} ({stats?.closedTrades || 0} {t.dashboard.closedTradesCount})
             </p>
           </CardContent>
         </Card>
@@ -128,7 +130,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Offene Trades
+              {t.dashboard.openTrades}
             </CardTitle>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -149,7 +151,7 @@ export default function DashboardPage() {
               {stats?.openTrades || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Aktive Positionen
+              Active open positions
             </p>
           </CardContent>
         </Card>
@@ -158,7 +160,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Gesamt Trades
+              {t.dashboard.totalTrades}
             </CardTitle>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -180,7 +182,7 @@ export default function DashboardPage() {
               {stats?.totalTrades || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Alle erfassten Trades
+              All logged trades
             </p>
           </CardContent>
         </Card>
@@ -190,34 +192,34 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Best & Worst</CardTitle>
+            <CardTitle>Performance Highlights</CardTitle>
             <CardDescription>
-              Größter Gewinn und Verlust
+              Largest and average win/loss metrics
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Größter Gewinn</span>
-              <span className="text-sm font-medium text-green-600">
-                {formatCurrency(stats?.largestWin || 0)}
+              <span className="text-sm text-muted-foreground">Largest Win</span>
+              <span className="text-sm font-medium text-emerald-600">
+                {formatCurrency(stats?.largestWin || 0, locale)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Größter Verlust</span>
-              <span className="text-sm font-medium text-red-600">
-                {formatCurrency(stats?.largestLoss || 0)}
+              <span className="text-sm text-muted-foreground">Largest Loss</span>
+              <span className="text-sm font-medium text-rose-600">
+                {formatCurrency(stats?.largestLoss || 0, locale)}
               </span>
             </div>
             <div className="flex items-center justify-between pt-4 border-t">
-              <span className="text-sm text-muted-foreground">Durchschn. Gewinn</span>
+              <span className="text-sm text-muted-foreground">Average Win</span>
               <span className="text-sm font-medium">
-                {formatCurrency(stats?.avgWin || 0)}
+                {formatCurrency(stats?.avgWin || 0, locale)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Durchschn. Verlust</span>
+              <span className="text-sm text-muted-foreground">Average Loss</span>
               <span className="text-sm font-medium">
-                {formatCurrency(stats?.avgLoss || 0)}
+                {formatCurrency(stats?.avgLoss || 0, locale)}
               </span>
             </div>
           </CardContent>
@@ -225,22 +227,22 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Trade-Verteilung</CardTitle>
+            <CardTitle>{t.dashboard.distributionByType}</CardTitle>
             <CardDescription>
-              Aufschlüsselung nach Status und Typ
+              Breakdown by position status and asset class
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Geschlossen</span>
+              <span className="text-sm text-muted-foreground">{t.common.closed}</span>
               <span className="text-sm font-medium">
-                {stats?.closedTrades || 0} Trades
+                {stats?.closedTrades || 0} {t.common.trades}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Offen</span>
+              <span className="text-sm text-muted-foreground">{t.common.open}</span>
               <span className="text-sm font-medium">
-                {stats?.openTrades || 0} Trades
+                {stats?.openTrades || 0} {t.common.trades}
               </span>
             </div>
             <div className="pt-4 border-t">
@@ -263,16 +265,16 @@ export default function DashboardPage() {
       {/* Recent Trades Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Letzte Trades</CardTitle>
+          <CardTitle>{t.dashboard.recentTrades}</CardTitle>
           <CardDescription>
-            Die 5 neuesten Trades in deinem Journal
+            {t.dashboard.recentTradesDesc}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {recentTrades.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">Noch keine Trades vorhanden.</p>
-              <TradeForm trigger={<Button>Ersten Trade erstellen</Button>} />
+              <p className="text-muted-foreground mb-4">{t.dashboard.noTradesYet}</p>
+              <TradeForm trigger={<Button>{t.dashboard.createFirstTrade}</Button>} />
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -280,28 +282,28 @@ export default function DashboardPage() {
                 <TableHeader>
                   {/* Main Header Row */}
                   <TableRow>
-                    <TableHead colSpan={6} className="text-center bg-slate-50 font-semibold">Information</TableHead>
-                    <TableHead colSpan={2} className="text-center bg-blue-50 font-semibold">Einstieg</TableHead>
-                    <TableHead colSpan={2} className="text-center bg-amber-50 font-semibold">Ausstieg</TableHead>
-                    <TableHead colSpan={2} className="text-center bg-purple-50 font-semibold">Kosten & Steuer</TableHead>
-                    <TableHead colSpan={2} className="text-center bg-green-50 font-semibold">Rendite</TableHead>
+                    <TableHead colSpan={6} className="text-center bg-slate-50 font-semibold">{t.dashboard.infoGroup}</TableHead>
+                    <TableHead colSpan={2} className="text-center bg-blue-50 font-semibold">{t.dashboard.entryGroup}</TableHead>
+                    <TableHead colSpan={2} className="text-center bg-amber-50 font-semibold">{t.dashboard.exitGroup}</TableHead>
+                    <TableHead colSpan={2} className="text-center bg-purple-50 font-semibold">{t.dashboard.costsGroup}</TableHead>
+                    <TableHead colSpan={2} className="text-center bg-green-50 font-semibold">{t.dashboard.returnGroup}</TableHead>
                   </TableRow>
                   {/* Sub-Header Row */}
                   <TableRow className="border-b text-xs">
-                    <TableHead className="bg-slate-50">Symbol</TableHead>
-                    <TableHead className="bg-slate-50">Typ</TableHead>
-                    <TableHead className="bg-slate-50">Status</TableHead>
-                    <TableHead className="bg-slate-50">Seite</TableHead>
-                    <TableHead className="bg-slate-50">Broker</TableHead>
-                    <TableHead className="bg-slate-50">Anzahl</TableHead>
-                    <TableHead className="bg-blue-50">Datum</TableHead>
-                    <TableHead className="bg-blue-50">Preis</TableHead>
-                    <TableHead className="bg-amber-50">Datum</TableHead>
-                    <TableHead className="bg-amber-50">Preis</TableHead>
-                    <TableHead className="bg-purple-50">Gebühr</TableHead>
-                    <TableHead className="bg-purple-50">Steuer</TableHead>
-                    <TableHead className="bg-green-50">Netto P&L</TableHead>
-                    <TableHead className="bg-green-50 text-right">Brutto P&L (%)</TableHead>
+                    <TableHead className="bg-slate-50">{t.common.symbol}</TableHead>
+                    <TableHead className="bg-slate-50">{t.common.type}</TableHead>
+                    <TableHead className="bg-slate-50">{t.common.status}</TableHead>
+                    <TableHead className="bg-slate-50">{t.common.side}</TableHead>
+                    <TableHead className="bg-slate-50">{t.common.broker}</TableHead>
+                    <TableHead className="bg-slate-50">{t.common.shares}</TableHead>
+                    <TableHead className="bg-blue-50">{t.common.date}</TableHead>
+                    <TableHead className="bg-blue-50">{t.common.price}</TableHead>
+                    <TableHead className="bg-amber-50">{t.common.date}</TableHead>
+                    <TableHead className="bg-amber-50">{t.common.price}</TableHead>
+                    <TableHead className="bg-purple-50">{t.common.fee}</TableHead>
+                    <TableHead className="bg-purple-50">{t.common.tax}</TableHead>
+                    <TableHead className="bg-green-50">Net P&L</TableHead>
+                    <TableHead className="bg-green-50 text-right">Gross P&L (%)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -318,7 +320,7 @@ export default function DashboardPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant={trade.status === 'open' ? 'default' : 'secondary'}>
-                            {trade.status === 'open' ? 'Offen' : 'Geschlossen'}
+                            {trade.status === 'open' ? t.common.open : t.common.closed}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -331,46 +333,46 @@ export default function DashboardPage() {
                         </TableCell>
                         <TableCell>{trade.shares}</TableCell>
 
-                        {/* Einstieg Group */}
+                        {/* Entry Group */}
                         <TableCell className="text-sm">
-                          {formatDateSafe(trade.entryDate, 'dd.MM.yyyy')}
+                          {formatDateSafe(trade.entryDate, 'MMM dd, yyyy')}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {formatCurrency(trade.entryPrice)}
+                          {formatCurrency(trade.entryPrice, locale)}
                         </TableCell>
 
-                        {/* Ausstieg Group */}
+                        {/* Exit Group */}
                         <TableCell className="text-sm">
-                          {formatDateSafe(trade.exitDate, 'dd.MM.yyyy')}
+                          {formatDateSafe(trade.exitDate, 'MMM dd, yyyy')}
                         </TableCell>
                         <TableCell className="text-sm">
                           {trade.exitPrice
-                            ? formatCurrency(trade.exitPrice)
+                            ? formatCurrency(trade.exitPrice, locale)
                             : <span className="text-muted-foreground">-</span>
                           }
                         </TableCell>
 
-                        {/* Kosten & Steuer */}
+                        {/* Costs & Tax */}
                         <TableCell className="text-xs font-mono">
-                          {formatCurrency(trade.fee || 0)}
+                          {formatCurrency(trade.fee || 0, locale)}
                         </TableCell>
                         <TableCell className="text-xs font-mono">
                           {trade.tax !== undefined && trade.tax < 0 ? (
-                            <span className="text-emerald-600 font-medium" title="Steuererstattung (wird zum Nettoergebnis addiert)">
-                              +{formatCurrency(Math.abs(trade.tax))}
+                            <span className="text-emerald-600 font-medium" title={t.common.taxCredit}>
+                              +{formatCurrency(Math.abs(trade.tax), locale)}
                             </span>
                           ) : (
-                            formatCurrency(trade.tax || 0)
+                            formatCurrency(trade.tax || 0, locale)
                           )}
                         </TableCell>
 
-                        {/* Rendite Group */}
+                        {/* Return Group */}
                         <TableCell>
                           {isClosed && netPnl !== undefined ? (
                             <div className={`font-bold text-sm ${
                               netPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'
                             }`}>
-                              {formatCurrency(netPnl)}
+                              {formatCurrency(netPnl, locale)}
                             </div>
                           ) : (
                             <span className="text-muted-foreground">-</span>
@@ -380,11 +382,11 @@ export default function DashboardPage() {
                           {isClosed && trade.pnl !== undefined ? (
                             <div className="text-xs">
                               <span className={`font-medium ${trade.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                {formatCurrency(trade.pnl)}
+                                {formatCurrency(trade.pnl, locale)}
                               </span>
                               {trade.pnlPercent !== undefined && (
                                 <span className="text-muted-foreground ml-1">
-                                  ({formatPercent(trade.pnlPercent)})
+                                  ({formatPercent(trade.pnlPercent, locale)})
                                 </span>
                               )}
                             </div>

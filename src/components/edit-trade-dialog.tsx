@@ -41,43 +41,44 @@ import {
 } from '@/components/ui/popover';
 import { useUpdateTrade } from '@/hooks/useTrades';
 import { Trade, TradeType, TradeSide, TradeStatus, Broker } from '@/types/trade';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 const editTradeFormSchema = z.object({
   symbol: z
     .string()
-    .min(1, 'Symbol ist erforderlich')
-    .max(10, 'Symbol darf maximal 10 Zeichen lang sein')
-    .regex(/^[A-Z0-9]+$/, 'Symbol muss aus Großbuchstaben und Zahlen bestehen'),
+    .min(1, 'Symbol is required')
+    .max(10, 'Symbol cannot exceed 10 characters')
+    .regex(/^[A-Z0-9]+$/, 'Symbol must contain only uppercase letters and digits'),
   type: z.nativeEnum(TradeType, {
-    message: 'Bitte wähle einen Trade-Typ',
+    message: 'Please select an asset type',
   }),
   side: z.nativeEnum(TradeSide, {
-    message: 'Bitte wähle Long oder Short',
+    message: 'Please select Long or Short',
   }),
   broker: z.nativeEnum(Broker).optional(),
   entryShares: z
     .number({
-      message: 'Anzahl beim Einstieg ist erforderlich und muss eine Zahl sein',
+      message: 'Entry shares must be a number',
     })
-    .positive('Anzahl muss größer als 0 sein')
-    .int('Anzahl muss eine ganze Zahl sein'),
+    .positive('Shares must be greater than 0')
+    .int('Shares must be an integer'),
   entryPrice: z
     .number({
-      message: 'Einstiegspreis ist erforderlich und muss eine Zahl sein',
+      message: 'Entry price must be a number',
     })
-    .positive('Preis muss größer als 0 sein'),
+    .positive('Price must be greater than 0'),
   entryDate: z.date({
-    message: 'Einstiegsdatum ist erforderlich',
+    message: 'Entry date is required',
   }),
   exitShares: z
     .number()
-    .positive('Anzahl muss größer als 0 sein')
-    .int('Anzahl muss eine ganze Zahl sein')
+    .positive('Shares must be greater than 0')
+    .int('Shares must be an integer')
     .optional()
     .or(z.literal(undefined)),
   exitPrice: z
     .number()
-    .positive('Ausstiegspreis muss größer als 0 sein')
+    .positive('Exit price must be greater than 0')
     .optional()
     .or(z.literal(undefined)),
   exitDate: z.date().optional().or(z.literal(undefined)),
@@ -89,7 +90,7 @@ const editTradeFormSchema = z.object({
     return true;
   },
   {
-    message: 'Wenn ein Ausstiegspreis angegeben wird, müssen auch Anzahl und Datum ausgefüllt werden',
+    message: 'When exit price is specified, exit shares and date are also required',
     path: ['exitPrice'],
   }
 ).refine(
@@ -100,7 +101,7 @@ const editTradeFormSchema = z.object({
     return true;
   },
   {
-    message: 'Ausstiegsmenge darf nicht größer als Einstiegsmenge sein',
+    message: 'Exit shares cannot exceed entry shares',
     path: ['exitShares'],
   }
 );
@@ -114,7 +115,23 @@ interface EditTradeDialogProps {
 }
 
 export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogProps) {
+  const { t, language } = useTranslation();
   const updateTrade = useUpdateTrade();
+
+  const getTradeTypeLabel = (type: TradeType) => {
+    switch (type) {
+      case TradeType.AKTIE:
+        return t.forms.stock;
+      case TradeType.ZERTIFIKAT:
+        return t.forms.certificate;
+      case TradeType.OPTIONSSCHEIN:
+        return t.forms.warrant;
+      case TradeType.KRYPTO:
+        return t.forms.crypto;
+      default:
+        return type;
+    }
+  };
 
   const calculateExitShares = (trade: Trade): number | undefined => {
     if (!trade.exitPrice) return undefined;
@@ -202,9 +219,11 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-6 sm:p-8">
         <DialogHeader>
-          <DialogTitle>Trade bearbeiten</DialogTitle>
+          <DialogTitle>{t.forms.editTrade}</DialogTitle>
           <DialogDescription>
-            Bearbeite die Details deines Trades. Du kannst z.B. einen Teilverkauf nachtragen.
+            {language === 'de' 
+              ? 'Bearbeite die Details deines Trades. Du kannst z.B. einen Teilverkauf nachtragen.'
+              : 'Edit the details of your trade or record an exit transaction.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -216,7 +235,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                 name="symbol"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Symbol *</FormLabel>
+                    <FormLabel>{t.common.symbol} *</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="AAPL"
@@ -226,7 +245,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                         }
                       />
                     </FormControl>
-                    <FormDescription>Ticker-Symbol (z.B. AAPL, BTC)</FormDescription>
+                    <FormDescription>{language === 'de' ? 'Ticker-Symbol (z.B. AAPL, BTC)' : 'Ticker symbol (e.g. AAPL, BTC)'}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -237,20 +256,20 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Typ *</FormLabel>
+                    <FormLabel>{t.common.type} *</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Wähle einen Typ" />
+                          <SelectValue placeholder={t.forms.assetType} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {Object.values(TradeType).map((type) => (
                           <SelectItem key={type} value={type}>
-                            {type}
+                            {getTradeTypeLabel(type)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -267,22 +286,23 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                 name="side"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Seite *</FormLabel>
+                    <FormLabel>{t.common.side} *</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Long oder Short" />
+                          <SelectValue placeholder={language === 'de' ? 'Long oder Short' : 'Long or Short'} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {Object.values(TradeSide).map((side) => (
-                          <SelectItem key={side} value={side}>
-                            {side}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value={TradeSide.LONG}>
+                          {t.common.long}
+                        </SelectItem>
+                        <SelectItem value={TradeSide.SHORT}>
+                          {t.common.short}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -295,14 +315,14 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                 name="broker"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Broker</FormLabel>
+                    <FormLabel>{t.common.broker}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Wähle einen Broker" />
+                          <SelectValue placeholder={t.forms.selectBroker} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -313,7 +333,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>Optional</FormDescription>
+                    <FormDescription>{language === 'de' ? 'Optional' : 'Optional'}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -321,7 +341,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
             </div>
 
             <div className="border-t pt-4">
-              <h3 className="text-sm font-medium mb-4">Einstieg</h3>
+              <h3 className="text-sm font-medium mb-4">{t.dashboard.entryGroup}</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -330,7 +350,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                 name="entryShares"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Anzahl *</FormLabel>
+                    <FormLabel>{t.forms.entryShares} *</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -344,7 +364,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                         value={field.value ?? ''}
                       />
                     </FormControl>
-                    <FormDescription>Anzahl beim Einstieg</FormDescription>
+                    <FormDescription>{language === 'de' ? 'Anzahl beim Einstieg' : 'Number of shares/units'}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -355,7 +375,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                 name="entryPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Einstiegspreis *</FormLabel>
+                    <FormLabel>{t.forms.entryPrice} *</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -370,7 +390,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                         value={field.value ?? ''}
                       />
                     </FormControl>
-                    <FormDescription>Preis pro Anteil in €</FormDescription>
+                    <FormDescription>{language === 'de' ? 'Preis pro Anteil in €' : 'Price per share in €'}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -382,7 +402,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
               name="entryDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Einstiegsdatum *</FormLabel>
+                  <FormLabel>{t.forms.entryDate} *</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -394,9 +414,9 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                           )}
                         >
                           {field.value ? (
-                            format(field.value, 'dd.MM.yyyy')
+                            format(field.value, language === 'de' ? 'dd.MM.yyyy' : 'MMM dd, yyyy')
                           ) : (
-                            <span>Datum wählen</span>
+                            <span>{language === 'de' ? 'Datum wählen' : 'Pick a date'}</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -420,9 +440,11 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
             />
 
             <div className="border-t pt-4">
-              <h3 className="text-sm font-medium mb-2">Ausstieg</h3>
+              <h3 className="text-sm font-medium mb-2">{t.dashboard.exitGroup}</h3>
               <p className="text-xs text-muted-foreground mb-4">
-                Füge einen (Teil-)Verkauf hinzu oder aktualisiere bestehende Ausstiegsdaten.
+                {language === 'de' 
+                  ? 'Füge einen (Teil-)Verkauf hinzu oder aktualisiere bestehende Ausstiegsdaten.'
+                  : 'Add or update exit transactions.'}
               </p>
             </div>
 
@@ -432,7 +454,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                 name="exitShares"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Verkaufte Anzahl</FormLabel>
+                    <FormLabel>{t.forms.exitShares}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -447,7 +469,9 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                       />
                     </FormControl>
                     <FormDescription>
-                      Anzahl beim Ausstieg (max. {entryShares})
+                      {language === 'de' 
+                        ? `Anzahl beim Ausstieg (max. ${entryShares})`
+                        : `Shares sold (max. ${entryShares})`}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -459,7 +483,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                 name="exitPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ausstiegspreis</FormLabel>
+                    <FormLabel>{t.forms.exitPrice}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -474,7 +498,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                         value={field.value ?? ''}
                       />
                     </FormControl>
-                    <FormDescription>Preis pro Anteil in €</FormDescription>
+                    <FormDescription>{language === 'de' ? 'Preis pro Anteil in €' : 'Price per share in €'}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -486,7 +510,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
               name="exitDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Ausstiegsdatum</FormLabel>
+                  <FormLabel>{t.forms.exitDate}</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -498,9 +522,9 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                           )}
                         >
                           {field.value ? (
-                            format(field.value, 'dd.MM.yyyy')
+                            format(field.value, language === 'de' ? 'dd.MM.yyyy' : 'MMM dd, yyyy')
                           ) : (
-                            <span>Datum wählen</span>
+                            <span>{language === 'de' ? 'Datum wählen' : 'Pick a date'}</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -526,12 +550,12 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
             {hasExitData && (
               <div className="rounded-md bg-blue-50 p-3">
                 <p className="text-sm text-blue-900">
-                  <strong>Hinweis:</strong> 
+                  <strong>{language === 'de' ? 'Hinweis:' : 'Note:'}</strong>{' '}
                   {exitShares === entryShares
-                    ? ' Der Trade wird als "Geschlossen" markiert (vollständig verkauft).'
+                    ? (language === 'de' ? 'Der Trade wird als "Geschlossen" markiert (vollständig verkauft).' : 'This trade will be marked as "Closed" (fully exited).')
                     : exitShares
-                    ? ` Der Trade bleibt "Offen" (${entryShares - exitShares} Anteile verbleiben).`
-                    : ' Bitte fülle alle Ausstiegsfelder aus.'}
+                    ? (language === 'de' ? `Der Trade bleibt "Offen" (${(entryShares || 0) - exitShares} Anteile verbleiben).` : `This trade remains "Open" (${(entryShares || 0) - exitShares} shares remaining).`)
+                    : (language === 'de' ? 'Bitte fülle alle Ausstiegsfelder aus.' : 'Please fill all exit fields.')}
                 </p>
               </div>
             )}
@@ -543,7 +567,7 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                 onClick={() => onOpenChange(false)}
                 disabled={updateTrade.isPending}
               >
-                Abbrechen
+                {t.common.cancel}
               </Button>
               <Button type="submit" disabled={updateTrade.isPending}>
                 {updateTrade.isPending ? (
@@ -568,10 +592,10 @@ export function EditTradeDialog({ trade, open, onOpenChange }: EditTradeDialogPr
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Wird gespeichert...
+                    {t.forms.saving}
                   </>
                 ) : (
-                  'Änderungen speichern'
+                  t.forms.updateTrade
                 )}
               </Button>
             </DialogFooter>

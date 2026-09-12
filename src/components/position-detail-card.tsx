@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { de } from 'date-fns/locale';
+import { de, enUS } from 'date-fns/locale';
 import {
   ChevronDown,
   ChevronRight,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Position, Transaction, TransactionType } from '@/types/position';
 import { formatCurrency, formatPercent } from '@/lib/tradeUtils';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,10 @@ export function PositionDetailCard({
   onEdit,
   onAddTransaction,
 }: PositionDetailCardProps) {
+  const { t, language } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
+  const locale = language === 'de' ? 'de-DE' : 'en-US';
+  const dateFormat = language === 'de' ? 'dd.MM.yyyy' : 'MMM dd, yyyy';
 
   const entries = position.transactions.filter((t) => t.type === TransactionType.ENTRY);
   const exits = position.transactions.filter((t) => t.type === TransactionType.EXIT);
@@ -72,21 +76,21 @@ export function PositionDetailCard({
               variant={position.side === 'Long' ? 'default' : 'secondary'}
               className="text-xs"
             >
-              {position.side}
+              {position.side === 'Long' ? t.common.long : t.common.short}
             </Badge>
           </div>
 
           {/* Avg Price */}
           <div className="flex flex-col min-w-[100px]">
-            <span className="text-xs text-muted-foreground">Ø Einstieg</span>
-            <span className="font-medium">{formatCurrency(position.avgEntryPrice)}</span>
+            <span className="text-xs text-muted-foreground">{t.table.avgPrice}</span>
+            <span className="font-medium">{formatCurrency(position.avgEntryPrice, locale)}</span>
           </div>
 
           {/* Shares */}
           <div className="flex flex-col min-w-[100px]">
-            <span className="text-xs text-muted-foreground">Position</span>
+            <span className="text-xs text-muted-foreground">{t.table.shares}</span>
             <span className="font-medium">
-              {position.remainingShares} / {position.totalEntryShares} Stk
+              {position.remainingShares} / {position.totalEntryShares} {language === 'de' ? 'Stk' : 'sh.'}
             </span>
           </div>
 
@@ -102,10 +106,10 @@ export function PositionDetailCard({
               }
             >
               {position.status === 'OPEN'
-                ? 'Offen'
+                ? t.common.open
                 : position.status === 'PARTIAL'
-                ? 'Teilweise'
-                : 'Geschlossen'}
+                ? (language === 'de' ? 'Teilweise' : 'Partial')
+                : t.common.closed}
             </Badge>
           </div>
 
@@ -122,7 +126,7 @@ export function PositionDetailCard({
               ) : (
                 <TrendingDown className="h-4 w-4" />
               )}
-              {formatCurrency(position.totalPnL)}
+              {formatCurrency(position.totalPnL, locale)}
             </div>
             <span
               className={cn(
@@ -141,9 +145,9 @@ export function PositionDetailCard({
             {/* Position Progress Bar */}
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Position Status</span>
+                <span className="text-muted-foreground">{t.common.status}</span>
                 <span className="font-medium">
-                  {position.remainingShares} Stk offen ({openPercent.toFixed(1)}%)
+                  {position.remainingShares} {language === 'de' ? 'Stk offen' : 'shares open'} ({openPercent.toFixed(1)}%)
                 </span>
               </div>
               <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden flex">
@@ -151,43 +155,43 @@ export function PositionDetailCard({
                   <div
                     className="bg-green-500 h-full transition-all"
                     style={{ width: `${closedPercent}%` }}
-                    title={`${closedPercent.toFixed(1)}% verkauft`}
+                    title={`${closedPercent.toFixed(1)}% ${language === 'de' ? 'verkauft' : 'closed'}`}
                   />
                 )}
                 <div
                   className="bg-blue-500 h-full transition-all"
                   style={{ width: `${openPercent}%` }}
-                  title={`${openPercent.toFixed(1)}% offen`}
+                  title={`${openPercent.toFixed(1)}% ${language === 'de' ? 'offen' : 'open'}`}
                 />
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{position.totalExitShares} Stk verkauft</span>
-                <span>{position.remainingShares} Stk offen</span>
+                <span>{position.totalExitShares} {language === 'de' ? 'Stk verkauft' : 'shares sold'}</span>
+                <span>{position.remainingShares} {language === 'de' ? 'Stk offen' : 'shares open'}</span>
               </div>
             </div>
 
             {/* Summary Stats */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Realisierter Gewinn</p>
+                <p className="text-xs text-muted-foreground">{language === 'de' ? 'Realisierter Gewinn' : 'Realized P&L'}</p>
                 <p
                   className={cn(
                     'font-semibold text-lg',
                     position.realizedPnL >= 0 ? 'text-green-600' : 'text-red-600'
                   )}
                 >
-                  {formatCurrency(position.realizedPnL)}
+                  {formatCurrency(position.realizedPnL, locale)}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Unrealisierter Gewinn</p>
+                <p className="text-xs text-muted-foreground">{language === 'de' ? 'Unrealisierter Gewinn' : 'Unrealized P&L'}</p>
                 <p
                   className={cn(
                     'font-semibold text-lg',
                     position.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'
                   )}
                 >
-                  {formatCurrency(position.unrealizedPnL)}
+                  {formatCurrency(position.unrealizedPnL, locale)}
                 </p>
               </div>
             </div>
@@ -197,7 +201,7 @@ export function PositionDetailCard({
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <ArrowDownToLine className="h-4 w-4 text-blue-500" />
-                  <h4 className="font-semibold text-sm">Einstiege ({entries.length})</h4>
+                  <h4 className="font-semibold text-sm">{t.dashboard.entryGroup} ({entries.length})</h4>
                 </div>
                 <div className="space-y-2">
                   {entries.map((entry, idx) => (
@@ -207,27 +211,27 @@ export function PositionDetailCard({
                     >
                       <div className="flex items-center gap-4">
                         <span className="text-xs text-muted-foreground w-[80px]">
-                          {format(new Date(entry.date), 'dd.MM.yyyy', { locale: de })}
+                          {format(new Date(entry.date), dateFormat, { locale: language === 'de' ? de : enUS })}
                         </span>
-                        <span className="font-medium">{entry.shares} Stk</span>
-                        <span className="text-sm">@ {formatCurrency(entry.price)}</span>
+                        <span className="font-medium">{entry.shares} {language === 'de' ? 'Stk' : 'sh.'}</span>
+                        <span className="text-sm">@ {formatCurrency(entry.price, locale)}</span>
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-sm font-medium">
-                          = {formatCurrency(entry.value)}
+                          = {formatCurrency(entry.value, locale)}
                         </span>
                         <span className="text-xs text-muted-foreground w-[100px] text-right">
-                          Ø {formatCurrency(entry.positionAvgPrice)}
+                          ø {formatCurrency(entry.positionAvgPrice, locale)}
                         </span>
                       </div>
                     </div>
                   ))}
                   <div className="flex justify-between pt-2 border-t border-blue-200 dark:border-blue-800 text-sm font-semibold">
-                    <span>Gesamt:</span>
+                    <span>{t.common.total}:</span>
                     <span>
-                      {position.totalEntryShares} Stk @ Ø{' '}
-                      {formatCurrency(position.avgEntryPrice)} ={' '}
-                      {formatCurrency(position.totalEntryValue)}
+                      {position.totalEntryShares} {language === 'de' ? 'Stk' : 'sh.'} @ Ø{' '}
+                      {formatCurrency(position.avgEntryPrice, locale)} ={' '}
+                      {formatCurrency(position.totalEntryValue, locale)}
                     </span>
                   </div>
                 </div>
@@ -239,7 +243,7 @@ export function PositionDetailCard({
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <ArrowUpFromLine className="h-4 w-4 text-green-500" />
-                  <h4 className="font-semibold text-sm">Ausstiege ({exits.length})</h4>
+                  <h4 className="font-semibold text-sm">{t.dashboard.exitGroup} ({exits.length})</h4>
                 </div>
                 <div className="space-y-2">
                   {exits.map((exit) => (
@@ -249,10 +253,10 @@ export function PositionDetailCard({
                     >
                       <div className="flex items-center gap-4">
                         <span className="text-xs text-muted-foreground w-[80px]">
-                          {format(new Date(exit.date), 'dd.MM.yyyy', { locale: de })}
+                          {format(new Date(exit.date), dateFormat, { locale: language === 'de' ? de : enUS })}
                         </span>
-                        <span className="font-medium">{exit.shares} Stk</span>
-                        <span className="text-sm">@ {formatCurrency(exit.price)}</span>
+                        <span className="font-medium">{exit.shares} {language === 'de' ? 'Stk' : 'sh.'}</span>
+                        <span className="text-sm">@ {formatCurrency(exit.price, locale)}</span>
                       </div>
                       <div className="flex items-center gap-4">
                         <span
@@ -261,7 +265,7 @@ export function PositionDetailCard({
                             (exit.pnl ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'
                           )}
                         >
-                          {exit.pnl ? formatCurrency(exit.pnl) : '-'}
+                          {exit.pnl ? formatCurrency(exit.pnl, locale) : '-'}
                         </span>
                         <span
                           className={cn(
@@ -276,13 +280,13 @@ export function PositionDetailCard({
                   ))}
                   {position.totalExitValue && (
                     <div className="flex justify-between pt-2 border-t border-green-200 dark:border-green-800 text-sm font-semibold">
-                      <span>Realisiert:</span>
+                      <span>{language === 'de' ? 'Realisiert:' : 'Realized:'}</span>
                       <span
                         className={cn(
                           position.realizedPnL >= 0 ? 'text-green-600' : 'text-red-600'
                         )}
                       >
-                        {formatCurrency(position.realizedPnL)}
+                        {formatCurrency(position.realizedPnL, locale)}
                       </span>
                     </div>
                   )}
@@ -295,12 +299,12 @@ export function PositionDetailCard({
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Activity className="h-4 w-4 text-amber-500" />
-                  <h4 className="font-semibold text-sm">Offene Position</h4>
+                  <h4 className="font-semibold text-sm">{language === 'de' ? 'Offene Position' : 'Open Position'}</h4>
                 </div>
                 <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-md border border-amber-200 dark:border-amber-800">
                   <div className="flex justify-between items-center">
                     <span className="text-sm">
-                      {position.remainingShares} Stk @ Ø {formatCurrency(position.avgEntryPrice)}
+                      {position.remainingShares} {language === 'de' ? 'Stk' : 'sh.'} @ Ø {formatCurrency(position.avgEntryPrice, locale)}
                     </span>
                     <span
                       className={cn(
@@ -308,7 +312,7 @@ export function PositionDetailCard({
                         position.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'
                       )}
                     >
-                      {formatCurrency(position.unrealizedPnL)} (aktueller Gewinn)
+                      {formatCurrency(position.unrealizedPnL, locale)} {language === 'de' ? '(aktueller Gewinn)' : '(current P&L)'}
                     </span>
                   </div>
                 </div>
@@ -323,7 +327,7 @@ export function PositionDetailCard({
                   size="sm"
                   onClick={() => onEdit(position)}
                 >
-                  Bearbeiten
+                  {t.common.edit}
                 </Button>
               )}
               {onAddTransaction && position.remainingShares > 0 && (
@@ -332,7 +336,7 @@ export function PositionDetailCard({
                   size="sm"
                   onClick={() => onAddTransaction(position.id)}
                 >
-                  + Transaktion hinzufügen
+                  + {t.table.addTransaction}
                 </Button>
               )}
             </div>
