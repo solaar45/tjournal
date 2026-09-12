@@ -95,6 +95,21 @@ export function formatCurrency(amount: number, locale: string = 'en-US', currenc
 }
 
 /**
+ * Formatiert Steuern:
+ * - Steuerrückzahlungen (negativer Wert im Datenmodell, z.B. -8.37) -> positives Vorzeichen (+€8.37)
+ * - Steuerzahlungen (positiver Wert im Datenmodell, z.B. 25.00) -> negatives Vorzeichen (-€25.00)
+ * - 0 oder undefined -> neutral (€0.00 oder fallback)
+ */
+export function formatTax(tax?: number | null, locale: string = 'en-US', fallback: string = '-'): string {
+  if (tax === undefined || tax === null) return fallback;
+  if (tax === 0) return formatCurrency(0, locale);
+  if (tax < 0) {
+    return `+${formatCurrency(Math.abs(tax), locale)}`;
+  }
+  return `-${formatCurrency(Math.abs(tax), locale)}`;
+}
+
+/**
  * Formatiert einen Prozentsatz
  */
 export function formatPercent(value: number, locale: string = 'en-US'): string {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTrades, useTradeStats } from '@/hooks/useTrades';
-import { formatCurrency, formatPercent, formatDateSafe } from '@/lib/tradeUtils';
+import { formatCurrency, formatPercent, formatDateSafe, formatTax } from '@/lib/tradeUtils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { TradeForm } from '@/components/trade-form';
 import { CsvImportDialog } from '@/components/csv-import-dialog';
 import { TradeType, TradeSide } from '@/types/trade';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -292,20 +292,20 @@ export default function DashboardPage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b text-xs">
-                    <TableHead className="bg-slate-50 dark:bg-slate-900">{t.common.symbol}</TableHead>
-                    <TableHead className="bg-slate-50 dark:bg-slate-900">{t.common.type}</TableHead>
-                    <TableHead className="bg-slate-50 dark:bg-slate-900">{t.common.status}</TableHead>
-                    <TableHead className="bg-slate-50 dark:bg-slate-900">{t.common.side}</TableHead>
-                    <TableHead className="bg-slate-50 dark:bg-slate-900">{t.common.shares}</TableHead>
-                    <TableHead className="bg-blue-50 dark:bg-blue-950/40">{t.dashboard.entryGroup} {t.common.date}</TableHead>
-                    <TableHead className="bg-blue-50 dark:bg-blue-950/40">{t.dashboard.entryGroup} {t.common.price}</TableHead>
-                    <TableHead className="bg-amber-50 dark:bg-amber-950/40">{t.dashboard.exitGroup} {t.common.date}</TableHead>
-                    <TableHead className="bg-amber-50 dark:bg-amber-950/40">{t.dashboard.exitGroup} {t.common.price}</TableHead>
-                    <TableHead className="bg-purple-50 dark:bg-purple-950/40">{t.common.fee}</TableHead>
-                    <TableHead className="bg-purple-50 dark:bg-purple-950/40">{t.common.tax}</TableHead>
-                    <TableHead className="bg-green-50 dark:bg-green-950/40">Net P&L</TableHead>
-                    <TableHead className="bg-green-50 dark:bg-green-950/40 text-right">Gross P&L (%)</TableHead>
+                  <TableRow className="bg-slate-100/70 dark:bg-slate-800/60 border-b text-xs">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.common.symbol}</TableHead>
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.common.type}</TableHead>
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.common.status}</TableHead>
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200 text-center">{t.common.side}</TableHead>
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.common.shares}</TableHead>
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.dashboard.entryGroup} {t.common.date}</TableHead>
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.dashboard.entryGroup} {t.common.price}</TableHead>
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.dashboard.exitGroup} {t.common.date}</TableHead>
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.dashboard.exitGroup} {t.common.price}</TableHead>
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.common.fee}</TableHead>
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.common.tax}</TableHead>
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">Net P&L</TableHead>
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200 text-right">Gross P&L (%)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -325,10 +325,22 @@ export default function DashboardPage() {
                             {trade.status === 'open' ? t.common.open : t.common.closed}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant={trade.side === TradeSide.LONG ? "default" : "secondary"}>
-                            {trade.side}
-                          </Badge>
+                        <TableCell className="text-center">
+                          {trade.side === TradeSide.LONG || (trade.side as string) === 'Long' ? (
+                            <span
+                              className="inline-flex items-center justify-center w-6 h-6 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                              title="Long"
+                            >
+                              <ArrowUp className="h-4 w-4" />
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-flex items-center justify-center w-6 h-6 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                              title="Short"
+                            >
+                              <ArrowDown className="h-4 w-4" />
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell>{trade.entryShares || trade.shares}</TableCell>
 
@@ -355,14 +367,8 @@ export default function DashboardPage() {
                         <TableCell className="text-xs font-mono">
                           {formatCurrency(trade.fee || 0, locale)}
                         </TableCell>
-                        <TableCell className="text-xs font-mono">
-                          {trade.tax !== undefined && trade.tax < 0 ? (
-                            <span className="text-emerald-600 font-medium" title={t.common.taxCredit}>
-                              +{formatCurrency(Math.abs(trade.tax), locale)}
-                            </span>
-                          ) : (
-                            formatCurrency(trade.tax || 0, locale)
-                          )}
+                        <TableCell className="text-xs font-mono font-medium text-foreground">
+                          {formatTax(trade.tax, locale)}
                         </TableCell>
 
                         {/* Return */}

@@ -15,11 +15,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { parseBrokerCsv, processCsvToTrades, ImportCandidate } from '@/lib/csvImporter';
-import { formatCurrency, formatPercent, formatDateSafe } from '@/lib/tradeUtils';
+import { formatCurrency, formatPercent, formatDateSafe, formatTax } from '@/lib/tradeUtils';
 import { useCreateTrade } from '@/hooks/useTrades';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { toast } from 'sonner';
-import { Upload, FileText, CheckCircle2, ArrowRight, ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, ArrowRight, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
 
 interface CsvImportDialogProps {
   trigger?: React.ReactNode;
@@ -313,16 +313,16 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
                                 {candidate.type}
                               </Badge>
                               <span
-                                className={`text-[11px] font-semibold flex items-center ${
-                                  candidate.side === 'Long' ? 'text-emerald-600' : 'text-rose-600'
+                                className={`inline-flex items-center justify-center w-5 h-5 rounded ${
+                                  candidate.side === 'Long' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'
                                 }`}
+                                title={candidate.side}
                               >
                                 {candidate.side === 'Long' ? (
-                                  <ArrowUpRight className="h-3 w-3 inline" />
+                                  <ArrowUp className="h-3.5 w-3.5" />
                                 ) : (
-                                  <ArrowDownRight className="h-3 w-3 inline" />
+                                  <ArrowDown className="h-3.5 w-3.5" />
                                 )}
-                                {candidate.side}
                               </span>
                             </div>
                             <span className="text-[11px] text-muted-foreground truncate max-w-[200px]" title={candidate.originalDescription}>
@@ -365,13 +365,7 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
                             {t.table.feeShort}: <span className="font-mono">{formatCurrency(candidate.fee || 0, locale)}</span>
                           </div>
                           <div>
-                            {t.table.taxShort}: {candidate.tax !== undefined && candidate.tax < 0 ? (
-                              <span className="font-mono text-emerald-600 font-medium" title={t.common.taxCredit}>
-                                +{formatCurrency(Math.abs(candidate.tax), locale)}
-                              </span>
-                            ) : (
-                              <span className="font-mono text-muted-foreground">{formatCurrency(candidate.tax || 0, locale)}</span>
-                            )}
+                            {t.table.taxShort}: <span className="font-mono text-foreground font-medium">{formatTax(candidate.tax, locale)}</span>
                           </div>
                         </TableCell>
 

@@ -19,10 +19,12 @@ import {
   MoreHorizontal,
   Trash2,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { Position, Transaction, TransactionType, PositionStatus } from '@/types/position';
 import { TradeSide } from '@/types/trade';
-import { formatCurrency, formatPercent, formatDateSafe } from '@/lib/tradeUtils';
+import { formatCurrency, formatPercent, formatDateSafe, formatTax } from '@/lib/tradeUtils';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,31 +71,8 @@ function getTransactionRowBg(type: TransactionType, pnl?: number): string {
 /**
  * Get background color for header columns
  */
-function getHeaderBg(columnId: string): string {
-  switch (columnId) {
-    case 'expander':
-    case 'symbol':
-    case 'type':
-    case 'status':
-    case 'side':
-    case 'shares':
-    case 'actions':
-      return 'bg-slate-50 dark:bg-slate-900';
-    case 'entryDate':
-    case 'entryPrice':
-      return 'bg-blue-50 dark:bg-blue-950/40';
-    case 'exitDate':
-    case 'exitPrice':
-      return 'bg-amber-50 dark:bg-amber-950/40';
-    case 'fee':
-    case 'tax':
-      return 'bg-purple-50 dark:bg-purple-950/40';
-    case 'netPnl':
-    case 'grossPnl':
-      return 'bg-green-50 dark:bg-green-950/40';
-    default:
-      return '';
-  }
+function getHeaderBg(_columnId?: string): string {
+  return 'bg-slate-100/70 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200';
 }
 
 /**
@@ -172,11 +151,25 @@ export function PositionTableTanstack({
         accessorKey: 'side',
         header: t.common.side,
         cell: ({ row }) => {
-          const isLong = row.original.side === TradeSide.LONG;
+          const isLong = row.original.side === TradeSide.LONG || (row.original.side as string) === 'Long';
           return (
-            <Badge variant={isLong ? 'default' : 'secondary'}>
-              {row.original.side}
-            </Badge>
+            <div className="flex items-center">
+              {isLong ? (
+                <span
+                  className="inline-flex items-center justify-center w-6 h-6 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  title="Long"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </span>
+              ) : (
+                <span
+                  className="inline-flex items-center justify-center w-6 h-6 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                  title="Short"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </span>
+              )}
+            </div>
           );
         },
       },
@@ -254,14 +247,8 @@ export function PositionTableTanstack({
         id: 'tax',
         header: t.common.tax,
         cell: ({ row }) => (
-          <span className="text-xs font-mono">
-            {row.original.tax !== undefined && row.original.tax < 0 ? (
-              <span className="text-emerald-600 font-medium" title={t.common.taxCredit}>
-                +{formatCurrency(Math.abs(row.original.tax), locale)}
-              </span>
-            ) : (
-              formatCurrency(row.original.tax || 0, locale)
-            )}
+          <span className="text-xs font-mono font-medium text-foreground">
+            {formatTax(row.original.tax, locale)}
           </span>
         ),
       },
@@ -519,18 +506,8 @@ export function PositionTableTanstack({
                         </TableCell>
 
                         {/* 12. Tax */}
-                        <TableCell className="font-mono">
-                          {txn.tax !== undefined ? (
-                            txn.tax < 0 ? (
-                              <span className="text-emerald-600 font-medium">
-                                +{formatCurrency(Math.abs(txn.tax), locale)}
-                              </span>
-                            ) : (
-                              formatCurrency(txn.tax, locale)
-                            )
-                          ) : (
-                            '-'
-                          )}
+                        <TableCell className="font-mono text-foreground font-medium">
+                          {formatTax(txn.tax, locale)}
                         </TableCell>
 
                         {/* 13. Net P&L */}
