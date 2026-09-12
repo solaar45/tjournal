@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo, useState } from 'react';
-import { format } from 'date-fns';
-import { de, enUS } from 'date-fns/locale';
 import {
   flexRender,
   getCoreRowModel,
@@ -16,21 +14,18 @@ import {
 import {
   ChevronDown,
   ChevronRight,
-  TrendingUp,
-  TrendingDown,
   Edit,
   Plus,
   MoreHorizontal,
   Trash2,
   ArrowUpDown,
-  ArrowUpRight,
-  ArrowDownRight,
 } from 'lucide-react';
-import { Position, Transaction, TransactionType } from '@/types/position';
+import { Position, Transaction, TransactionType, PositionStatus } from '@/types/position';
+import { TradeSide } from '@/types/trade';
 import { formatCurrency, formatPercent, formatDateSafe } from '@/lib/tradeUtils';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { Translations } from '@/i18n/types';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,15 +51,6 @@ interface PositionTableTanstackProps {
 }
 
 /**
- * Compact notation for large numbers
- */
-function formatCompact(value: number): string {
-  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-  if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-  return value.toFixed(0);
-}
-
-/**
  * Get background color for transaction rows
  */
 function getTransactionRowBg(type: TransactionType, pnl?: number): string {
@@ -81,33 +67,30 @@ function getTransactionRowBg(type: TransactionType, pnl?: number): string {
 }
 
 /**
- * Get status text and color classes based on P&L
+ * Get background color for header sections matching the Dashboard table
  */
-function getStatusDisplay(position: Position, t: Translations): { text: string; className: string } {
-  // If position is still open (has remaining shares)
-  if (position.remainingShares > 0) {
-    return {
-      text: t.common.open,
-      className: 'text-muted-foreground',
-    };
-  }
-  
-  // Closed position - Win or Loss based on P&L
-  if (position.totalPnL >= 0) {
-    return {
-      text: t.common.win,
-      className: 'text-green-600 dark:text-green-400',
-    };
-  } else {
-    return {
-      text: t.common.loss,
-      className: 'text-red-600 dark:text-red-400',
-    };
+function getHeaderBg(headerId: string, parentId?: string): string {
+  const id = parentId || headerId;
+  switch (id) {
+    case 'infoGroup':
+      return 'bg-slate-50 dark:bg-slate-900';
+    case 'entryGroup':
+      return 'bg-blue-50 dark:bg-blue-950/40';
+    case 'exitGroup':
+      return 'bg-amber-50 dark:bg-amber-950/40';
+    case 'costsGroup':
+      return 'bg-purple-50 dark:bg-purple-950/40';
+    case 'returnGroup':
+      return 'bg-green-50 dark:bg-green-950/40';
+    case 'actionsGroup':
+      return 'bg-slate-50 dark:bg-slate-900';
+    default:
+      return '';
   }
 }
 
 /**
- * Main TanStack Position Table Component
+ * Main TanStack Position Table Component using the 2-tier Grouped Header Design
  */
 export function PositionTableTanstack({
   positions,
@@ -115,301 +98,350 @@ export function PositionTableTanstack({
   onAddTransaction,
   onDelete,
 }: PositionTableTanstackProps) {
-  const { t, language } = useTranslation();
+  const { t, locale } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [expanded, setExpanded] = useState<ExpandedState>({}); // Empty = all collapsed
-  const locale = language === 'de' ? 'de-DE' : 'en-US';
-  const dateFormat = language === 'de' ? 'dd.MM.yy' : 'MM/dd/yy';
+  const [expanded, setExpanded] = useState<ExpandedState>({});
 
-  // Define columns
+  // Define 2-tier grouped columns matching Dashboard table design
   const columns = useMemo<ColumnDef<Position>[]>(
     () => [
-      // Expand/Collapse Column
+      // 1. Information Group
       {
-        id: 'expander',
-        header: '',
-        size: 40,
-        cell: ({ row }) => {
-          return (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                row.toggleExpanded();
-              }}
-            >
-              {row.getIsExpanded() ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </Button>
-          );
-        },
-      },
-      // Symbol Column
-      {
-        accessorKey: 'symbol',
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-xs"
-          >
-            {t.table.symbol}
-            <ArrowUpDown className="ml-1 h-3 w-3" />
-          </Button>
-        ),
-        cell: ({ row }) => <span className="font-bold">{row.original.symbol}</span>,
-      },
-      // Side Column - Icon only
-      {
-        id: 'side',
-        accessorKey: 'side',
-        header: '',
-        size: 40,
-        cell: ({ row }) => {
-          const isLong = row.original.side === 'Long';
-          return (
-            <div className="flex items-center justify-center" title={row.original.side}>
-              {isLong ? (
-                <ArrowUpRight className="h-4 w-4 text-green-600 dark:text-green-400" />
-              ) : (
-                <ArrowDownRight className="h-4 w-4 text-red-600 dark:text-red-400" />
-              )}
-            </div>
-          );
-        },
-      },
-      // Status Column - Win/Loss/Open
-      {
-        id: 'status',
-        header: t.table.status,
-        size: 60,
-        cell: ({ row }) => {
-          const { text, className } = getStatusDisplay(row.original, t);
-          return (
-            <span className={cn('text-xs font-medium', className)}>
-              {text}
-            </span>
-          );
-        },
-      },
-      // Price Column
-      {
-        id: 'avgPrice',
-        accessorKey: 'avgEntryPrice',
-        header: ({ column }) => (
-          <div className="text-right">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-              className="h-8 text-xs"
-            >
-              {t.table.avgPrice}
-              <ArrowUpDown className="ml-1 h-3 w-3" />
-            </Button>
-          </div>
-        ),
-        cell: ({ row }) => (
-          <div className="text-right font-medium text-sm">
-            {formatCurrency(row.original.avgEntryPrice, locale)}
-          </div>
-        ),
-      },
-      // Shares Column
-      {
-        id: 'shares',
-        header: () => <div className="text-right">{t.table.shares}</div>,
-        cell: ({ row }) => (
-          <div className="text-right text-sm">
-            <span className="font-medium">{row.original.remainingShares}</span>
-            <span className="text-muted-foreground">/{row.original.totalEntryShares}</span>
-          </div>
-        ),
-      },
-      // Entries Summary
-      {
-        id: 'entries',
-        header: () => <div className="text-right">{t.table.entries}</div>,
-        cell: ({ row }) => {
-          const entryCount = row.original.transactions.filter(
-            (t) => t.type === TransactionType.ENTRY
-          ).length;
-          return (
-            <div className="text-right text-xs text-muted-foreground">
-              {entryCount}× {formatCompact(row.original.totalEntryValue)}
-            </div>
-          );
-        },
-      },
-      // Exits Summary
-      {
-        id: 'exits',
-        header: () => <div className="text-right">{t.table.exits}</div>,
-        cell: ({ row }) => {
-          const exitCount = row.original.transactions.filter(
-            (t) => t.type === TransactionType.EXIT
-          ).length;
-          return (
-            <div className="text-right text-xs text-muted-foreground">
-              {exitCount > 0
-                ? `${exitCount}× ${formatCompact(row.original.totalExitValue || 0)}`
-                : '-'}
-            </div>
-          );
-        },
-      },
-      // Kosten & Steuer Column
-      {
-        id: 'costs',
-        header: () => <div className="text-right">{t.table.costsAndTax}</div>,
-        cell: ({ row }) => {
-          const fee = row.original.fee || 0;
-          const tax = row.original.tax || 0;
-          return (
-            <div className="text-right text-xs">
-              <div>
-                <span className="text-muted-foreground text-[11px]">{t.table.feeShort}: </span>
-                <span className="font-mono">{formatCurrency(fee, locale)}</span>
+        id: 'infoGroup',
+        header: () => <span className="font-semibold">{t.dashboard.infoGroup}</span>,
+        columns: [
+          {
+            id: 'expander',
+            header: '',
+            size: 36,
+            cell: ({ row }) => (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  row.toggleExpanded();
+                }}
+              >
+                {row.getIsExpanded() ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </Button>
+            ),
+          },
+          {
+            accessorKey: 'symbol',
+            header: ({ column }) => (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                className="-ml-3 h-8 text-xs font-semibold"
+              >
+                {t.common.symbol}
+                <ArrowUpDown className="ml-1 h-3 w-3" />
+              </Button>
+            ),
+            cell: ({ row }) => <span className="font-medium">{row.original.symbol}</span>,
+          },
+          {
+            id: 'type',
+            accessorKey: 'type',
+            header: t.common.type,
+            cell: ({ row }) => <Badge variant="outline">{row.original.type}</Badge>,
+          },
+          {
+            id: 'status',
+            header: t.common.status,
+            cell: ({ row }) => {
+              const isOpen = row.original.remainingShares > 0;
+              return (
+                <Badge variant={isOpen ? 'default' : 'secondary'}>
+                  {isOpen ? t.common.open : t.common.closed}
+                </Badge>
+              );
+            },
+          },
+          {
+            id: 'side',
+            accessorKey: 'side',
+            header: t.common.side,
+            cell: ({ row }) => {
+              const isLong = row.original.side === TradeSide.LONG;
+              return (
+                <Badge variant={isLong ? 'default' : 'secondary'}>
+                  {row.original.side}
+                </Badge>
+              );
+            },
+          },
+          {
+            id: 'broker',
+            accessorKey: 'broker',
+            header: t.common.broker,
+            cell: ({ row }) => (
+              <span className="text-sm">
+                {row.original.broker || <span className="text-muted-foreground">-</span>}
+              </span>
+            ),
+          },
+          {
+            id: 'shares',
+            header: t.common.shares,
+            cell: ({ row }) => (
+              <div className="text-sm">
+                <span className="font-medium">{row.original.remainingShares}</span>
+                {row.original.totalEntryShares !== row.original.remainingShares && (
+                  <span className="text-muted-foreground text-xs">/{row.original.totalEntryShares}</span>
+                )}
               </div>
-              <div>
-                <span className="text-muted-foreground text-[11px]">{t.table.taxShort}: </span>
-                {tax < 0 ? (
-                  <span className="font-mono text-emerald-600 font-medium" title={t.common.taxCredit}>
-                    +{formatCurrency(Math.abs(tax), locale)}
+            ),
+          },
+        ],
+      },
+
+      // 2. Entry Group
+      {
+        id: 'entryGroup',
+        header: () => <span className="font-semibold">{t.dashboard.entryGroup}</span>,
+        columns: [
+          {
+            id: 'entryDate',
+            header: t.common.date,
+            cell: ({ row }) => (
+              <span className="text-sm">
+                {formatDateSafe(row.original.firstEntryDate, 'MMM dd, yyyy')}
+              </span>
+            ),
+          },
+          {
+            id: 'entryPrice',
+            accessorKey: 'avgEntryPrice',
+            header: ({ column }) => (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                className="h-8 text-xs font-semibold"
+              >
+                {t.common.price}
+                <ArrowUpDown className="ml-1 h-3 w-3" />
+              </Button>
+            ),
+            cell: ({ row }) => (
+              <span className="text-sm">
+                {formatCurrency(row.original.avgEntryPrice, locale)}
+              </span>
+            ),
+          },
+        ],
+      },
+
+      // 3. Exit Group
+      {
+        id: 'exitGroup',
+        header: () => <span className="font-semibold">{t.dashboard.exitGroup}</span>,
+        columns: [
+          {
+            id: 'exitDate',
+            header: t.common.date,
+            cell: ({ row }) => (
+              <span className="text-sm">
+                {row.original.lastExitDate
+                  ? formatDateSafe(row.original.lastExitDate, 'MMM dd, yyyy')
+                  : <span className="text-muted-foreground">-</span>}
+              </span>
+            ),
+          },
+          {
+            id: 'exitPrice',
+            header: t.common.price,
+            cell: ({ row }) => (
+              <span className="text-sm">
+                {row.original.avgExitPrice
+                  ? formatCurrency(row.original.avgExitPrice, locale)
+                  : <span className="text-muted-foreground">-</span>}
+              </span>
+            ),
+          },
+        ],
+      },
+
+      // 4. Costs & Tax Group
+      {
+        id: 'costsGroup',
+        header: () => <span className="font-semibold">{t.dashboard.costsGroup}</span>,
+        columns: [
+          {
+            id: 'fee',
+            header: t.common.fee,
+            cell: ({ row }) => (
+              <span className="text-xs font-mono">
+                {formatCurrency(row.original.fee || 0, locale)}
+              </span>
+            ),
+          },
+          {
+            id: 'tax',
+            header: t.common.tax,
+            cell: ({ row }) => (
+              <span className="text-xs font-mono">
+                {row.original.tax !== undefined && row.original.tax < 0 ? (
+                  <span className="text-emerald-600 font-medium" title={t.common.taxCredit}>
+                    +{formatCurrency(Math.abs(row.original.tax), locale)}
                   </span>
                 ) : (
-                  <span className="font-mono">{formatCurrency(tax, locale)}</span>
+                  formatCurrency(row.original.tax || 0, locale)
                 )}
-              </div>
-            </div>
-          );
-        },
+              </span>
+            ),
+          },
+        ],
       },
-      // Total P&L
+
+      // 5. Return Group
       {
-        id: 'pnl',
-        accessorKey: 'totalPnL',
-        header: ({ column }) => (
-          <div className="text-right">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-              className="h-8 text-xs"
-            >
-              {t.table.pnlNetGross}
-              <ArrowUpDown className="ml-1 h-3 w-3" />
-            </Button>
-          </div>
-        ),
-        cell: ({ row }) => {
-          const netPnL = row.original.totalNetPnL !== undefined ? row.original.totalNetPnL : row.original.totalPnL;
-          const grossPnL = row.original.totalPnL;
-          const isProfitable = netPnL >= 0;
-          return (
-            <div className="text-right">
-              <div className="flex items-center justify-end gap-1">
-                {isProfitable ? (
-                  <TrendingUp className="h-3 w-3 text-emerald-600" />
-                ) : (
-                  <TrendingDown className="h-3 w-3 text-rose-600" />
-                )}
-                <span
-                  className={cn(
-                    'font-bold text-sm',
-                    isProfitable ? 'text-emerald-600' : 'text-rose-600'
-                  )}
+        id: 'returnGroup',
+        header: () => <span className="font-semibold">{t.dashboard.returnGroup}</span>,
+        columns: [
+          {
+            id: 'netPnl',
+            accessorKey: 'totalNetPnL',
+            header: ({ column }) => (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                className="h-8 text-xs font-semibold"
+              >
+                Net P&L
+                <ArrowUpDown className="ml-1 h-3 w-3" />
+              </Button>
+            ),
+            cell: ({ row }) => {
+              const netPnl = row.original.totalNetPnL !== undefined ? row.original.totalNetPnL : row.original.totalPnL;
+              const isClosed = row.original.remainingShares === 0 || row.original.status === PositionStatus.CLOSED;
+              return isClosed && netPnl !== undefined ? (
+                <div className={cn('font-bold text-sm', netPnl >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
+                  {formatCurrency(netPnl, locale)}
+                </div>
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              );
+            },
+          },
+          {
+            id: 'grossPnl',
+            accessorKey: 'totalPnL',
+            header: ({ column }) => (
+              <div className="text-right">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                  className="h-8 text-xs font-semibold"
                 >
-                  {formatCurrency(netPnL, locale)}
-                </span>
+                  Gross P&L (%)
+                  <ArrowUpDown className="ml-1 h-3 w-3" />
+                </Button>
               </div>
-              <div className="text-xs text-muted-foreground">
-                {t.table.grossShort}: <span className={grossPnL >= 0 ? 'text-emerald-600/90 font-medium' : 'text-rose-600/90 font-medium'}>{formatCurrency(grossPnL, locale)}</span>
-                <span className="ml-1">({formatPercent(row.original.totalPnLPercent)})</span>
-              </div>
-            </div>
-          );
-        },
+            ),
+            cell: ({ row }) => {
+              const isClosed = row.original.remainingShares === 0 || row.original.status === PositionStatus.CLOSED;
+              return isClosed && row.original.totalPnL !== undefined ? (
+                <div className="text-xs text-right">
+                  <span className={cn('font-medium', row.original.totalPnL >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
+                    {formatCurrency(row.original.totalPnL, locale)}
+                  </span>
+                  {row.original.totalPnLPercent !== undefined && (
+                    <span className="text-muted-foreground ml-1">
+                      ({formatPercent(row.original.totalPnLPercent, locale)})
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="text-right text-muted-foreground">-</div>
+              );
+            },
+          },
+        ],
       },
-      // Actions Column (Option C: Kompaktes Dropdown-Menü)
+
+      // 6. Actions Group
       {
-        id: 'actions',
-        header: () => <div className="text-right pr-2">{t.table.actions}</div>,
-        size: 60,
-        cell: ({ row }) => {
-          const isClosed = row.original.remainingShares === 0;
+        id: 'actionsGroup',
+        header: () => <span className="font-semibold">{t.common.actions}</span>,
+        columns: [
+          {
+            id: 'actions',
+            size: 40,
+            header: '',
+            cell: ({ row }) => {
+              const isClosed = row.original.status === PositionStatus.CLOSED || row.original.remainingShares === 0;
+              return (
+                <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[180px]">
+                      {onEdit && (
+                        <DropdownMenuItem
+                          onClick={() => onEdit(row.original)}
+                          className="cursor-pointer"
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          <span>{t.table.editTrade}</span>
+                        </DropdownMenuItem>
+                      )}
 
-          return (
-            <div className="flex items-center justify-end">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                    onClick={(e) => e.stopPropagation()}
-                    title={t.common.actions}
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">{t.common.actions}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56" onClick={(e) => e.stopPropagation()}>
-                  {onEdit && (
-                    <DropdownMenuItem
-                      onClick={() => onEdit(row.original)}
-                      className="cursor-pointer"
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      <span>{t.table.editTrade}</span>
-                    </DropdownMenuItem>
-                  )}
-
-                  <DropdownMenuItem
-                    disabled={isClosed}
-                    onClick={() => {
-                      if (!isClosed && onAddTransaction) {
-                        onAddTransaction(row.original.id);
-                      }
-                    }}
-                    className={cn(
-                      "cursor-pointer",
-                      isClosed && "opacity-50 cursor-not-allowed text-muted-foreground focus:bg-transparent"
-                    )}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    <span>{t.table.addTransaction}</span>
-                    {isClosed && (
-                      <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-normal">
-                        {t.table.closedBadge}
-                      </span>
-                    )}
-                  </DropdownMenuItem>
-
-                  {onDelete && (
-                    <>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => onDelete(row.original)}
-                        className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                        disabled={isClosed}
+                        onClick={() => {
+                          if (!isClosed && onAddTransaction) {
+                            onAddTransaction(row.original.id);
+                          }
+                        }}
+                        className={cn(
+                          "cursor-pointer",
+                          isClosed && "opacity-50 cursor-not-allowed text-muted-foreground focus:bg-transparent"
+                        )}
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>{t.table.deleteTrade}</span>
+                        <Plus className="mr-2 h-4 w-4" />
+                        <span>{t.table.addTransaction}</span>
+                        {isClosed && (
+                          <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-normal">
+                            {t.table.closedBadge}
+                          </span>
+                        )}
                       </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          );
-        },
+
+                      {onDelete && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => onDelete(row.original)}
+                            className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>{t.table.deleteTrade}</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              );
+            },
+          },
+        ],
       },
     ],
     [onEdit, onAddTransaction, onDelete, t, locale]
@@ -430,22 +462,29 @@ export function PositionTableTanstack({
   });
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead
-                  key={header.id}
-                  style={{ width: header.getSize() }}
-                  className="h-9 text-xs uppercase"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                </TableHead>
-              ))}
+          {table.getHeaderGroups().map((headerGroup, idx) => (
+            <TableRow key={headerGroup.id} className={idx === 1 ? 'border-b text-xs' : ''}>
+              {headerGroup.headers.map((header) => {
+                const bgClass = getHeaderBg(header.id, header.column.parent?.id);
+                return (
+                  <TableHead
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    style={{ width: header.getSize() }}
+                    className={cn(
+                      idx === 0 ? "text-center font-semibold" : "font-semibold",
+                      bgClass
+                    )}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                );
+              })}
             </TableRow>
           ))}
         </TableHeader>
@@ -460,7 +499,7 @@ export function PositionTableTanstack({
                   onClick={() => row.toggleExpanded()}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-2">
+                    <TableCell key={cell.id} className="py-2.5">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -468,109 +507,137 @@ export function PositionTableTanstack({
 
                 {/* Expanded Transaction Rows */}
                 {row.getIsExpanded() &&
-                  row.original.transactions.map((txn) => (
-                    <TableRow
-                      key={txn.id}
-                      className={cn(
-                        'border-l-4',
-                        getTransactionRowBg(txn.type, txn.pnl)
-                      )}
-                    >
-                      {/* Empty expander cell */}
-                      <TableCell />
+                  row.original.transactions.map((txn) => {
+                    const isEntry = txn.type === TransactionType.ENTRY;
+                    const isExit = txn.type === TransactionType.EXIT;
+                    const netPnl = txn.netPnl !== undefined ? txn.netPnl : txn.pnl;
 
-                      {/* Date */}
-                      <TableCell className="py-1 pl-8 text-xs text-muted-foreground">
-                        {formatDateSafe(txn.date, dateFormat)}
-                      </TableCell>
-
-                      {/* Transaction Type (Entry/Exit) - now just text */}
-                      <TableCell className="py-1" colSpan={2}>
-                        <span className={cn(
-                          'text-xs font-medium',
-                          txn.type === TransactionType.ENTRY
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-amber-600 dark:text-amber-400'
-                        )}>
-                          {txn.type === TransactionType.ENTRY ? 'Entry' : 'Exit'}
-                        </span>
-                      </TableCell>
-
-                      {/* Price */}
-                      <TableCell className="py-1 text-right text-xs font-mono">
-                        {formatCurrency(txn.price, locale)}
-                      </TableCell>
-
-                      {/* Shares */}
-                      <TableCell className="py-1 text-right text-xs font-medium">
-                        {txn.type === TransactionType.EXIT && '-'}
-                        {txn.shares} {language === 'de' ? 'Stk' : 'shares'}
-                      </TableCell>
-
-                      {/* Value (Entries column) */}
-                      <TableCell className="py-1 text-right text-xs text-muted-foreground">
-                        {txn.type === TransactionType.ENTRY ? formatCurrency(txn.value, locale) : '-'}
-                      </TableCell>
-
-                      {/* Exits column */}
-                      <TableCell className="py-1 text-right text-xs text-muted-foreground">
-                        {txn.type === TransactionType.EXIT ? formatCurrency(txn.value, locale) : '-'}
-                      </TableCell>
-
-                      {/* Kosten & Steuer */}
-                      <TableCell className="py-1 text-right text-xs">
-                        {txn.fee !== undefined || txn.tax !== undefined ? (
-                          <div className="text-[11px]">
-                            {txn.fee !== undefined && (
-                              <div><span className="text-muted-foreground">{t.table.feeShort}: </span><span className="font-mono">{formatCurrency(txn.fee, locale)}</span></div>
-                            )}
-                            {txn.tax !== undefined && (
-                              <div><span className="text-muted-foreground">{t.table.taxShort}: </span>
-                                {txn.tax < 0 ? (
-                                  <span className="font-mono text-emerald-600 font-medium">+{formatCurrency(Math.abs(txn.tax), locale)}</span>
-                                ) : (
-                                  <span className="font-mono">{formatCurrency(txn.tax, locale)}</span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
+                    return (
+                      <TableRow
+                        key={txn.id}
+                        className={cn(
+                          'border-l-4 text-xs',
+                          getTransactionRowBg(txn.type, txn.pnl)
                         )}
-                      </TableCell>
+                      >
+                        {/* 1. Expander cell */}
+                        <TableCell />
 
-                      {/* P/L (Netto & Brutto) or Avg Price */}
-                      <TableCell className="py-1 text-right">
-                        {txn.pnl !== undefined ? (
-                          <div>
+                        {/* 2. Date under Symbol */}
+                        <TableCell className="font-medium text-xs">
+                          {formatDateSafe(txn.date, 'MMM dd, yyyy')}
+                        </TableCell>
+
+                        {/* 3. Type */}
+                        <TableCell>
+                          <Badge
+                            variant={isEntry ? 'outline' : 'secondary'}
+                            className="text-[10px] px-1.5 py-0 h-4 font-normal"
+                          >
+                            {isEntry ? 'Entry' : 'Exit'}
+                          </Badge>
+                        </TableCell>
+
+                        {/* 4. Status placeholder */}
+                        <TableCell className="text-muted-foreground">-</TableCell>
+
+                        {/* 5. Side placeholder */}
+                        <TableCell className="text-muted-foreground">-</TableCell>
+
+                        {/* 6. Broker placeholder */}
+                        <TableCell className="text-muted-foreground">-</TableCell>
+
+                        {/* 7. Shares */}
+                        <TableCell className="font-medium">
+                          {isExit && '-'}{txn.shares}
+                        </TableCell>
+
+                        {/* 8. Entry Date */}
+                        <TableCell className="text-muted-foreground">
+                          {isEntry ? formatDateSafe(txn.date, 'MMM dd, yyyy') : '-'}
+                        </TableCell>
+
+                        {/* 9. Entry Price */}
+                        <TableCell className="font-mono">
+                          {isEntry ? formatCurrency(txn.price, locale) : '-'}
+                        </TableCell>
+
+                        {/* 10. Exit Date */}
+                        <TableCell className="text-muted-foreground">
+                          {isExit ? formatDateSafe(txn.date, 'MMM dd, yyyy') : '-'}
+                        </TableCell>
+
+                        {/* 11. Exit Price */}
+                        <TableCell className="font-mono">
+                          {isExit ? formatCurrency(txn.price, locale) : '-'}
+                        </TableCell>
+
+                        {/* 12. Fee */}
+                        <TableCell className="font-mono">
+                          {txn.fee !== undefined ? formatCurrency(txn.fee, locale) : '-'}
+                        </TableCell>
+
+                        {/* 13. Tax */}
+                        <TableCell className="font-mono">
+                          {txn.tax !== undefined ? (
+                            txn.tax < 0 ? (
+                              <span className="text-emerald-600 font-medium">
+                                +{formatCurrency(Math.abs(txn.tax), locale)}
+                              </span>
+                            ) : (
+                              formatCurrency(txn.tax, locale)
+                            )
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+
+                        {/* 14. Net P&L */}
+                        <TableCell>
+                          {isExit && netPnl !== undefined ? (
                             <div
                               className={cn(
-                                'font-semibold text-xs',
-                                (txn.netPnl !== undefined ? txn.netPnl : txn.pnl) >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                                'font-bold font-mono',
+                                netPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'
                               )}
                             >
-                              {formatCurrency(txn.netPnl !== undefined ? txn.netPnl : txn.pnl, locale)}
+                              {formatCurrency(netPnl, locale)}
                             </div>
-                            <div className="text-[10px] text-muted-foreground">
-                              {t.table.grossShort}: {formatCurrency(txn.pnl, locale)}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground font-mono">
-                            ø {formatCurrency(txn.positionAvgPrice, locale)}
-                          </span>
-                        )}
-                      </TableCell>
+                          ) : !isExit ? (
+                            <span className="text-muted-foreground font-mono">
+                              ø {formatCurrency(txn.positionAvgPrice, locale)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
 
-                      {/* Empty actions cell */}
-                      <TableCell />
-                    </TableRow>
-                  ))}
+                        {/* 15. Gross P&L */}
+                        <TableCell className="text-right">
+                          {isExit && txn.pnl !== undefined ? (
+                            <div
+                              className={cn(
+                                'font-medium font-mono',
+                                txn.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                              )}
+                            >
+                              {formatCurrency(txn.pnl, locale)}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+
+                        {/* 16. Actions placeholder */}
+                        <TableCell />
+                      </TableRow>
+                    );
+                  })}
               </>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
+              <TableCell colSpan={16} className="h-24 text-center">
                 {t.table.noPositions}
               </TableCell>
             </TableRow>
