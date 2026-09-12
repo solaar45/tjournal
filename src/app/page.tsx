@@ -10,9 +10,13 @@ import { TradeForm } from '@/components/trade-form';
 import { CsvImportDialog } from '@/components/csv-import-dialog';
 import { TradeType, TradeSide } from '@/types/trade';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function DashboardPage() {
-  const { t, locale } = useTranslation();
+  const { t, locale, language } = useTranslation();
+  const dateFormat = language === 'de' ? 'dd.MM.yy' : 'MM/dd/yy';
   const { data: trades, isLoading: tradesLoading, error: tradesError } = useTrades();
   const { data: stats, isLoading: statsLoading, error: statsError } = useTradeStats();
 
@@ -264,11 +268,19 @@ export default function DashboardPage() {
 
       {/* Recent Trades Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>{t.dashboard.recentTrades}</CardTitle>
-          <CardDescription>
-            {t.dashboard.recentTradesDesc}
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div>
+            <CardTitle>{t.dashboard.recentTrades}</CardTitle>
+            <CardDescription className="mt-1">
+              {t.dashboard.recentTradesDesc}
+            </CardDescription>
+          </div>
+          <Link href="/trades">
+            <Button variant="ghost" size="sm" className="gap-1 text-xs">
+              <span>{t.common.trades}</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </Link>
         </CardHeader>
         <CardContent>
           {recentTrades.length === 0 ? (
@@ -280,83 +292,88 @@ export default function DashboardPage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  {/* Main Header Row */}
-                  <TableRow>
-                    <TableHead colSpan={6} className="text-center bg-slate-50 font-semibold">{t.dashboard.infoGroup}</TableHead>
-                    <TableHead colSpan={2} className="text-center bg-blue-50 font-semibold">{t.dashboard.entryGroup}</TableHead>
-                    <TableHead colSpan={2} className="text-center bg-amber-50 font-semibold">{t.dashboard.exitGroup}</TableHead>
-                    <TableHead colSpan={2} className="text-center bg-purple-50 font-semibold">{t.dashboard.costsGroup}</TableHead>
-                    <TableHead colSpan={2} className="text-center bg-green-50 font-semibold">{t.dashboard.returnGroup}</TableHead>
-                  </TableRow>
-                  {/* Sub-Header Row */}
-                  <TableRow className="border-b text-xs">
-                    <TableHead className="bg-slate-50">{t.common.symbol}</TableHead>
-                    <TableHead className="bg-slate-50">{t.common.type}</TableHead>
-                    <TableHead className="bg-slate-50">{t.common.status}</TableHead>
-                    <TableHead className="bg-slate-50">{t.common.side}</TableHead>
-                    <TableHead className="bg-slate-50">{t.common.broker}</TableHead>
-                    <TableHead className="bg-slate-50">{t.common.shares}</TableHead>
-                    <TableHead className="bg-blue-50">{t.common.date}</TableHead>
-                    <TableHead className="bg-blue-50">{t.common.price}</TableHead>
-                    <TableHead className="bg-amber-50">{t.common.date}</TableHead>
-                    <TableHead className="bg-amber-50">{t.common.price}</TableHead>
-                    <TableHead className="bg-purple-50">{t.common.fee}</TableHead>
-                    <TableHead className="bg-purple-50">{t.common.tax}</TableHead>
-                    <TableHead className="bg-green-50">Net P&L</TableHead>
-                    <TableHead className="bg-green-50 text-right">Gross P&L (%)</TableHead>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="h-9 text-xs uppercase font-medium">{t.table.symbol}</TableHead>
+                    <TableHead className="h-9 w-10 text-center text-xs uppercase font-medium">
+                      <span className="sr-only">{t.common.side}</span>
+                    </TableHead>
+                    <TableHead className="h-9 text-xs uppercase font-medium">{t.table.status}</TableHead>
+                    <TableHead className="h-9 text-xs uppercase font-medium">{t.common.date}</TableHead>
+                    <TableHead className="h-9 text-right text-xs uppercase font-medium">{t.table.avgPrice}</TableHead>
+                    <TableHead className="h-9 text-right text-xs uppercase font-medium">{t.table.shares}</TableHead>
+                    <TableHead className="h-9 text-right text-xs uppercase font-medium">{t.common.fee}</TableHead>
+                    <TableHead className="h-9 text-right text-xs uppercase font-medium">{t.common.tax}</TableHead>
+                    <TableHead className="h-9 text-right text-xs uppercase font-medium">{t.table.pnlNetGross}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recentTrades.map((trade) => {
-                    const netPnl = trade.netPnl !== undefined ? trade.netPnl : trade.pnl;
                     const isClosed = trade.status === 'closed';
+                    const isLong = trade.side === TradeSide.LONG;
+                    const netPnl = trade.netPnl !== undefined ? trade.netPnl : trade.pnl;
+                    const isProfitable = (netPnl ?? 0) >= 0;
+
+                    let statusText = t.common.open;
+                    let statusClassName = 'text-muted-foreground';
+                    if (isClosed) {
+                      statusText = isProfitable ? t.common.win : t.common.loss;
+                      statusClassName = isProfitable
+                        ? 'text-green-600 dark:text-green-400 font-medium'
+                        : 'text-red-600 dark:text-red-400 font-medium';
+                    }
 
                     return (
-                      <TableRow key={trade.id}>
-                        {/* Information Group */}
-                        <TableCell className="font-medium">{trade.symbol}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{trade.type}</Badge>
+                      <TableRow key={trade.id} className="hover:bg-muted/50">
+                        {/* Symbol */}
+                        <TableCell className="py-2.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold">{trade.symbol}</span>
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-normal">
+                              {trade.type}
+                            </Badge>
+                          </div>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant={trade.status === 'open' ? 'default' : 'secondary'}>
-                            {trade.status === 'open' ? t.common.open : t.common.closed}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={trade.side === TradeSide.LONG ? "default" : "secondary"}>
-                            {trade.side}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {trade.broker || <span className="text-muted-foreground">-</span>}
-                        </TableCell>
-                        <TableCell>{trade.shares}</TableCell>
 
-                        {/* Entry Group */}
-                        <TableCell className="text-sm">
-                          {formatDateSafe(trade.entryDate, 'MMM dd, yyyy')}
+                        {/* Side - Icon only */}
+                        <TableCell className="py-2.5 text-center w-10">
+                          <div className="flex items-center justify-center" title={trade.side}>
+                            {isLong ? (
+                              <ArrowUpRight className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            ) : (
+                              <ArrowDownRight className="h-4 w-4 text-red-600 dark:text-red-400" />
+                            )}
+                          </div>
                         </TableCell>
-                        <TableCell className="text-sm">
+
+                        {/* Status - Outcome based */}
+                        <TableCell className="py-2.5">
+                          <span className={cn('text-xs', statusClassName)}>
+                            {statusText}
+                          </span>
+                        </TableCell>
+
+                        {/* Date */}
+                        <TableCell className="py-2.5 text-xs text-muted-foreground">
+                          {formatDateSafe(trade.entryDate, dateFormat)}
+                        </TableCell>
+
+                        {/* Avg Price */}
+                        <TableCell className="py-2.5 text-right font-medium text-sm">
                           {formatCurrency(trade.entryPrice, locale)}
                         </TableCell>
 
-                        {/* Exit Group */}
-                        <TableCell className="text-sm">
-                          {formatDateSafe(trade.exitDate, 'MMM dd, yyyy')}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {trade.exitPrice
-                            ? formatCurrency(trade.exitPrice, locale)
-                            : <span className="text-muted-foreground">-</span>
-                          }
+                        {/* Shares */}
+                        <TableCell className="py-2.5 text-right text-sm font-medium">
+                          {trade.shares}
                         </TableCell>
 
-                        {/* Costs & Tax */}
-                        <TableCell className="text-xs font-mono">
+                        {/* Fee */}
+                        <TableCell className="py-2.5 text-right font-mono text-xs">
                           {formatCurrency(trade.fee || 0, locale)}
                         </TableCell>
-                        <TableCell className="text-xs font-mono">
+
+                        {/* Tax */}
+                        <TableCell className="py-2.5 text-right font-mono text-xs">
                           {trade.tax !== undefined && trade.tax < 0 ? (
                             <span className="text-emerald-600 font-medium" title={t.common.taxCredit}>
                               +{formatCurrency(Math.abs(trade.tax), locale)}
@@ -366,32 +383,36 @@ export default function DashboardPage() {
                           )}
                         </TableCell>
 
-                        {/* Return Group */}
-                        <TableCell>
+                        {/* Net / Gross P&L */}
+                        <TableCell className="py-2.5 text-right">
                           {isClosed && netPnl !== undefined ? (
-                            <div className={`font-bold text-sm ${
-                              netPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                            }`}>
-                              {formatCurrency(netPnl, locale)}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {isClosed && trade.pnl !== undefined ? (
-                            <div className="text-xs">
-                              <span className={`font-medium ${trade.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                {formatCurrency(trade.pnl, locale)}
-                              </span>
-                              {trade.pnlPercent !== undefined && (
-                                <span className="text-muted-foreground ml-1">
-                                  ({formatPercent(trade.pnlPercent, locale)})
+                            <div>
+                              <div className="flex items-center justify-end gap-1">
+                                {isProfitable ? (
+                                  <TrendingUp className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                ) : (
+                                  <TrendingDown className="h-3 w-3 text-rose-600 dark:text-rose-400" />
+                                )}
+                                <span
+                                  className={cn(
+                                    "font-bold text-sm font-mono",
+                                    isProfitable ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                                  )}
+                                >
+                                  {formatCurrency(netPnl, locale)}
                                 </span>
+                              </div>
+                              {trade.pnl !== undefined && (
+                                <div className="text-[11px] text-muted-foreground font-mono">
+                                  <span>{formatCurrency(trade.pnl, locale)}</span>
+                                  {trade.pnlPercent !== undefined && (
+                                    <span className="ml-1">({formatPercent(trade.pnlPercent, locale)})</span>
+                                  )}
+                                </div>
                               )}
                             </div>
                           ) : (
-                            <span className="text-muted-foreground">-</span>
+                            <span className="text-muted-foreground text-sm">-</span>
                           )}
                         </TableCell>
                       </TableRow>
