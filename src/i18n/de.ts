@@ -127,7 +127,7 @@ export const de: Translations = {
     successDeleted: 'Trade erfolgreich gelöscht!',
   },
   csvImport: {
-    triggerButton: 'CSV Import',
+    triggerButton: 'Import',
     dialogTitle: 'Broker Transaktions-Import',
     dialogDescription: 'Importiere Abrechnungen und Transaktions-Exporte (z. B. Scalable Capital oder Trade Republic). Derivate, Basiswerte, Gebühren und Steuern werden automatisch zugeordnet.',
     dropzoneTitle: 'CSV-Datei auswählen oder hierher ziehen',
@@ -183,6 +183,6 @@ export const de: Translations = {
     thisWeek: 'Diese Woche',
     today: 'Heute',
     allTypes: 'Alle Assets',
-    exportCsv: 'Export CSV',
+    exportCsv: 'Export',
   },
 };

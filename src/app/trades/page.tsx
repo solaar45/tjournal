@@ -6,10 +6,7 @@ import { Trade } from '@/types/trade';
 import { Position, Transaction, TransactionType, PositionStatus } from '@/types/position';
 import { PositionTableTanstack } from '@/components/position-table-tanstack';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TradeForm } from '@/components/trade-form';
-import { QuickTradeForm } from '@/components/quick-trade-form';
 import { EditTradeDialog } from '@/components/edit-trade-dialog';
-import { CsvImportDialog } from '@/components/csv-import-dialog';
 
 /**
  * Convert Trade to Position format for display

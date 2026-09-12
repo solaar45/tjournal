@@ -4,7 +4,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TradeForm } from '@/components/trade-form';
-import { QuickTradeForm } from '@/components/quick-trade-form';
 import { CsvImportDialog } from '@/components/csv-import-dialog';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { TradeType } from '@/types/trade';
@@ -123,10 +122,9 @@ export function FilterToolbar(props: FilterToolbarProps) {
           className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
         >
           <Download className="h-3.5 w-3.5" />
-          {t.filters.exportCsv}
+          <span>{t.filters.exportCsv}</span>
         </Button>
         <CsvImportDialog />
-        <QuickTradeForm />
         <TradeForm />
       </div>
     </div>

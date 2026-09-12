@@ -160,8 +160,12 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline" className="gap-2">
-            <Upload className="h-4 w-4" />
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+          >
+            <Upload className="h-3.5 w-3.5" />
             {t.csvImport.triggerButton}
           </Button>
         )}
