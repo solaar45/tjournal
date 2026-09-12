@@ -57,12 +57,6 @@ export default function RootLayout({
                   >
                     Trades
                   </Link>
-                  <Link
-                    href="/analytics"
-                    className="transition-colors hover:text-foreground/80 text-foreground/60"
-                  >
-                    Analytics
-                  </Link>
                 </nav>
               </div>
             </header>

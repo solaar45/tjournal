@@ -72,11 +72,11 @@ const quickTradeSchema = z.object({
     .regex(/^[A-Z0-9]+$/, 'Nur Großbuchstaben & Zahlen'),
   side: z.nativeEnum(TradeSide),
   entryShares: z.coerce
-    .number({ invalid_type_error: 'Nur Zahlen' })
+    .number({ message: 'Nur Zahlen' })
     .positive('Muss > 0 sein')
     .int('Nur ganze Zahlen'),
   entryPrice: z.coerce
-    .number({ invalid_type_error: 'Nur Zahlen' })
+    .number({ message: 'Nur Zahlen' })
     .positive('Muss > 0 sein'),
 });
 
@@ -95,7 +95,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
   const smartDefaults = getSmartDefaults();
 
   const form = useForm<QuickTradeValues>({
-    resolver: zodResolver(quickTradeSchema),
+    resolver: zodResolver(quickTradeSchema) as any,
     mode: 'onChange', // Enable inline validation
     defaultValues: {
       symbol: '',
@@ -233,7 +233,6 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                   <FormControl>
                     <div className="relative">
                       <Input
-                        ref={symbolInputRef}
                         placeholder="AAPL"
                         autoComplete="off"
                         className={cn(
@@ -242,6 +241,12 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                           getInputState(symbolValue, symbolError) === 'success' && 'border-green-500 focus-visible:ring-green-500'
                         )}
                         {...field}
+                        ref={(e) => {
+                          field.ref(e);
+                          if (symbolInputRef) {
+                            (symbolInputRef as any).current = e;
+                          }
+                        }}
                         onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                       />
                       {/* Inline validation indicator */}
@@ -318,7 +323,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                           )}
                           {...field}
                         />
-                        {sharesValue && sharesValue !== '' && (
+                        {Boolean(sharesValue) && (
                           <div className="absolute right-3 top-1/2 -translate-y-1/2">
                             {sharesError ? (
                               <span className="text-red-500 text-xl">✗</span>
@@ -359,7 +364,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                           )}
                           {...field}
                         />
-                        {priceValue && priceValue !== '' && (
+                        {Boolean(priceValue) && (
                           <div className="absolute right-3 top-1/2 -translate-y-1/2">
                             {priceError ? (
                               <span className="text-red-500 text-xl">✗</span>
