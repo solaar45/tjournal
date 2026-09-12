@@ -3,10 +3,17 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { formatCurrency } from '@/lib/tradeUtils';
+import {
+  formatCurrency,
+  formatSignedCurrency,
+  formatTax,
+  getAmountColorClass,
+  getTaxColorClass,
+} from '@/lib/tradeUtils';
 import { Trade, TradeStats } from '@/types/trade';
 import { StreakStats, LongShortStats } from '@/lib/tradeUtils';
 import { ArrowUp, ArrowDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface KpiStripProps {
   stats?: TradeStats;
@@ -31,13 +38,6 @@ export function KpiStrip({
   // Avg PnL per trade (net)
   const netPnL = stats?.totalNetPnL !== undefined ? stats.totalNetPnL : (stats?.totalPnL || 0);
   const avgNetPerTrade = totalClosed > 0 ? Number((netPnL / totalClosed).toFixed(2)) : 0;
-
-  // Relative width calculation for Long vs Short bars
-  const absLongPnl = Math.abs(longShortStats.long.pnl);
-  const absShortPnl = Math.abs(longShortStats.short.pnl);
-  const maxPnl = Math.max(absLongPnl, absShortPnl, 1);
-  const longBarWidth = Math.min(100, Math.max(15, (absLongPnl / maxPnl) * 100));
-  const shortBarWidth = Math.min(100, Math.max(15, (absShortPnl / maxPnl) * 100));
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -89,8 +89,8 @@ export function KpiStrip({
             {t.kpi.avgWinLoss}
           </div>
 
-          <div className="text-2xl font-bold font-mono tracking-tight text-foreground">
-            {formatCurrency(avgNetPerTrade, locale)}
+          <div className={cn("text-2xl font-bold font-mono tracking-tight", getAmountColorClass(avgNetPerTrade))}>
+            {formatSignedCurrency(avgNetPerTrade, locale)}
           </div>
           <div className="text-[11px] text-muted-foreground mt-0.5">
             {t.kpi.perTrade}
@@ -113,7 +113,7 @@ export function KpiStrip({
               <span className="text-muted-foreground">Avg Loss</span>
             </div>
             <span className="text-rose-500 font-medium">
-              {stats?.avgLoss ? formatCurrency(stats.avgLoss, locale) : formatCurrency(0, locale)}
+              {stats?.avgLoss ? `-${formatCurrency(Math.abs(stats.avgLoss), locale)}` : formatCurrency(0, locale)}
             </span>
           </div>
         </div>
@@ -126,10 +126,8 @@ export function KpiStrip({
             {t.kpi.longVsShort}
           </div>
 
-          <div className={`text-2xl font-bold font-mono tracking-tight ${
-            netPnL >= 0 ? 'text-emerald-500' : 'text-rose-500'
-          }`}>
-            {netPnL >= 0 ? '+' : ''}{formatCurrency(netPnL, locale)}
+          <div className={cn("text-2xl font-bold font-mono tracking-tight", getAmountColorClass(netPnL))}>
+            {formatSignedCurrency(netPnL, locale)}
           </div>
           <div className="text-[11px] text-muted-foreground mt-0.5">
             {t.kpi.totalPnL}
@@ -145,8 +143,8 @@ export function KpiStrip({
               </span>
               <span className="text-muted-foreground">L ({longShortStats.long.count})</span>
             </div>
-            <span className={longShortStats.long.pnl >= 0 ? 'text-emerald-500 font-medium' : 'text-rose-500 font-medium'}>
-              {longShortStats.long.pnl >= 0 ? '+' : ''}{formatCurrency(longShortStats.long.pnl, locale)}
+            <span className={cn("font-medium", getAmountColorClass(longShortStats.long.pnl))}>
+              {formatSignedCurrency(longShortStats.long.pnl, locale)}
             </span>
           </div>
 
@@ -158,8 +156,8 @@ export function KpiStrip({
               </span>
               <span className="text-muted-foreground">S ({longShortStats.short.count})</span>
             </div>
-            <span className={longShortStats.short.pnl >= 0 ? 'text-emerald-500 font-medium' : 'text-rose-500 font-medium'}>
-              {longShortStats.short.pnl >= 0 ? '+' : ''}{formatCurrency(longShortStats.short.pnl, locale)}
+            <span className={cn("font-medium", getAmountColorClass(longShortStats.short.pnl))}>
+              {formatSignedCurrency(longShortStats.short.pnl, locale)}
             </span>
           </div>
         </div>
@@ -214,7 +212,9 @@ export function KpiStrip({
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">{t.common.tax}</span>
-            <span className="font-medium text-foreground">{formatCurrency(stats?.totalTax || 0, locale)}</span>
+            <span className={cn("font-medium", getTaxColorClass(stats?.totalTax || 0))}>
+              {formatTax(stats?.totalTax || 0, locale)}
+            </span>
           </div>
         </div>
       </Card>

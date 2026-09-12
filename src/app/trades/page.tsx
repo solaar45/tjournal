@@ -104,7 +104,13 @@ function tradeToPosition(trade: Trade): Position {
 }
 
 import { useTranslation } from '@/i18n/LanguageContext';
-import { formatCurrency } from '@/lib/tradeUtils';
+import {
+  formatCurrency,
+  formatSignedCurrency,
+  formatTax,
+  getAmountColorClass,
+  getTaxColorClass,
+} from '@/lib/tradeUtils';
 
 export default function TradesPage() {
   const { t, locale } = useTranslation();
@@ -162,39 +168,60 @@ export default function TradesPage() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>{t.tradesPage.totalTrades}</CardDescription>
-            <CardTitle className="text-3xl">{stats.total}</CardTitle>
-          </CardHeader>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card className="p-3.5 bg-card/60 backdrop-blur-xs border-border/60">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+            {t.tradesPage.totalTrades}
+          </div>
+          <div className="text-2xl font-bold font-mono tracking-tight text-foreground">
+            {stats.total}
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-0.5 font-mono">
+            {stats.closed} {t.common.closed} · {stats.open} {t.common.open}
+          </div>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>{t.tradesPage.openTrades}</CardDescription>
-            <CardTitle className="text-3xl text-blue-600">{stats.open}</CardTitle>
-          </CardHeader>
+
+        <Card className="p-3.5 bg-card/60 backdrop-blur-xs border-border/60">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+            {t.tradesPage.openTrades}
+          </div>
+          <div className="text-2xl font-bold font-mono tracking-tight text-blue-600 dark:text-blue-400">
+            {stats.open}
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">
+            Active positions
+          </div>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>{t.tradesPage.closedTrades}</CardDescription>
-            <CardTitle className="text-3xl text-gray-600">{stats.closed}</CardTitle>
-          </CardHeader>
+
+        <Card className="p-3.5 bg-card/60 backdrop-blur-xs border-border/60">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+            {t.tradesPage.closedTrades}
+          </div>
+          <div className="text-2xl font-bold font-mono tracking-tight text-foreground">
+            {stats.closed}
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">
+            Completed trades
+          </div>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>{t.tradesPage.totalPnL}</CardDescription>
-            <CardTitle
-              className={`text-2xl ${
-                stats.totalNetPnL >= 0 ? 'text-emerald-600' : 'text-rose-600'
-              }`}
-            >
-              {formatCurrency(stats.totalNetPnL, locale)} <span className="text-xs font-normal text-muted-foreground">{t.common.net}</span>
-            </CardTitle>
-            <div className="text-xs text-muted-foreground mt-1">
-              {t.common.gross}: {formatCurrency(stats.totalPnL, locale)} ({t.common.fees}: {formatCurrency(stats.totalFees, locale)} | {t.common.taxes}: {formatCurrency(stats.totalTax, locale)})
-            </div>
-          </CardHeader>
+
+        <Card className="p-3.5 bg-card/60 backdrop-blur-xs border-border/60">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+            {t.tradesPage.totalPnL} (NET)
+          </div>
+          <div
+            className={`text-2xl font-bold font-mono tracking-tight ${getAmountColorClass(stats.totalNetPnL)}`}
+          >
+            {formatSignedCurrency(stats.totalNetPnL, locale)}
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1 font-mono flex flex-wrap gap-x-2">
+            <span>
+              {t.common.gross}: <span className={getAmountColorClass(stats.totalPnL)}>{formatSignedCurrency(stats.totalPnL, locale)}</span>
+            </span>
+            <span>
+              {t.common.tax}: <span className={getTaxColorClass(stats.totalTax)}>{formatTax(stats.totalTax, locale)}</span>
+            </span>
+          </div>
         </Card>
       </div>
 

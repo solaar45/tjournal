@@ -95,6 +95,58 @@ export function formatCurrency(amount: number, locale: string = 'en-US', currenc
 }
 
 /**
+ * Formatiert einen Geldbetrag mit explizitem Vorzeichen (+ für positiv, - für negativ)
+ */
+export function formatSignedCurrency(amount?: number | null, locale: string = 'en-US', fallback: string = '-'): string {
+  if (amount === undefined || amount === null) return fallback;
+  if (amount > 0) {
+    return `+${formatCurrency(amount, locale)}`;
+  }
+  if (amount < 0) {
+    return `-${formatCurrency(Math.abs(amount), locale)}`;
+  }
+  return formatCurrency(0, locale);
+}
+
+/**
+ * Formatiert einen Prozentsatz mit explizitem Vorzeichen (+ für positiv, - für negativ)
+ */
+export function formatSignedPercent(value?: number | null, locale: string = 'en-US', fallback: string = '-'): string {
+  if (value === undefined || value === null) return fallback;
+  if (value > 0) {
+    return `+${formatPercent(value, locale)}`;
+  }
+  if (value < 0) {
+    return `-${formatPercent(Math.abs(value), locale)}`;
+  }
+  return formatPercent(0, locale);
+}
+
+/**
+ * Gibt die passende Farbklasse für Beträge zurück:
+ * positiv -> text-emerald-600 dark:text-emerald-400 (Grün)
+ * negativ -> text-rose-600 dark:text-rose-400 (Rot)
+ * neutral -> text-muted-foreground
+ */
+export function getAmountColorClass(amount?: number | null): string {
+  if (amount === undefined || amount === null || amount === 0) return 'text-muted-foreground';
+  if (amount > 0) return 'text-emerald-600 dark:text-emerald-400';
+  return 'text-rose-600 dark:text-rose-400';
+}
+
+/**
+ * Gibt die passende Farbklasse für Steuern zurück:
+ * Steuerrückzahlung (tax < 0, z.B. +€8.37) -> Grün
+ * Steuerzahlung (tax > 0, z.B. -€25.00) -> Rot
+ * 0 oder undefined -> text-muted-foreground
+ */
+export function getTaxColorClass(tax?: number | null): string {
+  if (tax === undefined || tax === null || tax === 0) return 'text-muted-foreground';
+  if (tax < 0) return 'text-emerald-600 dark:text-emerald-400';
+  return 'text-rose-600 dark:text-rose-400';
+}
+
+/**
  * Formatiert Steuern:
  * - Steuerrückzahlungen (negativer Wert im Datenmodell, z.B. -8.37) -> positives Vorzeichen (+€8.37)
  * - Steuerzahlungen (positiver Wert im Datenmodell, z.B. 25.00) -> negatives Vorzeichen (-€25.00)

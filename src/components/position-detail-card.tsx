@@ -13,7 +13,13 @@ import {
   Activity,
 } from 'lucide-react';
 import { Position, Transaction, TransactionType } from '@/types/position';
-import { formatCurrency, formatPercent } from '@/lib/tradeUtils';
+import {
+  formatCurrency,
+  formatPercent,
+  formatSignedCurrency,
+  formatSignedPercent,
+  getAmountColorClass,
+} from '@/lib/tradeUtils';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -117,8 +123,8 @@ export function PositionDetailCard({
           <div className="flex flex-col items-end ml-auto min-w-[140px]">
             <div
               className={cn(
-                'flex items-center gap-1 font-bold text-lg',
-                isProfitable ? 'text-green-600' : 'text-red-600'
+                'flex items-center gap-1 font-bold text-lg font-mono',
+                getAmountColorClass(position.totalPnL)
               )}
             >
               {isProfitable ? (
@@ -126,15 +132,15 @@ export function PositionDetailCard({
               ) : (
                 <TrendingDown className="h-4 w-4" />
               )}
-              {formatCurrency(position.totalPnL, locale)}
+              {formatSignedCurrency(position.totalPnL, locale)}
             </div>
             <span
               className={cn(
-                'text-sm',
-                isProfitable ? 'text-green-600' : 'text-red-600'
+                'text-sm font-mono',
+                getAmountColorClass(position.totalPnLPercent)
               )}
             >
-              {formatPercent(position.totalPnLPercent)}
+              {formatSignedPercent(position.totalPnLPercent)}
             </span>
           </div>
         </div>
@@ -176,22 +182,22 @@ export function PositionDetailCard({
                 <p className="text-xs text-muted-foreground">{language === 'de' ? 'Realisierter Gewinn' : 'Realized P&L'}</p>
                 <p
                   className={cn(
-                    'font-semibold text-lg',
-                    position.realizedPnL >= 0 ? 'text-green-600' : 'text-red-600'
+                    'font-semibold text-lg font-mono',
+                    getAmountColorClass(position.realizedPnL)
                   )}
                 >
-                  {formatCurrency(position.realizedPnL, locale)}
+                  {formatSignedCurrency(position.realizedPnL, locale)}
                 </p>
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">{language === 'de' ? 'Unrealisierter Gewinn' : 'Unrealized P&L'}</p>
                 <p
                   className={cn(
-                    'font-semibold text-lg',
-                    position.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'
+                    'font-semibold text-lg font-mono',
+                    getAmountColorClass(position.unrealizedPnL)
                   )}
                 >
-                  {formatCurrency(position.unrealizedPnL, locale)}
+                  {formatSignedCurrency(position.unrealizedPnL, locale)}
                 </p>
               </div>
             </div>
@@ -261,19 +267,19 @@ export function PositionDetailCard({
                       <div className="flex items-center gap-4">
                         <span
                           className={cn(
-                            'font-semibold',
-                            (exit.pnl ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                            'font-semibold font-mono',
+                            getAmountColorClass(exit.pnl ?? 0)
                           )}
                         >
-                          {exit.pnl ? formatCurrency(exit.pnl, locale) : '-'}
+                          {exit.pnl !== undefined ? formatSignedCurrency(exit.pnl, locale) : '-'}
                         </span>
                         <span
                           className={cn(
-                            'text-xs w-[60px] text-right font-medium',
-                            (exit.pnlPercent ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                            'text-xs w-[60px] text-right font-medium font-mono',
+                            getAmountColorClass(exit.pnlPercent ?? 0)
                           )}
                         >
-                          {exit.pnlPercent ? formatPercent(exit.pnlPercent) : '-'}
+                          {exit.pnlPercent !== undefined ? formatSignedPercent(exit.pnlPercent) : '-'}
                         </span>
                       </div>
                     </div>
@@ -283,10 +289,11 @@ export function PositionDetailCard({
                       <span>{language === 'de' ? 'Realisiert:' : 'Realized:'}</span>
                       <span
                         className={cn(
-                          position.realizedPnL >= 0 ? 'text-green-600' : 'text-red-600'
+                          'font-mono',
+                          getAmountColorClass(position.realizedPnL)
                         )}
                       >
-                        {formatCurrency(position.realizedPnL, locale)}
+                        {formatSignedCurrency(position.realizedPnL, locale)}
                       </span>
                     </div>
                   )}
@@ -304,15 +311,15 @@ export function PositionDetailCard({
                 <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-md border border-amber-200 dark:border-amber-800">
                   <div className="flex justify-between items-center">
                     <span className="text-sm">
-                      {position.remainingShares} {language === 'de' ? 'Stk' : 'sh.'} @ Ø {formatCurrency(position.avgEntryPrice, locale)}
+                      {position.remainingShares} {language === 'de' ? 'Stk' : 'sh.'} @ Ø <span className="font-mono">{formatCurrency(position.avgEntryPrice, locale)}</span>
                     </span>
                     <span
                       className={cn(
-                        'font-semibold',
-                        position.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'
+                        'font-semibold font-mono',
+                        getAmountColorClass(position.unrealizedPnL)
                       )}
                     >
-                      {formatCurrency(position.unrealizedPnL, locale)} {language === 'de' ? '(aktueller Gewinn)' : '(current P&L)'}
+                      {formatSignedCurrency(position.unrealizedPnL, locale)} {language === 'de' ? '(aktueller Gewinn)' : '(current P&L)'}
                     </span>
                   </div>
                 </div>

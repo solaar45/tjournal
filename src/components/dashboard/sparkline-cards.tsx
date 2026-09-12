@@ -1,10 +1,9 @@
 "use client";
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { formatCurrency } from '@/lib/tradeUtils';
-import { EquityPoint } from '@/lib/tradeUtils';
+import { formatCurrency, formatSignedCurrency, getAmountColorClass, EquityPoint } from '@/lib/tradeUtils';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -39,10 +38,8 @@ export function SparklineCards({ equityPoints, locale }: SparklineCardsProps) {
         </div>
 
         <div className="flex items-baseline gap-2 mb-2">
-          <span className={`text-xl font-bold font-mono tracking-tight ${
-            currentPnl >= 0 ? 'text-emerald-500' : 'text-rose-500'
-          }`}>
-            {currentPnl >= 0 ? '+' : ''}{formatCurrency(currentPnl, locale)}
+          <span className={`text-xl font-bold font-mono tracking-tight ${getAmountColorClass(currentPnl)}`}>
+            {formatSignedCurrency(currentPnl, locale)}
           </span>
         </div>
 
@@ -72,7 +69,9 @@ export function SparklineCards({ equityPoints, locale }: SparklineCardsProps) {
                     return (
                       <div className="bg-popover border border-border text-popover-foreground text-xs p-1.5 rounded shadow-md font-mono">
                         <div className="text-[10px] text-muted-foreground">{data.dateLabel}</div>
-                        <div className="font-bold text-emerald-500">{formatCurrency(data.cumulativePnl, locale)}</div>
+                        <div className={`font-bold ${getAmountColorClass(data.cumulativePnl)}`}>
+                          {formatSignedCurrency(data.cumulativePnl, locale)}
+                        </div>
                       </div>
                     );
                   }
@@ -102,8 +101,8 @@ export function SparklineCards({ equityPoints, locale }: SparklineCardsProps) {
         </div>
 
         <div className="flex items-baseline gap-2 mb-2">
-          <span className="text-xl font-bold font-mono tracking-tight text-rose-500">
-            {formatCurrency(currentDrawdown, locale)}
+          <span className={`text-xl font-bold font-mono tracking-tight ${getAmountColorClass(currentDrawdown)}`}>
+            {formatSignedCurrency(currentDrawdown, locale)}
           </span>
           <span className="text-[10px] text-muted-foreground font-mono">
             {t.kpi.currentDrawdown}
@@ -136,7 +135,9 @@ export function SparklineCards({ equityPoints, locale }: SparklineCardsProps) {
                     return (
                       <div className="bg-popover border border-border text-popover-foreground text-xs p-1.5 rounded shadow-md font-mono">
                         <div className="text-[10px] text-muted-foreground">{data.dateLabel}</div>
-                        <div className="font-bold text-rose-500">{formatCurrency(data.drawdown, locale)}</div>
+                        <div className={`font-bold ${getAmountColorClass(data.drawdown)}`}>
+                          {formatSignedCurrency(data.drawdown, locale)}
+                        </div>
                       </div>
                     );
                   }

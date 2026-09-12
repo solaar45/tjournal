@@ -7,6 +7,10 @@ import {
   formatPercent,
   formatDateSafe,
   formatTax,
+  formatSignedCurrency,
+  formatSignedPercent,
+  getAmountColorClass,
+  getTaxColorClass,
   calculateTradeStats,
   calculateStreakStats,
   calculateLongShortStats,
@@ -20,6 +24,7 @@ import { TradeForm } from '@/components/trade-form';
 import { TradeType, TradeSide, Trade } from '@/types/trade';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { ArrowUp, ArrowDown, ArrowRight, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 // New Dashboard Components inspired by TradeSync
@@ -326,17 +331,15 @@ export default function DashboardPage() {
                         <TableCell className="font-mono">
                           {formatCurrency(trade.fee || 0, locale)}
                         </TableCell>
-                        <TableCell className="font-mono font-medium text-foreground">
+                        <TableCell className={cn("font-mono font-medium", getTaxColorClass(trade.tax))}>
                           {formatTax(trade.tax, locale)}
                         </TableCell>
 
                         {/* Return */}
                         <TableCell>
                           {isClosed && netPnl !== undefined ? (
-                            <div className={`font-bold font-mono ${
-                              netPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                            }`}>
-                              {formatCurrency(netPnl, locale)}
+                            <div className={cn("font-bold font-mono", getAmountColorClass(netPnl))}>
+                              {formatSignedCurrency(netPnl, locale)}
                             </div>
                           ) : (
                             <span className="text-muted-foreground">-</span>
@@ -345,12 +348,12 @@ export default function DashboardPage() {
                         <TableCell className="text-right font-mono">
                           {isClosed && trade.pnl !== undefined ? (
                             <div>
-                              <span className={`font-medium ${trade.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                {formatCurrency(trade.pnl, locale)}
+                              <span className={cn("font-medium", getAmountColorClass(trade.pnl))}>
+                                {formatSignedCurrency(trade.pnl, locale)}
                               </span>
                               {trade.pnlPercent !== undefined && (
-                                <span className="text-muted-foreground ml-1 text-[11px]">
-                                  ({formatPercent(trade.pnlPercent, locale)})
+                                <span className={cn("ml-1 text-[11px]", getAmountColorClass(trade.pnlPercent))}>
+                                  ({formatSignedPercent(trade.pnlPercent, locale)})
                                 </span>
                               )}
                             </div>

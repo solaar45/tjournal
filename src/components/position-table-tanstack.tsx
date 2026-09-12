@@ -24,7 +24,16 @@ import {
 } from 'lucide-react';
 import { Position, Transaction, TransactionType, PositionStatus } from '@/types/position';
 import { TradeSide } from '@/types/trade';
-import { formatCurrency, formatPercent, formatDateSafe, formatTax } from '@/lib/tradeUtils';
+import {
+  formatCurrency,
+  formatPercent,
+  formatDateSafe,
+  formatTax,
+  formatSignedCurrency,
+  formatSignedPercent,
+  getAmountColorClass,
+  getTaxColorClass,
+} from '@/lib/tradeUtils';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -247,7 +256,7 @@ export function PositionTableTanstack({
         id: 'tax',
         header: t.common.tax,
         cell: ({ row }) => (
-          <span className="text-xs font-mono font-medium text-foreground">
+          <span className={cn("text-xs font-mono font-medium", getTaxColorClass(row.original.tax))}>
             {formatTax(row.original.tax, locale)}
           </span>
         ),
@@ -270,8 +279,8 @@ export function PositionTableTanstack({
           const netPnl = row.original.totalNetPnL !== undefined ? row.original.totalNetPnL : row.original.totalPnL;
           const isClosed = row.original.remainingShares === 0 || row.original.status === PositionStatus.CLOSED;
           return isClosed && netPnl !== undefined ? (
-            <div className={cn('font-bold text-sm', netPnl >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
-              {formatCurrency(netPnl, locale)}
+            <div className={cn('font-bold font-mono text-sm', getAmountColorClass(netPnl))}>
+              {formatSignedCurrency(netPnl, locale)}
             </div>
           ) : (
             <span className="text-muted-foreground">-</span>
@@ -297,13 +306,13 @@ export function PositionTableTanstack({
         cell: ({ row }) => {
           const isClosed = row.original.remainingShares === 0 || row.original.status === PositionStatus.CLOSED;
           return isClosed && row.original.totalPnL !== undefined ? (
-            <div className="text-xs text-right">
-              <span className={cn('font-medium', row.original.totalPnL >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
-                {formatCurrency(row.original.totalPnL, locale)}
+            <div className="text-xs text-right font-mono">
+              <span className={cn('font-medium', getAmountColorClass(row.original.totalPnL))}>
+                {formatSignedCurrency(row.original.totalPnL, locale)}
               </span>
               {row.original.totalPnLPercent !== undefined && (
-                <span className="text-muted-foreground ml-1">
-                  ({formatPercent(row.original.totalPnLPercent, locale)})
+                <span className={cn('ml-1', getAmountColorClass(row.original.totalPnLPercent))}>
+                  ({formatSignedPercent(row.original.totalPnLPercent, locale)})
                 </span>
               )}
             </div>
@@ -506,20 +515,15 @@ export function PositionTableTanstack({
                         </TableCell>
 
                         {/* 12. Tax */}
-                        <TableCell className="font-mono text-foreground font-medium">
+                        <TableCell className={cn("font-mono font-medium", getTaxColorClass(txn.tax))}>
                           {formatTax(txn.tax, locale)}
                         </TableCell>
 
                         {/* 13. Net P&L */}
                         <TableCell>
                           {isExit && netPnl !== undefined ? (
-                            <div
-                              className={cn(
-                                'font-bold font-mono',
-                                netPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                              )}
-                            >
-                              {formatCurrency(netPnl, locale)}
+                            <div className={cn('font-bold font-mono', getAmountColorClass(netPnl))}>
+                              {formatSignedCurrency(netPnl, locale)}
                             </div>
                           ) : !isExit ? (
                             <span className="text-muted-foreground font-mono">
@@ -533,13 +537,8 @@ export function PositionTableTanstack({
                         {/* 14. Gross P&L */}
                         <TableCell className="text-right">
                           {isExit && txn.pnl !== undefined ? (
-                            <div
-                              className={cn(
-                                'font-medium font-mono',
-                                txn.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                              )}
-                            >
-                              {formatCurrency(txn.pnl, locale)}
+                            <div className={cn('font-medium font-mono', getAmountColorClass(txn.pnl))}>
+                              {formatSignedCurrency(txn.pnl, locale)}
                             </div>
                           ) : (
                             <span className="text-muted-foreground">-</span>

@@ -5,9 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { formatCurrency } from '@/lib/tradeUtils';
+import {
+  formatCurrency,
+  formatSignedCurrency,
+  getAmountColorClass,
+  calculateDailyCalendarData,
+  WeekCalendarRow,
+  DayCalendarData,
+} from '@/lib/tradeUtils';
 import { Trade } from '@/types/trade';
-import { calculateDailyCalendarData, WeekCalendarRow, DayCalendarData } from '@/lib/tradeUtils';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { enUS, de } from 'date-fns/locale';
@@ -156,15 +162,9 @@ export function TradingCalendar({
                         {hasTrades ? (
                           <>
                             <div
-                              className={`text-xs font-bold font-mono tracking-tight ${
-                                isPositive
-                                  ? 'text-emerald-500'
-                                  : isNegative
-                                  ? 'text-rose-500'
-                                  : 'text-foreground'
-                              }`}
+                              className={`text-xs font-bold font-mono tracking-tight ${getAmountColorClass(day.pnl)}`}
                             >
-                              {isPositive ? '+' : ''}{formatCurrency(day.pnl, locale)}
+                              {formatSignedCurrency(day.pnl, locale)}
                             </div>
                             <div className="text-[10px] text-muted-foreground font-mono">
                               {day.tradesCount} {day.tradesCount === 1 ? t.calendar.trade : t.calendar.trades}
@@ -185,15 +185,9 @@ export function TradingCalendar({
                   {week.weeklyTradesCount > 0 ? (
                     <>
                       <div
-                        className={`text-xs font-bold font-mono tracking-tight ${
-                          week.weeklyPnl > 0
-                            ? 'text-emerald-500'
-                            : week.weeklyPnl < 0
-                            ? 'text-rose-500'
-                            : 'text-foreground'
-                        }`}
+                        className={`text-xs font-bold font-mono tracking-tight ${getAmountColorClass(week.weeklyPnl)}`}
                       >
-                        {week.weeklyPnl > 0 ? '+' : ''}{formatCurrency(week.weeklyPnl, locale)}
+                        {formatSignedCurrency(week.weeklyPnl, locale)}
                       </div>
                       <div className="text-[10px] text-muted-foreground font-mono">
                         {week.weeklyTradesCount} {week.weeklyTradesCount === 1 ? t.calendar.trade : t.calendar.trades}

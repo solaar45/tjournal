@@ -15,11 +15,20 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { parseBrokerCsv, processCsvToTrades, ImportCandidate } from '@/lib/csvImporter';
-import { formatCurrency, formatPercent, formatDateSafe, formatTax } from '@/lib/tradeUtils';
+import {
+  formatCurrency,
+  formatPercent,
+  formatDateSafe,
+  formatTax,
+  formatSignedCurrency,
+  getAmountColorClass,
+  getTaxColorClass,
+} from '@/lib/tradeUtils';
 import { useCreateTrade } from '@/hooks/useTrades';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { toast } from 'sonner';
 import { Upload, FileText, CheckCircle2, ArrowRight, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CsvImportDialogProps {
   trigger?: React.ReactNode;
@@ -365,19 +374,19 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
                             {t.table.feeShort}: <span className="font-mono">{formatCurrency(candidate.fee || 0, locale)}</span>
                           </div>
                           <div>
-                            {t.table.taxShort}: <span className="font-mono text-foreground font-medium">{formatTax(candidate.tax, locale)}</span>
+                            {t.table.taxShort}: <span className={cn("font-mono font-medium", getTaxColorClass(candidate.tax))}>{formatTax(candidate.tax, locale)}</span>
                           </div>
                         </TableCell>
 
                         {/* Net P&L */}
                         <TableCell className="text-right">
                           {isClosed && hasNetPnl ? (
-                            <div className="text-xs">
-                              <div className={`font-bold ${isWin ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                {formatCurrency(candidate.netPnl || 0, locale)}
+                            <div className="text-xs font-mono">
+                              <div className={cn("font-bold", getAmountColorClass(candidate.netPnl))}>
+                                {formatSignedCurrency(candidate.netPnl || 0, locale)}
                               </div>
                               <div className="text-[10px] text-muted-foreground">
-                                {t.table.grossShort}: {formatCurrency(candidate.pnl || 0, locale)}
+                                {t.table.grossShort}: <span className={getAmountColorClass(candidate.pnl)}>{formatSignedCurrency(candidate.pnl || 0, locale)}</span>
                               </div>
                             </div>
                           ) : (
