@@ -153,10 +153,10 @@ export default function TradesPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t.tradesPage.title}</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t.tradesPage.title}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             {t.tradesPage.subtitle}
           </p>
         </div>
@@ -169,7 +169,7 @@ export default function TradesPage() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="p-3.5 bg-card/60 backdrop-blur-xs border-border/60">
+        <Card className="p-4 bg-card border-border/70 shadow-eggplore hover:shadow-eggplore-card transition-all">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
             {t.tradesPage.totalTrades}
           </div>
@@ -181,11 +181,11 @@ export default function TradesPage() {
           </div>
         </Card>
 
-        <Card className="p-3.5 bg-card/60 backdrop-blur-xs border-border/60">
+        <Card className="p-4 bg-card border-border/70 shadow-eggplore hover:shadow-eggplore-card transition-all">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
             {t.tradesPage.openTrades}
           </div>
-          <div className="text-2xl font-bold font-mono tracking-tight text-blue-600 dark:text-blue-400">
+          <div className="text-2xl font-bold font-mono tracking-tight text-[#6979F8]">
             {stats.open}
           </div>
           <div className="text-[11px] text-muted-foreground mt-0.5">
@@ -193,7 +193,7 @@ export default function TradesPage() {
           </div>
         </Card>
 
-        <Card className="p-3.5 bg-card/60 backdrop-blur-xs border-border/60">
+        <Card className="p-4 bg-card border-border/70 shadow-eggplore hover:shadow-eggplore-card transition-all">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
             {t.tradesPage.closedTrades}
           </div>
@@ -205,7 +205,7 @@ export default function TradesPage() {
           </div>
         </Card>
 
-        <Card className="p-3.5 bg-card/60 backdrop-blur-xs border-border/60">
+        <Card className="p-4 bg-card border-border/70 shadow-eggplore hover:shadow-eggplore-card transition-all">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
             {t.tradesPage.totalPnL} (NET)
           </div>
@@ -226,11 +226,11 @@ export default function TradesPage() {
       </div>
 
       {/* Position Table */}
-      <Card>
+      <Card className="border-border/70 bg-card shadow-eggplore overflow-hidden">
         <CardContent className="p-0">
-          <div className="p-6 border-b">
-            <h3 className="font-semibold text-lg">{t.tradesPage.tableTitle}</h3>
-            <p className="text-sm text-muted-foreground mt-1">
+          <div className="p-5 sm:p-6 border-b border-border/60">
+            <h3 className="font-semibold text-lg tracking-tight text-foreground">{t.tradesPage.tableTitle}</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {t.tradesPage.tableSubtitle}
             </p>
           </div>

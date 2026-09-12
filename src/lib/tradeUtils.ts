@@ -123,27 +123,27 @@ export function formatSignedPercent(value?: number | null, locale: string = 'en-
 }
 
 /**
- * Gibt die passende Farbklasse für Beträge zurück:
- * positiv -> text-emerald-600 dark:text-emerald-400 (Grün)
- * negativ -> text-rose-600 dark:text-rose-400 (Rot)
+ * Gibt die passende Farbklasse für Beträge zurück (Eggplore UI Palette):
+ * positiv -> text-[#00C48C] (Eggplore Emerald)
+ * negativ -> text-[#FF647C] (Eggplore Coral/Rose)
  * neutral -> text-muted-foreground
  */
 export function getAmountColorClass(amount?: number | null): string {
   if (amount === undefined || amount === null || amount === 0) return 'text-muted-foreground';
-  if (amount > 0) return 'text-emerald-600 dark:text-emerald-400';
-  return 'text-rose-600 dark:text-rose-400';
+  if (amount > 0) return 'text-[#00C48C]';
+  return 'text-[#FF647C]';
 }
 
 /**
  * Gibt die passende Farbklasse für Steuern zurück:
- * Steuerrückzahlung (tax < 0, z.B. +€8.37) -> Grün
- * Steuerzahlung (tax > 0, z.B. -€25.00) -> Rot
+ * Steuerrückzahlung (tax < 0, z.B. +€8.37) -> Eggplore Grün #00C48C
+ * Steuerzahlung (tax > 0, z.B. -€25.00) -> Eggplore Rot #FF647C
  * 0 oder undefined -> text-muted-foreground
  */
 export function getTaxColorClass(tax?: number | null): string {
   if (tax === undefined || tax === null || tax === 0) return 'text-muted-foreground';
-  if (tax < 0) return 'text-emerald-600 dark:text-emerald-400';
-  return 'text-rose-600 dark:text-rose-400';
+  if (tax < 0) return 'text-[#00C48C]';
+  return 'text-[#FF647C]';
 }
 
 /**

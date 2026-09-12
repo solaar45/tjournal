@@ -211,14 +211,14 @@ export default function DashboardPage() {
       />
 
       {/* 5. Trades Table */}
-      <Card className="border-border/60 bg-card/60 backdrop-blur-xs">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3 px-4 border-b border-border/40">
+      <Card className="border-border/70 bg-card shadow-eggplore overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3.5 px-5 border-b border-border/60">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-sm font-semibold">
+            <CardTitle className="text-sm font-semibold tracking-tight">
               {selectedDate ? (
                 <span className="flex items-center gap-2">
                   <span>Trades for {selectedDate}</span>
-                  <Badge variant="outline" className="text-xs font-mono">
+                  <Badge variant="secondary" className="text-xs font-mono rounded-full">
                     {filteredTrades.length}
                   </Badge>
                   <Button
@@ -237,7 +237,7 @@ export default function DashboardPage() {
             </CardTitle>
           </div>
           <Link href="/trades">
-            <Button variant="ghost" size="sm" className="gap-1 text-xs h-7 text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="sm" className="gap-1 text-xs h-8 text-muted-foreground hover:text-foreground">
               <span>{t.common.trades}</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
@@ -253,20 +253,20 @@ export default function DashboardPage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-100/70 dark:bg-slate-800/60 border-b text-xs">
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.common.symbol}</TableHead>
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.common.type}</TableHead>
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.common.status}</TableHead>
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200 text-center">{t.common.side}</TableHead>
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.common.shares}</TableHead>
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.dashboard.entryGroup} {t.common.date}</TableHead>
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.dashboard.entryGroup} {t.common.price}</TableHead>
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.dashboard.exitGroup} {t.common.date}</TableHead>
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.dashboard.exitGroup} {t.common.price}</TableHead>
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.common.fee}</TableHead>
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">{t.common.tax}</TableHead>
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200">Net P&L</TableHead>
-                    <TableHead className="font-semibold text-slate-700 dark:text-slate-200 text-right">Gross P&L (%)</TableHead>
+                  <TableRow className="bg-[#F7F5F9]/80 dark:bg-muted/30 border-b border-border/60 text-xs">
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">{t.common.symbol}</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">{t.common.type}</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">{t.common.status}</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider text-center">{t.common.side}</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">{t.common.shares}</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">{t.dashboard.entryGroup} {t.common.date}</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">{t.dashboard.entryGroup} {t.common.price}</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">{t.dashboard.exitGroup} {t.common.date}</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">{t.dashboard.exitGroup} {t.common.price}</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">{t.common.fee}</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">{t.common.tax}</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">Net P&L</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider text-right">Gross P&L (%)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -275,16 +275,16 @@ export default function DashboardPage() {
                     const isClosed = trade.status === 'closed';
 
                     return (
-                      <TableRow key={trade.id} className="text-xs hover:bg-muted/40 transition-colors">
+                      <TableRow key={trade.id} className="text-xs hover:bg-[#F7F5F9]/80 dark:hover:bg-muted/30 transition-colors">
                         {/* Information */}
-                        <TableCell className="font-medium">{trade.symbol}</TableCell>
+                        <TableCell className="font-bold text-foreground">{trade.symbol}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{trade.type}</Badge>
+                          <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-full font-medium">{trade.type}</Badge>
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={trade.status === 'open' ? 'default' : 'secondary'}
-                            className="text-[10px] px-1.5 py-0"
+                            variant={trade.status === 'open' ? 'blue' : 'secondary'}
+                            className="text-[10px] px-2 py-0.5 rounded-full"
                           >
                             {trade.status === 'open' ? t.common.open : t.common.closed}
                           </Badge>
@@ -292,17 +292,17 @@ export default function DashboardPage() {
                         <TableCell className="text-center">
                           {trade.side === TradeSide.LONG || (trade.side as string) === 'Long' ? (
                             <span
-                              className="inline-flex items-center justify-center w-5 h-5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                              className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#D5F2EA] text-[#00C48C] dark:bg-[#122B24] dark:text-[#7DDFC3]"
                               title="Long"
                             >
-                              <ArrowUp className="h-3.5 w-3.5" />
+                              <ArrowUp className="h-3 w-3 stroke-[2.5]" />
                             </span>
                           ) : (
                             <span
-                              className="inline-flex items-center justify-center w-5 h-5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                              className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#FBE4E8] text-[#FF647C] dark:bg-[#33151D] dark:text-[#FDAFBB]"
                               title="Short"
                             >
-                              <ArrowDown className="h-3.5 w-3.5" />
+                              <ArrowDown className="h-3 w-3 stroke-[2.5]" />
                             </span>
                           )}
                         </TableCell>

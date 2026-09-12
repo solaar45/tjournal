@@ -62,26 +62,26 @@ interface PositionTableTanstackProps {
 }
 
 /**
- * Get background color for transaction rows
+ * Get background color for transaction rows (Eggplore tints)
  */
 function getTransactionRowBg(type: TransactionType, pnl?: number): string {
   if (type === TransactionType.ENTRY) {
-    return 'bg-blue-50/50 dark:bg-blue-950/20 hover:bg-blue-100/50';
+    return 'bg-[#E5E7FA]/30 dark:bg-[#1E1B38]/30 hover:bg-[#E5E7FA]/50 border-l-[#6979F8]';
   }
   if (type === TransactionType.EXIT) {
-    if (pnl === undefined) return 'bg-gray-50 dark:bg-gray-900';
+    if (pnl === undefined) return 'bg-muted/20 dark:bg-muted/10';
     return pnl >= 0
-      ? 'bg-green-50/50 dark:bg-green-950/20 hover:bg-green-100/50'
-      : 'bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100/50';
+      ? 'bg-[#D5F2EA]/35 dark:bg-[#122B24]/30 hover:bg-[#D5F2EA]/50 border-l-[#00C48C]'
+      : 'bg-[#FBE4E8]/35 dark:bg-[#33151D]/30 hover:bg-[#FBE4E8]/50 border-l-[#FF647C]';
   }
   return '';
 }
 
 /**
- * Get background color for header columns
+ * Get background color for header columns (Eggplore subtle slate-neutral)
  */
 function getHeaderBg(_columnId?: string): string {
-  return 'bg-slate-100/70 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200';
+  return 'bg-[#F7F5F9]/80 dark:bg-muted/30 text-muted-foreground font-semibold text-[11px] uppercase tracking-wider';
 }
 
 /**
@@ -141,7 +141,7 @@ export function PositionTableTanstack({
         id: 'type',
         accessorKey: 'type',
         header: t.common.type,
-        cell: ({ row }) => <Badge variant="outline">{row.original.type}</Badge>,
+        cell: ({ row }) => <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-full font-medium">{row.original.type}</Badge>,
       },
       {
         id: 'status',
@@ -149,7 +149,7 @@ export function PositionTableTanstack({
         cell: ({ row }) => {
           const isOpen = row.original.remainingShares > 0;
           return (
-            <Badge variant={isOpen ? 'default' : 'secondary'}>
+            <Badge variant={isOpen ? 'blue' : 'secondary'} className="text-[10px] px-2 py-0.5 rounded-full">
               {isOpen ? t.common.open : t.common.closed}
             </Badge>
           );
@@ -165,17 +165,17 @@ export function PositionTableTanstack({
             <div className="flex items-center">
               {isLong ? (
                 <span
-                  className="inline-flex items-center justify-center w-6 h-6 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#D5F2EA] text-[#00C48C] dark:bg-[#122B24] dark:text-[#7DDFC3]"
                   title="Long"
                 >
-                  <ArrowUp className="h-4 w-4" />
+                  <ArrowUp className="h-3 w-3 stroke-[2.5]" />
                 </span>
               ) : (
                 <span
-                  className="inline-flex items-center justify-center w-6 h-6 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                  className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#FBE4E8] text-[#FF647C] dark:bg-[#33151D] dark:text-[#FDAFBB]"
                   title="Short"
                 >
-                  <ArrowDown className="h-4 w-4" />
+                  <ArrowDown className="h-3 w-3 stroke-[2.5]" />
                 </span>
               )}
             </div>
@@ -472,7 +472,7 @@ export function PositionTableTanstack({
                         <TableCell>
                           <Badge
                             variant={isEntry ? 'outline' : 'secondary'}
-                            className="text-[10px] px-1.5 py-0 h-4 font-normal"
+                            className="text-[10px] px-2 py-0.5 rounded-full font-medium"
                           >
                             {isEntry ? 'Entry' : 'Exit'}
                           </Badge>

@@ -63,16 +63,16 @@ export function TradingCalendar({
   return (
     <Card className="border-border/60 bg-card/60 backdrop-blur-xs overflow-hidden">
       {/* Calendar Header */}
-      <CardHeader className="py-3 px-4 border-b border-border/40 flex flex-row items-center justify-between space-y-0">
+      <CardHeader className="py-3 px-4 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center gap-2">
-          <CalendarIcon className="h-4 w-4 text-primary" />
+          <CalendarIcon className="h-4 w-4 text-[#6979F8]" />
           <CardTitle className="text-sm font-semibold tracking-tight">
             {t.calendar.title}
           </CardTitle>
           {selectedDate && (
             <Badge
               variant="secondary"
-              className="text-xs font-mono gap-1 cursor-pointer hover:bg-destructive/10 hover:text-destructive"
+              className="text-xs font-mono gap-1 cursor-pointer hover:bg-[#FF647C]/10 hover:text-[#FF647C]"
               onClick={() => onSelectDate(null)}
               title={t.calendar.clearFilter}
             >
@@ -109,13 +109,13 @@ export function TradingCalendar({
       <CardContent className="p-0 overflow-x-auto">
         <div className="min-w-[700px]">
           {/* Weekday column headers */}
-          <div className="grid grid-cols-8 border-b border-border/40 bg-muted/40 text-[11px] font-semibold text-muted-foreground text-center">
+          <div className="grid grid-cols-8 border-b border-border/60 bg-[#F7F5F9]/80 dark:bg-muted/30 text-[11px] font-semibold text-muted-foreground text-center">
             {dayNames.map((d, idx) => (
-              <div key={idx} className="py-2 border-r border-border/30 last:border-r-0">
+              <div key={idx} className="py-2 border-r border-border/40 last:border-r-0">
                 {d}
               </div>
             ))}
-            <div className="py-2 bg-muted/60 text-foreground font-bold">
+            <div className="py-2 bg-muted/50 text-foreground font-bold">
               {t.calendar.weekly}
             </div>
           </div>
@@ -143,16 +143,16 @@ export function TradingCalendar({
                       } ${
                         hasTrades ? 'cursor-pointer hover:bg-muted/30' : ''
                       } ${
-                        isSelected ? 'ring-2 ring-primary ring-inset bg-primary/5' : ''
+                        isSelected ? 'ring-2 ring-[#6979F8] ring-inset bg-[#E5E7FA]/40 dark:bg-[#1E1B38]/40' : ''
                       } ${
-                        hasTrades && isPositive ? 'hover:bg-emerald-500/5' : ''
+                        hasTrades && isPositive ? 'hover:bg-[#D5F2EA]/40 dark:hover:bg-[#122B24]/40' : ''
                       } ${
-                        hasTrades && isNegative ? 'hover:bg-rose-500/5' : ''
+                        hasTrades && isNegative ? 'hover:bg-[#FBE4E8]/40 dark:hover:bg-[#33151D]/40' : ''
                       }`}
                     >
                       {/* Day Number */}
                       <div className="flex items-center justify-between text-[11px]">
-                        <span className={`font-mono ${isSelected ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
+                        <span className={`font-mono ${isSelected ? 'font-bold text-[#6979F8]' : 'text-muted-foreground'}`}>
                           {day.dayNumber}
                         </span>
                       </div>

@@ -49,16 +49,16 @@ export function FilterToolbar({
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-2 border-b border-border/60">
       {/* Left: Filter Pills */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Timeframe Pills */}
-        <div className="flex items-center p-0.5 rounded-lg bg-muted/50 border border-border/40 text-xs">
+        <div className="flex items-center p-1 rounded-full bg-muted/70 border border-border/50 text-xs">
           {timeframes.map((tf) => (
             <button
               key={tf.id}
               onClick={() => onTimeframeChange(tf.id)}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
                 timeframe === tf.id
-                  ? 'bg-background text-foreground shadow-xs font-semibold'
+                  ? 'bg-card text-foreground shadow-xs font-bold'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -68,14 +68,14 @@ export function FilterToolbar({
         </div>
 
         {/* Asset Type Pills */}
-        <div className="flex items-center p-0.5 rounded-lg bg-muted/50 border border-border/40 text-xs overflow-x-auto">
+        <div className="flex items-center p-1 rounded-full bg-muted/70 border border-border/50 text-xs overflow-x-auto">
           {assetTypes.map((at) => (
             <button
               key={at.id}
               onClick={() => onAssetTypeChange(at.id)}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
                 assetType === at.id
-                  ? 'bg-background text-foreground shadow-xs font-semibold'
+                  ? 'bg-card text-foreground shadow-xs font-bold'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -84,7 +84,7 @@ export function FilterToolbar({
           ))}
         </div>
 
-        <Badge variant="outline" className="text-[11px] font-mono h-6 text-muted-foreground ml-1">
+        <Badge variant="secondary" className="text-[11px] font-mono h-6 px-2.5 rounded-full ml-1">
           {filteredTradesCount} {filteredTradesCount === 1 ? t.calendar.trade : t.calendar.trades}
         </Badge>
       </div>

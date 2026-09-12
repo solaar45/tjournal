@@ -105,11 +105,12 @@ export function PositionDetailCard({
             <Badge
               variant={
                 position.status === 'OPEN'
-                  ? 'default'
+                  ? 'blue'
                   : position.status === 'PARTIAL'
-                  ? 'outline'
+                  ? 'warning'
                   : 'secondary'
               }
+              className="rounded-full px-2.5 py-0.5 font-semibold"
             >
               {position.status === 'OPEN'
                 ? t.common.open
@@ -248,14 +249,14 @@ export function PositionDetailCard({
             {exits.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <ArrowUpFromLine className="h-4 w-4 text-green-500" />
+                  <ArrowUpFromLine className="h-4 w-4 text-[#00C48C]" />
                   <h4 className="font-semibold text-sm">{t.dashboard.exitGroup} ({exits.length})</h4>
                 </div>
                 <div className="space-y-2">
                   {exits.map((exit) => (
                     <div
                       key={exit.id}
-                      className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/30 rounded-md border border-green-200 dark:border-green-800"
+                      className="flex items-center justify-between p-3 bg-[#D5F2EA]/25 dark:bg-[#122B24]/30 rounded-xl border border-[#00C48C]/20"
                     >
                       <div className="flex items-center gap-4">
                         <span className="text-xs text-muted-foreground w-[80px]">
@@ -285,7 +286,7 @@ export function PositionDetailCard({
                     </div>
                   ))}
                   {position.totalExitValue && (
-                    <div className="flex justify-between pt-2 border-t border-green-200 dark:border-green-800 text-sm font-semibold">
+                    <div className="flex justify-between pt-2 border-t border-border/70 text-sm font-semibold">
                       <span>{language === 'de' ? 'Realisiert:' : 'Realized:'}</span>
                       <span
                         className={cn(
@@ -305,10 +306,10 @@ export function PositionDetailCard({
             {position.remainingShares > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-amber-500" />
+                  <Activity className="h-4 w-4 text-[#FFA26B]" />
                   <h4 className="font-semibold text-sm">{language === 'de' ? 'Offene Position' : 'Open Position'}</h4>
                 </div>
-                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-md border border-amber-200 dark:border-amber-800">
+                <div className="p-3 bg-[#FFE8DA]/30 dark:bg-[#311E16]/30 rounded-xl border border-[#FFA26B]/20">
                   <div className="flex justify-between items-center">
                     <span className="text-sm">
                       {position.remainingShares} {language === 'de' ? 'Stk' : 'sh.'} @ Ø <span className="font-mono">{formatCurrency(position.avgEntryPrice, locale)}</span>

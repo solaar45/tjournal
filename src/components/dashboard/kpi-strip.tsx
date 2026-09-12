@@ -60,22 +60,22 @@ export function KpiStrip({
 
         <div>
           {/* Two-tone split progress bar */}
-          <div className="w-full h-1.5 bg-muted/60 rounded-full overflow-hidden flex mb-1.5">
+          <div className="w-full h-1.5 bg-muted/80 rounded-full overflow-hidden flex mb-1.5">
             <div
               style={{ width: `${winRate}%` }}
-              className="bg-emerald-500 h-full transition-all duration-500 rounded-l-full"
+              className="bg-[#00C48C] h-full transition-all duration-500 rounded-l-full"
             />
             <div
               style={{ width: `${100 - winRate}%` }}
-              className="bg-rose-500 h-full transition-all duration-500 rounded-r-full"
+              className="bg-[#FF647C] h-full transition-all duration-500 rounded-r-full"
             />
           </div>
 
           <div className="flex items-center justify-between text-[10px] font-mono">
-            <span className="text-emerald-500 font-medium">
+            <span className="text-[#00C48C] font-semibold">
               {winningTradesCount} {t.kpi.wins}
             </span>
-            <span className="text-rose-500 font-medium">
+            <span className="text-[#FF647C] font-semibold">
               {losingTradesCount} {t.kpi.losses}
             </span>
           </div>
@@ -83,7 +83,7 @@ export function KpiStrip({
       </Card>
 
       {/* 2. AVG WIN / LOSS CARD */}
-      <Card className="p-3.5 bg-card/60 backdrop-blur-xs border-border/60 hover:border-border transition-all flex flex-col justify-between">
+      <Card className="p-3.5 bg-card border-border/70 hover:border-border hover:shadow-eggplore-card transition-all flex flex-col justify-between">
         <div>
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
             {t.kpi.avgWinLoss}
@@ -100,19 +100,19 @@ export function KpiStrip({
         <div className="space-y-1 mt-2 text-[10px] font-mono">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00C48C]"></span>
               <span className="text-muted-foreground">Avg Win</span>
             </div>
-            <span className="text-emerald-500 font-medium">
+            <span className="text-[#00C48C] font-semibold">
               +{formatCurrency(stats?.avgWin || 0, locale)}
             </span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FF647C]"></span>
               <span className="text-muted-foreground">Avg Loss</span>
             </div>
-            <span className="text-rose-500 font-medium">
+            <span className="text-[#FF647C] font-semibold">
               {stats?.avgLoss ? `-${formatCurrency(Math.abs(stats.avgLoss), locale)}` : formatCurrency(0, locale)}
             </span>
           </div>
@@ -120,7 +120,7 @@ export function KpiStrip({
       </Card>
 
       {/* 3. LONG VS SHORT CARD */}
-      <Card className="p-3.5 bg-card/60 backdrop-blur-xs border-border/60 hover:border-border transition-all flex flex-col justify-between">
+      <Card className="p-3.5 bg-card border-border/70 hover:border-border hover:shadow-eggplore-card transition-all flex flex-col justify-between">
         <div>
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
             {t.kpi.longVsShort}
@@ -137,26 +137,26 @@ export function KpiStrip({
         <div className="space-y-1.5 mt-2 text-[10px] font-mono">
           {/* Long row */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <span className="inline-flex items-center justify-center w-4 h-4 rounded bg-emerald-500/10 text-emerald-500">
-                <ArrowUp className="h-2.5 w-2.5" />
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#D5F2EA] text-[#00C48C] dark:bg-[#122B24] dark:text-[#7DDFC3]">
+                <ArrowUp className="h-2.5 w-2.5 stroke-[2.5]" />
               </span>
               <span className="text-muted-foreground">L ({longShortStats.long.count})</span>
             </div>
-            <span className={cn("font-medium", getAmountColorClass(longShortStats.long.pnl))}>
+            <span className={cn("font-semibold", getAmountColorClass(longShortStats.long.pnl))}>
               {formatSignedCurrency(longShortStats.long.pnl, locale)}
             </span>
           </div>
 
           {/* Short row */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <span className="inline-flex items-center justify-center w-4 h-4 rounded bg-rose-500/10 text-rose-500">
-                <ArrowDown className="h-2.5 w-2.5" />
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#FBE4E8] text-[#FF647C] dark:bg-[#33151D] dark:text-[#FDAFBB]">
+                <ArrowDown className="h-2.5 w-2.5 stroke-[2.5]" />
               </span>
               <span className="text-muted-foreground">S ({longShortStats.short.count})</span>
             </div>
-            <span className={cn("font-medium", getAmountColorClass(longShortStats.short.pnl))}>
+            <span className={cn("font-semibold", getAmountColorClass(longShortStats.short.pnl))}>
               {formatSignedCurrency(longShortStats.short.pnl, locale)}
             </span>
           </div>
@@ -164,7 +164,7 @@ export function KpiStrip({
       </Card>
 
       {/* 4. MAX STREAKS CARD */}
-      <Card className="p-3.5 bg-card/60 backdrop-blur-xs border-border/60 hover:border-border transition-all flex flex-col justify-between">
+      <Card className="p-3.5 bg-card border-border/70 hover:border-border hover:shadow-eggplore-card transition-all flex flex-col justify-between">
         <div>
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
             {t.kpi.maxStreaks}
@@ -181,17 +181,17 @@ export function KpiStrip({
         <div className="space-y-1 mt-2 text-[10px] font-mono">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">{t.kpi.consecutiveWins}</span>
-            <span className="text-emerald-500 font-medium">{streakStats.currentWinStreak}</span>
+            <span className="text-[#00C48C] font-semibold">{streakStats.currentWinStreak}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">{t.kpi.consecutiveLosses}</span>
-            <span className="text-rose-500 font-medium">{streakStats.maxLossStreak}</span>
+            <span className="text-[#FF647C] font-semibold">{streakStats.maxLossStreak}</span>
           </div>
         </div>
       </Card>
 
       {/* 5. TOTAL TRADES & FEES CARD */}
-      <Card className="p-3.5 bg-card/60 backdrop-blur-xs border-border/60 hover:border-border transition-all flex flex-col justify-between">
+      <Card className="p-3.5 bg-card border-border/70 hover:border-border hover:shadow-eggplore-card transition-all flex flex-col justify-between">
         <div>
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
             TRADES & COSTS
@@ -208,11 +208,11 @@ export function KpiStrip({
         <div className="space-y-1 mt-2 text-[10px] font-mono">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">{t.common.fee}</span>
-            <span className="font-medium text-foreground">{formatCurrency(stats?.totalFees || 0, locale)}</span>
+            <span className="font-semibold text-foreground">{formatCurrency(stats?.totalFees || 0, locale)}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">{t.common.tax}</span>
-            <span className={cn("font-medium", getTaxColorClass(stats?.totalTax || 0))}>
+            <span className={cn("font-semibold", getTaxColorClass(stats?.totalTax || 0))}>
               {formatTax(stats?.totalTax || 0, locale)}
             </span>
           </div>

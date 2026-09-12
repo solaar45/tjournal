@@ -318,19 +318,21 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
                         <TableCell>
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-1.5">
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                              <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-full font-medium">
                                 {candidate.type}
                               </Badge>
                               <span
-                                className={`inline-flex items-center justify-center w-5 h-5 rounded ${
-                                  candidate.side === 'Long' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'
+                                className={`inline-flex items-center justify-center w-5 h-5 rounded-full ${
+                                  candidate.side === 'Long'
+                                    ? 'bg-[#D5F2EA] text-[#00C48C] dark:bg-[#122B24] dark:text-[#7DDFC3]'
+                                    : 'bg-[#FBE4E8] text-[#FF647C] dark:bg-[#33151D] dark:text-[#FDAFBB]'
                                 }`}
                                 title={candidate.side}
                               >
                                 {candidate.side === 'Long' ? (
-                                  <ArrowUp className="h-3.5 w-3.5" />
+                                  <ArrowUp className="h-3 w-3 stroke-[2.5]" />
                                 ) : (
-                                  <ArrowDown className="h-3.5 w-3.5" />
+                                  <ArrowDown className="h-3 w-3 stroke-[2.5]" />
                                 )}
                               </span>
                             </div>
