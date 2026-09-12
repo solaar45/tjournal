@@ -35,7 +35,10 @@ export interface Transaction {
   
   // For Exits only
   pnl?: number;
+  netPnl?: number;
   pnlPercent?: number;
+  fee?: number;
+  tax?: number;
   
   // Position state after this transaction
   positionAvgPrice: number;
@@ -68,10 +71,16 @@ export interface Position {
   totalEntryValue: number;
   totalExitValue?: number;
   
+  // Fees and taxes
+  fee?: number;
+  tax?: number;
+
   // P/L calculations
-  realizedPnL: number; // From closed exits
+  realizedPnL: number; // From closed exits (Brutto)
+  realizedNetPnL?: number; // From closed exits (Netto)
   unrealizedPnL: number; // From remaining shares
-  totalPnL: number; // realized + unrealized
+  totalPnL: number; // realized + unrealized (Brutto)
+  totalNetPnL?: number; // realized + unrealized (Netto)
   totalPnLPercent: number;
   
   // Transactions

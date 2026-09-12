@@ -248,6 +248,33 @@ export function PositionTableTanstack({
           );
         },
       },
+      // Kosten & Steuer Column
+      {
+        id: 'costs',
+        header: () => <div className="text-right">Kosten & Steuer</div>,
+        cell: ({ row }) => {
+          const fee = row.original.fee || 0;
+          const tax = row.original.tax || 0;
+          return (
+            <div className="text-right text-xs">
+              <div>
+                <span className="text-muted-foreground text-[11px]">Geb: </span>
+                <span className="font-mono">{formatCurrency(fee)}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground text-[11px]">St: </span>
+                {tax < 0 ? (
+                  <span className="font-mono text-emerald-600 font-medium" title="Steuererstattung (wird zum Nettoergebnis addiert)">
+                    +{formatCurrency(Math.abs(tax))}
+                  </span>
+                ) : (
+                  <span className="font-mono">{formatCurrency(tax)}</span>
+                )}
+              </div>
+            </div>
+          );
+        },
+      },
       // Total P&L
       {
         id: 'pnl',
@@ -260,37 +287,35 @@ export function PositionTableTanstack({
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
               className="h-8 text-xs"
             >
-              P/L
+              P/L (Netto / Brutto)
               <ArrowUpDown className="ml-1 h-3 w-3" />
             </Button>
           </div>
         ),
         cell: ({ row }) => {
-          const isProfitable = row.original.totalPnL >= 0;
+          const netPnL = row.original.totalNetPnL !== undefined ? row.original.totalNetPnL : row.original.totalPnL;
+          const grossPnL = row.original.totalPnL;
+          const isProfitable = netPnL >= 0;
           return (
             <div className="text-right">
               <div className="flex items-center justify-end gap-1">
                 {isProfitable ? (
-                  <TrendingUp className="h-3 w-3 text-green-600" />
+                  <TrendingUp className="h-3 w-3 text-emerald-600" />
                 ) : (
-                  <TrendingDown className="h-3 w-3 text-red-600" />
+                  <TrendingDown className="h-3 w-3 text-rose-600" />
                 )}
                 <span
                   className={cn(
                     'font-bold text-sm',
-                    isProfitable ? 'text-green-600' : 'text-red-600'
+                    isProfitable ? 'text-emerald-600' : 'text-rose-600'
                   )}
                 >
-                  {formatCurrency(row.original.totalPnL)}
+                  {formatCurrency(netPnL)}
                 </span>
               </div>
-              <div
-                className={cn(
-                  'text-xs',
-                  isProfitable ? 'text-green-600' : 'text-red-600'
-                )}
-              >
-                {formatPercent(row.original.totalPnLPercent)}
+              <div className="text-xs text-muted-foreground">
+                Brutto: <span className={grossPnL >= 0 ? 'text-emerald-600/90 font-medium' : 'text-rose-600/90 font-medium'}>{formatCurrency(grossPnL)}</span>
+                <span className="ml-1">({formatPercent(row.original.totalPnLPercent)})</span>
               </div>
             </div>
           );
@@ -428,28 +453,59 @@ export function PositionTableTanstack({
                         {txn.shares} Stk
                       </TableCell>
 
-                      {/* Value */}
+                      {/* Value (Entries column) */}
                       <TableCell className="py-1 text-right text-xs text-muted-foreground">
-                        {formatCurrency(txn.value)}
+                        {txn.type === TransactionType.ENTRY ? formatCurrency(txn.value) : '-'}
                       </TableCell>
 
-                      {/* P/L or empty */}
-                      <TableCell className="py-1 text-right">
-                        {txn.pnl !== undefined && (
-                          <span
-                            className={cn(
-                              'font-semibold text-xs',
-                              txn.pnl >= 0 ? 'text-green-600' : 'text-red-600'
+                      {/* Exits column */}
+                      <TableCell className="py-1 text-right text-xs text-muted-foreground">
+                        {txn.type === TransactionType.EXIT ? formatCurrency(txn.value) : '-'}
+                      </TableCell>
+
+                      {/* Kosten & Steuer */}
+                      <TableCell className="py-1 text-right text-xs">
+                        {txn.fee !== undefined || txn.tax !== undefined ? (
+                          <div className="text-[11px]">
+                            {txn.fee !== undefined && (
+                              <div><span className="text-muted-foreground">Geb: </span><span className="font-mono">{formatCurrency(txn.fee)}</span></div>
                             )}
-                          >
-                            {formatCurrency(txn.pnl)}
-                          </span>
+                            {txn.tax !== undefined && (
+                              <div><span className="text-muted-foreground">St: </span>
+                                {txn.tax < 0 ? (
+                                  <span className="font-mono text-emerald-600 font-medium">+{formatCurrency(Math.abs(txn.tax))}</span>
+                                ) : (
+                                  <span className="font-mono">{formatCurrency(txn.tax)}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
 
-                      {/* Avg Price After */}
-                      <TableCell className="py-1 text-right text-xs text-muted-foreground">
-                        ø {formatCurrency(txn.positionAvgPrice)}
+                      {/* P/L (Netto & Brutto) or Avg Price */}
+                      <TableCell className="py-1 text-right">
+                        {txn.pnl !== undefined ? (
+                          <div>
+                            <div
+                              className={cn(
+                                'font-semibold text-xs',
+                                (txn.netPnl !== undefined ? txn.netPnl : txn.pnl) >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                              )}
+                            >
+                              {formatCurrency(txn.netPnl !== undefined ? txn.netPnl : txn.pnl)}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground">
+                              Brutto: {formatCurrency(txn.pnl)}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground font-mono">
+                            ø {formatCurrency(txn.positionAvgPrice)}
+                          </span>
+                        )}
                       </TableCell>
 
                       {/* Empty actions cell */}

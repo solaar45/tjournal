@@ -97,6 +97,9 @@ export interface TradeStats {
   openTrades: number;
   closedTrades: number;
   totalPnL: number;
+  totalNetPnL: number;
+  totalFees: number;
+  totalTax: number;
   winRate: number;
   avgWin: number;
   avgLoss: number;

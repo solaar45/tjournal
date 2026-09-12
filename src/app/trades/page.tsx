@@ -44,7 +44,10 @@ function tradeToPosition(trade: Trade): Position {
       price: trade.exitPrice,
       value: exitShares * trade.exitPrice,
       pnl: trade.pnl,
+      netPnl: trade.netPnl,
       pnlPercent: trade.pnlPercent,
+      fee: trade.fee,
+      tax: trade.tax,
       positionAvgPrice: trade.entryPrice,
       positionTotalShares: entryShares - exitShares,
     });
@@ -64,8 +67,10 @@ function tradeToPosition(trade: Trade): Position {
   const totalEntryValue = entryShares * trade.entryPrice;
   const totalExitValue = exitShares * (trade.exitPrice || 0);
   const realizedPnL = trade.pnl || 0;
+  const realizedNetPnL = trade.netPnl !== undefined ? trade.netPnl : realizedPnL;
   const unrealizedPnL = 0; // Would need current price for this
   const totalPnL = realizedPnL + unrealizedPnL;
+  const totalNetPnL = realizedNetPnL + unrealizedPnL;
   const totalPnLPercent = trade.pnlPercent || 0;
 
   return {
@@ -82,9 +87,13 @@ function tradeToPosition(trade: Trade): Position {
     avgExitPrice: trade.exitPrice,
     totalEntryValue,
     totalExitValue,
+    fee: trade.fee,
+    tax: trade.tax,
     realizedPnL,
+    realizedNetPnL,
     unrealizedPnL,
     totalPnL,
+    totalNetPnL,
     totalPnLPercent,
     transactions,
     firstEntryDate: trade.entryDate,
@@ -107,13 +116,16 @@ export default function TradesPage() {
 
   // Stats
   const stats = useMemo(() => {
-    if (!trades) return { total: 0, open: 0, closed: 0, totalPnL: 0 };
+    if (!trades) return { total: 0, open: 0, closed: 0, totalPnL: 0, totalNetPnL: 0, totalFees: 0, totalTax: 0 };
     
     return {
       total: trades.length,
       open: trades.filter((t) => t.status === 'open').length,
       closed: trades.filter((t) => t.status === 'closed').length,
       totalPnL: trades.reduce((sum, t) => sum + (t.pnl || 0), 0),
+      totalNetPnL: trades.reduce((sum, t) => sum + (t.netPnl !== undefined ? t.netPnl : (t.pnl || 0)), 0),
+      totalFees: trades.reduce((sum, t) => sum + (t.fee || 0), 0),
+      totalTax: trades.reduce((sum, t) => sum + (t.tax || 0), 0),
     };
   }, [trades]);
 
@@ -167,14 +179,17 @@ export default function TradesPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Gesamt P/L</CardDescription>
+            <CardDescription>Gesamt P/L (Netto / Brutto)</CardDescription>
             <CardTitle
-              className={`text-3xl ${
-                stats.totalPnL >= 0 ? 'text-green-600' : 'text-red-600'
+              className={`text-2xl ${
+                stats.totalNetPnL >= 0 ? 'text-emerald-600' : 'text-rose-600'
               }`}
             >
-              {stats.totalPnL.toFixed(0)} €
+              {stats.totalNetPnL.toFixed(2)} € <span className="text-xs font-normal text-muted-foreground">Netto</span>
             </CardTitle>
+            <div className="text-xs text-muted-foreground mt-1">
+              Brutto: {stats.totalPnL.toFixed(2)} € (Geb: {stats.totalFees.toFixed(2)} € | St: {stats.totalTax.toFixed(2)} €)
+            </div>
           </CardHeader>
         </Card>
       </div>

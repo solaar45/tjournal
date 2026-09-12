@@ -34,6 +34,9 @@ export function calculateTradeStats(trades: Trade[]): TradeStats {
   const openTrades = trades.filter(t => t.status === 'open');
 
   const totalPnL = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+  const totalNetPnL = closedTrades.reduce((sum, t) => sum + (t.netPnl !== undefined ? t.netPnl : (t.pnl || 0)), 0);
+  const totalFees = trades.reduce((sum, t) => sum + (t.fee || 0), 0);
+  const totalTax = trades.reduce((sum, t) => sum + (t.tax || 0), 0);
   const winningTrades = closedTrades.filter(t => (t.pnl || 0) > 0);
   const losingTrades = closedTrades.filter(t => (t.pnl || 0) < 0);
 
@@ -58,6 +61,9 @@ export function calculateTradeStats(trades: Trade[]): TradeStats {
     openTrades: openTrades.length,
     closedTrades: closedTrades.length,
     totalPnL: Number(totalPnL.toFixed(2)),
+    totalNetPnL: Number(totalNetPnL.toFixed(2)),
+    totalFees: Number(totalFees.toFixed(2)),
+    totalTax: Number(totalTax.toFixed(2)),
     winRate: closedTrades.length > 0 ? (winningTrades.length / closedTrades.length) * 100 : 0,
     avgWin: Number(avgWin.toFixed(2)),
     avgLoss: Number(avgLoss.toFixed(2)),

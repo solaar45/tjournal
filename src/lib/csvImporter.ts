@@ -122,6 +122,19 @@ export function parseLocalizedNumber(value: any): number {
   let cleaned = value.trim();
   if (cleaned === '' || cleaned === '-') return 0;
 
+  // Vorzeichen prüfen (z.B. "-35,31", "35,31-" oder "(35,31)")
+  let isNegative = false;
+  if (cleaned.startsWith('-') || cleaned.endsWith('-')) {
+    isNegative = true;
+    cleaned = cleaned.replace(/-/g, '').trim();
+  } else if (cleaned.startsWith('(') && cleaned.endsWith(')')) {
+    isNegative = true;
+    cleaned = cleaned.slice(1, -1).trim();
+  }
+
+  // Währungssymbole und Leerzeichen entfernen
+  cleaned = cleaned.replace(/[€$£\s]/g, '');
+
   // Wenn sowohl Punkt als auch Komma vorkommen:
   // "4.212,70" -> Tausenderpunkt entfernen, Komma zu Punkt
   if (cleaned.includes('.') && cleaned.includes(',')) {
@@ -139,7 +152,8 @@ export function parseLocalizedNumber(value: any): number {
   }
 
   const result = parseFloat(cleaned);
-  return isNaN(result) ? 0 : result;
+  if (isNaN(result)) return 0;
+  return isNegative ? -result : result;
 }
 
 /**
@@ -310,7 +324,7 @@ export function parseBrokerCsv(csvText: string): RawCsvRow[] {
       price: parseLocalizedNumber(rowObj['price'] || rowObj['kurs'] || rowObj['preis']),
       amount: parseLocalizedNumber(rowObj['amount'] || rowObj['betrag'] || rowObj['ausmachender_betrag']),
       fee: Math.abs(parseLocalizedNumber(rowObj['fee'] || rowObj['gebuehr'] || rowObj['kosten'])),
-      tax: Math.abs(parseLocalizedNumber(rowObj['tax'] || rowObj['steuer'] || rowObj['abgeltungsteuer'])),
+      tax: parseLocalizedNumber(rowObj['tax'] || rowObj['steuer'] || rowObj['abgeltungsteuer']),
       currency: rowObj['currency'] || 'EUR',
     });
   }

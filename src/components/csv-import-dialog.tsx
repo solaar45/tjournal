@@ -363,7 +363,13 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
                             Geb: <span className="font-mono">{formatCurrency(candidate.fee || 0)}</span>
                           </div>
                           <div>
-                            St: <span className="font-mono text-muted-foreground">{formatCurrency(candidate.tax || 0)}</span>
+                            St: {candidate.tax !== undefined && candidate.tax < 0 ? (
+                              <span className="font-mono text-emerald-600 font-medium" title="Steuererstattung (wird zum Nettoergebnis addiert)">
+                                +{formatCurrency(Math.abs(candidate.tax))}
+                              </span>
+                            ) : (
+                              <span className="font-mono text-muted-foreground">{formatCurrency(candidate.tax || 0)}</span>
+                            )}
                           </div>
                         </TableCell>
 
