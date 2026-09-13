@@ -34,13 +34,13 @@ export default function RootLayout({
             <LayoutHeader />
 
             {/* Main Content */}
-            <main className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-10 py-4 sm:py-8 flex-1 min-w-0">
+            <main className="w-[94%] sm:w-[90%] max-w-[2400px] mx-auto px-1 sm:px-2 py-4 sm:py-8 flex-1 min-w-0">
               {children}
             </main>
 
             {/* Footer */}
             <footer className="border-t border-border/70 py-6 bg-card/40 backdrop-blur-xs">
-              <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
+              <div className="w-[94%] sm:w-[90%] max-w-[2400px] mx-auto px-2 sm:px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-[#00C48C] animate-pulse" />
                   <span>tjournal · Eggplore UI Edition</span>

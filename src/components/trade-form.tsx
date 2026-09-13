@@ -310,8 +310,8 @@ export function TradeForm({ trigger }: TradeFormProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button size="sm" className="h-8 text-xs gap-1.5 font-semibold">
-            <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+          <Button size="sm" className="h-9 px-4 text-sm font-semibold gap-2 rounded-xl">
+            <Plus className="h-4 w-4 stroke-[2.5]" />
             <span>{t.forms.newTrade}</span>
           </Button>
         )}

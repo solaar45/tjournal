@@ -19,8 +19,8 @@ import {
   MoreHorizontal,
   Trash2,
   ArrowUpDown,
-  ArrowUpRight,
-  ArrowDownRight,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 import { Position, Transaction, TransactionType, PositionStatus } from '@/types/position';
 import { TradeSide } from '@/types/trade';
@@ -81,7 +81,7 @@ function getTransactionRowBg(type: TransactionType, pnl?: number): string {
  * Get background color for header columns (Clean high-contrast slate-neutral)
  */
 function getHeaderBg(_columnId?: string): string {
-  return 'bg-muted/50 text-muted-foreground font-semibold text-sm py-3';
+  return 'bg-muted/50 text-muted-foreground font-semibold text-sm py-3 px-2.5';
 }
 
 /**
@@ -130,7 +130,7 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="-ml-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             {t.common.symbol}
             <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
@@ -146,7 +146,7 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="-ml-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             {t.common.type}
             <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
@@ -162,7 +162,7 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="-ml-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             {t.common.status}
             <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
@@ -185,7 +185,7 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="-ml-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             {t.common.side}
             <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
@@ -196,9 +196,9 @@ export function PositionTableTanstack({
           return (
             <div className="flex items-center" title={isLong ? 'Long' : 'Short'}>
               {isLong ? (
-                <ArrowUpRight className="h-5 w-5 text-[#00C48C] stroke-[2.5]" />
+                <TrendingUp className="h-5 w-5 text-[#00C48C] stroke-[2.2]" />
               ) : (
-                <ArrowDownRight className="h-5 w-5 text-[#FF647C] stroke-[2.5]" />
+                <TrendingDown className="h-5 w-5 text-[#FF647C] stroke-[2.2]" />
               )}
             </div>
           );
@@ -212,14 +212,14 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="-ml-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             {t.common.shares}
             <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-base font-mono font-semibold text-foreground">
+          <span className="text-base font-mono font-semibold text-foreground/80">
             {row.original.totalEntryShares}
           </span>
         ),
@@ -232,14 +232,14 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="-ml-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             {t.dashboard.entryGroup} {t.common.date}
             <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-base font-mono font-semibold text-foreground">
+          <span className="text-base font-mono font-semibold text-foreground/80">
             {formatDateSafe(row.original.firstEntryDate, 'MMM dd, yyyy')}
           </span>
         ),
@@ -252,14 +252,14 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="-ml-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             {t.dashboard.entryGroup} {t.common.price}
             <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-base font-mono font-semibold text-foreground">
+          <span className="text-base font-mono font-semibold text-foreground/80">
             {formatCurrency(row.original.avgEntryPrice, locale)}
           </span>
         ),
@@ -272,14 +272,14 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="-ml-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             {t.dashboard.exitGroup} {t.common.date}
             <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-base font-mono font-semibold text-foreground">
+          <span className="text-base font-mono font-semibold text-foreground/80">
             {row.original.lastExitDate
               ? formatDateSafe(row.original.lastExitDate, 'MMM dd, yyyy')
               : <span className="text-muted-foreground">-</span>}
@@ -294,14 +294,14 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="-ml-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             {t.dashboard.exitGroup} {t.common.price}
             <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-base font-mono font-semibold text-foreground">
+          <span className="text-base font-mono font-semibold text-foreground/80">
             {row.original.avgExitPrice
               ? formatCurrency(row.original.avgExitPrice, locale)
               : <span className="text-muted-foreground">-</span>}
@@ -316,14 +316,14 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="-ml-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             {t.common.fee}
             <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-base font-mono font-semibold text-foreground">
+          <span className="text-base font-mono font-semibold text-foreground/80">
             {formatCurrency(row.original.fee || 0, locale)}
           </span>
         ),
@@ -336,14 +336,14 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="-ml-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             {t.common.tax}
             <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-base font-mono font-semibold text-foreground">
+          <span className="text-base font-mono font-semibold text-foreground/80">
             {formatTax(row.original.tax, locale)}
           </span>
         ),
@@ -356,7 +356,7 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="-ml-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             Net P&L
             <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
@@ -383,7 +383,7 @@ export function PositionTableTanstack({
               variant="ghost"
               size="sm"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-              className="-mr-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+              className="-mr-2 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground px-2"
             >
               Gross P&L (%)
               <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
@@ -528,7 +528,7 @@ export function PositionTableTanstack({
                     onClick={() => row.toggleExpanded()}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-3.5">
+                      <TableCell key={cell.id} className="py-3 px-2.5">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
@@ -550,15 +550,15 @@ export function PositionTableTanstack({
                           )}
                         >
                           {/* 1. Expander cell */}
-                          <TableCell />
+                          <TableCell className="px-2.5" />
 
                           {/* 2. Date under Symbol */}
-                          <TableCell className="font-semibold text-sm font-mono text-foreground">
+                          <TableCell className="font-semibold text-sm font-mono text-foreground/80 px-2.5">
                             {formatDateSafe(txn.date, 'MMM dd, yyyy')}
                           </TableCell>
 
                           {/* 3. Type */}
-                          <TableCell>
+                          <TableCell className="px-2.5">
                             <Badge
                               variant={isEntry ? 'outline' : 'secondary'}
                               className="text-xs px-2.5 py-0.5 rounded-full font-semibold"
@@ -568,43 +568,43 @@ export function PositionTableTanstack({
                           </TableCell>
 
                           {/* 4. Status placeholder */}
-                          <TableCell className="text-muted-foreground font-mono text-sm">-</TableCell>
+                          <TableCell className="text-muted-foreground font-mono text-sm px-2.5">-</TableCell>
 
                           {/* 5. Side placeholder */}
-                          <TableCell className="text-muted-foreground font-mono text-sm">-</TableCell>
+                          <TableCell className="text-muted-foreground font-mono text-sm px-2.5">-</TableCell>
 
                           {/* 6. Shares */}
-                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                          <TableCell className="font-mono text-sm font-semibold text-foreground/80 px-2.5">
                             {isExit && '-'}{txn.shares}
                           </TableCell>
 
                           {/* 7. Entry Date */}
-                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                          <TableCell className="font-mono text-sm font-semibold text-foreground/80 px-2.5">
                             {isEntry ? formatDateSafe(txn.date, 'MMM dd, yyyy') : <span className="text-muted-foreground">-</span>}
                           </TableCell>
 
                           {/* 8. Entry Price */}
-                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                          <TableCell className="font-mono text-sm font-semibold text-foreground/80 px-2.5">
                             {isEntry ? formatCurrency(txn.price, locale) : <span className="text-muted-foreground">-</span>}
                           </TableCell>
 
                           {/* 9. Exit Date */}
-                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                          <TableCell className="font-mono text-sm font-semibold text-foreground/80 px-2.5">
                             {isExit ? formatDateSafe(txn.date, 'MMM dd, yyyy') : <span className="text-muted-foreground">-</span>}
                           </TableCell>
 
                           {/* 10. Exit Price */}
-                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                          <TableCell className="font-mono text-sm font-semibold text-foreground/80 px-2.5">
                             {isExit ? formatCurrency(txn.price, locale) : <span className="text-muted-foreground">-</span>}
                           </TableCell>
 
                           {/* 11. Fee */}
-                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                          <TableCell className="font-mono text-sm font-semibold text-foreground/80 px-2.5">
                             {txn.fee !== undefined ? formatCurrency(txn.fee, locale) : <span className="text-muted-foreground">-</span>}
                           </TableCell>
 
                           {/* 12. Tax */}
-                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                          <TableCell className="font-mono text-sm font-semibold text-foreground/80 px-2.5">
                             {txn.tax !== undefined ? formatTax(txn.tax, locale) : <span className="text-muted-foreground">-</span>}
                           </TableCell>
 
@@ -684,9 +684,9 @@ export function PositionTableTanstack({
                       title={isLong ? 'Long' : 'Short'}
                     >
                       {isLong ? (
-                        <ArrowUpRight className="h-5 w-5 text-[#00C48C] stroke-[2.5]" />
+                        <TrendingUp className="h-5 w-5 text-[#00C48C] stroke-[2.2]" />
                       ) : (
-                        <ArrowDownRight className="h-5 w-5 text-[#FF647C] stroke-[2.5]" />
+                        <TrendingDown className="h-5 w-5 text-[#FF647C] stroke-[2.2]" />
                       )}
                     </span>
                     {/* Type Badge */}

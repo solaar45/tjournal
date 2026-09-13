@@ -119,7 +119,7 @@ export function FilterToolbar(props: FilterToolbarProps) {
           size="sm"
           onClick={onExportCsv}
           disabled={filteredTradesCount === 0}
-          className="h-9 text-sm gap-1.5 px-3.5 text-muted-foreground hover:text-foreground font-semibold"
+          className="h-9 px-3.5 text-sm font-semibold gap-2 text-muted-foreground hover:text-foreground rounded-xl"
         >
           <Upload className="h-4 w-4" />
           <span>{t.filters.exportCsv}</span>

@@ -163,10 +163,10 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+            className="h-9 px-3.5 text-sm font-semibold gap-2 text-muted-foreground hover:text-foreground rounded-xl"
           >
-            <Download className="h-3.5 w-3.5" />
-            {t.csvImport.triggerButton}
+            <Download className="h-4 w-4" />
+            <span>{t.csvImport.triggerButton}</span>
           </Button>
         )}
       </DialogTrigger>

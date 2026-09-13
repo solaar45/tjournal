@@ -140,7 +140,7 @@ export default function TradesPage() {
               {t.tradesPage.tableSubtitle}
             </p>
           </div>
-          <div className="p-2.5 sm:p-6">
+          <div className="p-1 sm:p-3">
             <PositionTableTanstack
               positions={positions}
               onEdit={(position) => {

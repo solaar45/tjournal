@@ -19,7 +19,7 @@ export function LayoutHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/80 backdrop-blur-md transition-colors overflow-hidden">
-      <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-10 flex h-16 items-center justify-between gap-2">
+      <div className="w-[94%] sm:w-[90%] max-w-[2400px] mx-auto px-1 sm:px-2 flex h-16 items-center justify-between gap-2">
         {/* Left: Brand / Logo */}
         <div className="flex items-center gap-2 sm:gap-6 min-w-0">
           <Link href="/trades" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
