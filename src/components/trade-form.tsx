@@ -658,7 +658,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 disabled={createTrade.isPending}
               >
                 {t.common.cancel}
-                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
+                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-xs font-medium opacity-100">
                   Esc
                 </kbd>
               </Button>
@@ -695,8 +695,8 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 ) : (
                   <>
                     {language === 'de' ? 'Speichern & Neu' : 'Save & New'}
-                    <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
-                      <span className="text-xs">⌘</span>⏎
+                    <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-xs font-medium opacity-100">
+                      <span>⌘</span>⏎
                     </kbd>
                   </>
                 )}
@@ -729,7 +729,7 @@ export function TradeForm({ trigger }: TradeFormProps) {
                 ) : (
                   <>
                     {t.forms.saveTrade}
-                    <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
+                    <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-xs font-medium opacity-100">
                       ⏎
                     </kbd>
                   </>

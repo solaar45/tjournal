@@ -138,12 +138,12 @@ export function KpiStrip({
           {/* Long row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#D5F2EA] text-[#00C48C] dark:bg-[#122B24] dark:text-[#7DDFC3]">
-                <ArrowUp className="h-3 w-3 stroke-[2.5]" />
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/15 text-[#00C48C] dark:bg-emerald-950/40 dark:text-[#00C48C]">
+                <ArrowUp className="h-3.5 w-3.5 stroke-[2.5]" />
               </span>
-              <span className="text-muted-foreground">L ({longShortStats.long.count})</span>
+              <span className="text-muted-foreground font-medium">L ({longShortStats.long.count})</span>
             </div>
-            <span className={cn("font-semibold", getAmountColorClass(longShortStats.long.pnl))}>
+            <span className={cn("font-bold font-mono", getAmountColorClass(longShortStats.long.pnl))}>
               {formatSignedCurrency(longShortStats.long.pnl, locale)}
             </span>
           </div>
@@ -151,12 +151,12 @@ export function KpiStrip({
           {/* Short row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#FBE4E8] text-[#FF647C] dark:bg-[#33151D] dark:text-[#FDAFBB]">
-                <ArrowDown className="h-3 w-3 stroke-[2.5]" />
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-rose-500/15 text-[#FF647C] dark:bg-rose-950/40 dark:text-[#FF647C]">
+                <ArrowDown className="h-3.5 w-3.5 stroke-[2.5]" />
               </span>
-              <span className="text-muted-foreground">S ({longShortStats.short.count})</span>
+              <span className="text-muted-foreground font-medium">S ({longShortStats.short.count})</span>
             </div>
-            <span className={cn("font-semibold", getAmountColorClass(longShortStats.short.pnl))}>
+            <span className={cn("font-bold font-mono", getAmountColorClass(longShortStats.short.pnl))}>
               {formatSignedCurrency(longShortStats.short.pnl, locale)}
             </span>
           </div>

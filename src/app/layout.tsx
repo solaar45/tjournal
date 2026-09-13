@@ -29,7 +29,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${ibmPlexMono.variable} ${inter.className} font-sans antialiased overflow-x-hidden w-full max-w-full`}>
         <Providers>
-          <div className="min-h-screen bg-background flex flex-col justify-between selection:bg-[#E5E7FA] selection:text-[#6979F8] overflow-x-hidden w-full max-w-full">
+          <div className="min-h-screen bg-background flex flex-col justify-between selection:bg-blue-600 selection:text-white overflow-x-hidden w-full max-w-full">
             {/* Header */}
             <LayoutHeader />
 

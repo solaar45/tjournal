@@ -10,23 +10,23 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-[#6979F8] text-white [a&]:hover:bg-[#5868e8]",
+          "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
         secondary:
-          "border-transparent bg-[#E5E7FA] text-[#6979F8] dark:bg-[#2A1E38] dark:text-[#A5AFFB]",
+          "border-transparent bg-secondary text-secondary-foreground",
         destructive:
           "border-transparent bg-[#FF647C] text-white",
         outline:
           "border-border text-foreground [a&]:hover:bg-accent",
         success:
-          "border-transparent bg-[#D5F2EA] text-[#00C48C] dark:bg-[#122B24] dark:text-[#7DDFC3]",
+          "border-transparent bg-emerald-500/15 text-[#00C48C] dark:bg-emerald-950/40 dark:text-[#00C48C]",
         danger:
-          "border-transparent bg-[#FBE4E8] text-[#FF647C] dark:bg-[#33151D] dark:text-[#FDAFBB]",
+          "border-transparent bg-rose-500/15 text-[#FF647C] dark:bg-rose-950/40 dark:text-[#FF647C]",
         warning:
-          "border-transparent bg-[#FFE8DA] text-[#FFA26B] dark:bg-[#311E16] dark:text-[#FFA26B]",
+          "border-transparent bg-amber-500/15 text-[#FFA26B] dark:bg-amber-950/40 dark:text-[#FFA26B]",
         purple:
-          "border-transparent bg-[#EEDFF2] text-[#BE52F2] dark:bg-[#2A1637] dark:text-[#DBA5F5]",
+          "border-transparent bg-indigo-500/15 text-indigo-500 dark:bg-indigo-950/40 dark:text-indigo-400",
         blue:
-          "border-transparent bg-[#E5E7FA] text-[#6979F8] dark:bg-[#1E1B38] dark:text-[#A5AFFB]",
+          "border-transparent bg-blue-500/15 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400",
       },
     },
     defaultVariants: {

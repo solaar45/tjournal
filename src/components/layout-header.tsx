@@ -23,18 +23,18 @@ export function LayoutHeader() {
         {/* Left: Brand / Logo */}
         <div className="flex items-center gap-2 sm:gap-6 min-w-0">
           <Link href="/trades" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-eggplore flex items-center justify-center text-white shadow-sm shadow-[#6979F8]/25 group-hover:scale-105 transition-transform">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/25 group-hover:scale-105 transition-transform">
               <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-sm sm:text-base tracking-tight text-foreground">tjournal</span>
-                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.2 rounded-full bg-[#E5E7FA] text-[#6979F8] dark:bg-[#2A1E38] dark:text-[#A5AFFB] hidden md:inline-flex">
+                <span className="font-bold text-base tracking-tight text-foreground">tjournal</span>
+                <span className="text-xs font-bold uppercase px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-500/20 hidden md:inline-flex">
                   v1.0
                 </span>
               </div>
-              <span className="text-[10px] text-muted-foreground -mt-0.5 hidden sm:inline">
-                Eggplore Edition
+              <span className="text-xs text-muted-foreground -mt-0.5 hidden sm:inline">
+                Trading Journal
               </span>
             </div>
           </Link>

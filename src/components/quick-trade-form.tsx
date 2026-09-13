@@ -205,8 +205,8 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
           <Button variant="secondary" size="default" className="gap-2">
             <Zap className="h-4 w-4 text-[#FFA26B]" />
             {t.forms.quickTrade}
-            <kbd className="ml-1 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-md border border-border/60 bg-muted/80 px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-              <span className="text-xs">⌘</span>Q
+            <kbd className="ml-1 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-md border border-border/60 bg-muted/80 px-1.5 font-mono text-xs font-medium text-muted-foreground">
+              <span>⌘</span>Q
             </kbd>
           </Button>
         )}
@@ -416,7 +416,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                 className="flex-1"
               >
                 {t.common.cancel}
-                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
+                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-xs font-medium opacity-100">
                   Esc
                 </kbd>
               </Button>
@@ -438,8 +438,8 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                 ) : (
                   <>
                     {language === 'de' ? '& Neu' : '& New'}
-                    <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
-                      <span className="text-xs">⌘</span>↵
+                    <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-xs font-medium opacity-100">
+                      <span>⌘</span>↵
                     </kbd>
                   </>
                 )}
@@ -460,7 +460,7 @@ export function QuickTradeForm({ trigger }: QuickTradeFormProps) {
                 ) : (
                   <>
                     {t.common.save}
-                    <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
+                    <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-xs font-medium opacity-100">
                       ↵
                     </kbd>
                   </>

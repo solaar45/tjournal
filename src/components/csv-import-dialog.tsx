@@ -322,14 +322,14 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
                         <TableCell>
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-1.5">
-                              <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-full font-medium">
+                              <Badge variant="outline" className="text-xs px-2.5 py-0.5 rounded-full font-semibold">
                                 {candidate.type}
                               </Badge>
                               <span
                                 className={`inline-flex items-center justify-center w-5 h-5 rounded-full ${
                                   candidate.side === 'Long'
-                                    ? 'bg-[#D5F2EA] text-[#00C48C] dark:bg-[#122B24] dark:text-[#7DDFC3]'
-                                    : 'bg-[#FBE4E8] text-[#FF647C] dark:bg-[#33151D] dark:text-[#FDAFBB]'
+                                    ? 'bg-emerald-500/15 text-[#00C48C] dark:bg-emerald-950/40 dark:text-[#00C48C]'
+                                    : 'bg-rose-500/15 text-[#FF647C] dark:bg-rose-950/40 dark:text-[#FF647C]'
                                 }`}
                                 title={candidate.side}
                               >
@@ -340,7 +340,7 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
                                 )}
                               </span>
                             </div>
-                            <span className="text-[11px] text-muted-foreground truncate max-w-[200px]" title={candidate.originalDescription}>
+                            <span className="text-xs text-muted-foreground truncate max-w-[200px]" title={candidate.originalDescription}>
                               {candidate.originalDescription}
                             </span>
                           </div>
@@ -348,10 +348,10 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
 
                         {/* Entry */}
                         <TableCell>
-                          <div className="text-xs">
-                            <span className="font-medium">{candidate.entryShares} {language === 'de' ? 'Stk.' : 'shares'}</span> @{' '}
-                            <span>{formatCurrency(candidate.entryPrice, locale)}</span>
-                            <div className="text-[10px] text-muted-foreground">
+                          <div className="text-xs sm:text-sm">
+                            <span className="font-semibold">{candidate.entryShares} {language === 'de' ? 'Stk.' : 'shares'}</span> @{' '}
+                            <span className="font-mono font-semibold">{formatCurrency(candidate.entryPrice, locale)}</span>
+                            <div className="text-xs text-muted-foreground mt-0.5">
                               {formatDateSafe(candidate.entryDate, dateTimeFormat)}
                             </div>
                           </div>
@@ -360,39 +360,39 @@ export function CsvImportDialog({ trigger }: CsvImportDialogProps) {
                         {/* Exit */}
                         <TableCell>
                           {isClosed && candidate.exitPrice ? (
-                            <div className="text-xs">
-                              <span className="font-medium">{candidate.exitShares || candidate.entryShares} {language === 'de' ? 'Stk.' : 'shares'}</span> @{' '}
-                              <span>{formatCurrency(candidate.exitPrice, locale)}</span>
-                              <div className="text-[10px] text-muted-foreground">
+                            <div className="text-xs sm:text-sm">
+                              <span className="font-semibold">{candidate.exitShares || candidate.entryShares} {language === 'de' ? 'Stk.' : 'shares'}</span> @{' '}
+                              <span className="font-mono font-semibold">{formatCurrency(candidate.exitPrice, locale)}</span>
+                              <div className="text-xs text-muted-foreground mt-0.5">
                                 {formatDateSafe(candidate.exitDate, dateTimeFormat)}
                               </div>
                             </div>
                           ) : (
-                            <Badge variant="secondary" className="text-[10px]">
+                            <Badge variant="secondary" className="text-xs px-2.5 py-0.5">
                               {t.csvImport.openPosition}
                             </Badge>
                           )}
                         </TableCell>
 
                         {/* Fees & Taxes */}
-                        <TableCell className="text-right text-xs">
+                        <TableCell className="text-right text-xs sm:text-sm">
                           <div>
-                            {t.table.feeShort}: <span className="font-mono">{formatCurrency(candidate.fee || 0, locale)}</span>
+                            {t.table.feeShort}: <span className="font-mono font-medium">{formatCurrency(candidate.fee || 0, locale)}</span>
                           </div>
                           <div>
-                            {t.table.taxShort}: <span className={cn("font-mono font-medium", getTaxColorClass(candidate.tax))}>{formatTax(candidate.tax, locale)}</span>
+                            {t.table.taxShort}: <span className={cn("font-mono font-semibold", getTaxColorClass(candidate.tax))}>{formatTax(candidate.tax, locale)}</span>
                           </div>
                         </TableCell>
 
                         {/* Net P&L */}
                         <TableCell className="text-right">
                           {isClosed && hasNetPnl ? (
-                            <div className="text-xs font-mono">
-                              <div className={cn("font-bold", getAmountColorClass(candidate.netPnl))}>
+                            <div className="text-xs sm:text-sm font-mono">
+                              <div className={cn("font-bold text-sm", getAmountColorClass(candidate.netPnl))}>
                                 {formatSignedCurrency(candidate.netPnl || 0, locale)}
                               </div>
-                              <div className="text-[10px] text-muted-foreground">
-                                {t.table.grossShort}: <span className={getAmountColorClass(candidate.pnl)}>{formatSignedCurrency(candidate.pnl || 0, locale)}</span>
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                {t.table.grossShort}: <span className={cn("font-semibold", getAmountColorClass(candidate.pnl))}>{formatSignedCurrency(candidate.pnl || 0, locale)}</span>
                               </div>
                             </div>
                           ) : (
