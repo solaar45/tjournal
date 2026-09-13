@@ -109,13 +109,13 @@ export function TradingCalendar({
       <CardContent className="p-0 overflow-hidden w-full">
         <div className="w-full">
           {/* Weekday column headers (Mo-Fr + Weekly) */}
-          <div className="grid grid-cols-6 border-b border-border/60 bg-muted/40 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">
+          <div className="grid grid-cols-6 border-b border-border/60 bg-muted/40 text-sm font-semibold text-muted-foreground text-center">
             {dayNames.map((d, idx) => (
               <div key={idx} className="py-2.5 sm:py-3 border-r border-border/40 last:border-r-0">
                 {d}
               </div>
             ))}
-            <div className="py-2.5 sm:py-3 bg-muted/60 text-foreground font-bold">
+            <div className="py-2.5 sm:py-3 bg-muted/60 text-foreground font-semibold">
               <span className="hidden sm:inline">{t.calendar.weekly}</span>
               <span className="sm:hidden">Σ</span>
             </div>
@@ -152,8 +152,8 @@ export function TradingCalendar({
                       }`}
                     >
                       {/* Day Number */}
-                      <div className="flex items-center justify-between text-xs sm:text-sm">
-                        <span className={`font-mono ${isSelected ? 'font-bold text-primary' : 'text-muted-foreground font-semibold'}`}>
+                      <div className="flex items-center justify-between text-sm sm:text-base">
+                        <span className={`font-mono ${isSelected ? 'font-bold text-primary' : 'text-foreground/80 font-semibold'}`}>
                           {day.dayNumber}
                         </span>
                       </div>
@@ -163,11 +163,11 @@ export function TradingCalendar({
                         {hasTrades ? (
                           <>
                             <div
-                              className={`text-xs sm:text-sm font-bold font-mono tracking-tight truncate ${getAmountColorClass(day.pnl)}`}
+                              className={`text-sm sm:text-base font-bold font-mono tracking-tight truncate ${getAmountColorClass(day.pnl)}`}
                             >
                               {formatSignedCurrency(day.pnl, locale)}
                             </div>
-                            <div className="text-xs text-muted-foreground font-mono font-medium mt-0.5">
+                            <div className="text-xs sm:text-sm text-muted-foreground font-mono font-medium mt-0.5">
                               <span className="hidden sm:inline">
                                 {day.tradesCount} {day.tradesCount === 1 ? t.calendar.trade : t.calendar.trades}
                               </span>
@@ -178,7 +178,7 @@ export function TradingCalendar({
                           </>
                         ) : (
                           <div className="h-4 sm:h-6 flex items-center justify-center">
-                            <span className="text-xs text-muted-foreground/40">-</span>
+                            <span className="text-muted-foreground/30 text-xs sm:text-sm font-mono">-</span>
                           </div>
                         )}
                       </div>
@@ -191,11 +191,11 @@ export function TradingCalendar({
                   {week.weeklyTradesCount > 0 ? (
                     <>
                       <div
-                        className={`text-xs sm:text-sm font-bold font-mono tracking-tight truncate ${getAmountColorClass(week.weeklyPnl)}`}
+                        className={`text-sm sm:text-base font-bold font-mono tracking-tight truncate ${getAmountColorClass(week.weeklyPnl)}`}
                       >
                         {formatSignedCurrency(week.weeklyPnl, locale)}
                       </div>
-                      <div className="text-xs text-muted-foreground font-mono font-medium mt-0.5">
+                      <div className="text-xs sm:text-sm text-muted-foreground font-mono font-medium mt-0.5">
                         <span className="hidden sm:inline">
                           {week.weeklyTradesCount} {week.weeklyTradesCount === 1 ? t.calendar.trade : t.calendar.trades}
                         </span>
@@ -205,7 +205,7 @@ export function TradingCalendar({
                       </div>
                     </>
                   ) : (
-                    <span className="text-xs text-muted-foreground/40">-</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground/40 font-mono">-</span>
                   )}
                 </div>
               </div>

@@ -19,8 +19,8 @@ import {
   MoreHorizontal,
   Trash2,
   ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react';
 import { Position, Transaction, TransactionType, PositionStatus } from '@/types/position';
 import { TradeSide } from '@/types/trade';
@@ -81,7 +81,7 @@ function getTransactionRowBg(type: TransactionType, pnl?: number): string {
  * Get background color for header columns (Clean high-contrast slate-neutral)
  */
 function getHeaderBg(_columnId?: string): string {
-  return 'bg-muted/60 text-muted-foreground font-bold text-xs uppercase tracking-wider py-3.5';
+  return 'bg-muted/50 text-muted-foreground font-semibold text-sm py-3';
 }
 
 /**
@@ -130,10 +130,10 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-xs font-semibold"
+            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
           >
             {t.common.symbol}
-            <ArrowUpDown className="ml-1 h-3 w-3" />
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => <span className="font-bold text-base text-foreground tracking-tight">{row.original.symbol}</span>,
@@ -141,16 +141,37 @@ export function PositionTableTanstack({
       {
         id: 'type',
         accessorKey: 'type',
-        header: t.common.type,
-        cell: ({ row }) => <Badge variant="outline" className="text-xs px-3 py-0.5 rounded-full font-semibold">{row.original.type}</Badge>,
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {t.common.type}
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
+        ),
+        cell: ({ row }) => <Badge variant="outline" className="text-xs px-2.5 py-0.5 rounded-full font-semibold">{row.original.type}</Badge>,
       },
       {
         id: 'status',
-        header: t.common.status,
+        accessorKey: 'status',
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {t.common.status}
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
+        ),
         cell: ({ row }) => {
           const isOpen = row.original.remainingShares > 0;
           return (
-            <Badge variant={isOpen ? 'blue' : 'secondary'} className="text-xs px-3 py-0.5 rounded-full font-semibold">
+            <Badge variant={isOpen ? 'blue' : 'secondary'} className="text-xs px-2.5 py-0.5 rounded-full font-semibold">
               {isOpen ? t.common.open : t.common.closed}
             </Badge>
           );
@@ -159,25 +180,25 @@ export function PositionTableTanstack({
       {
         id: 'side',
         accessorKey: 'side',
-        header: t.common.side,
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {t.common.side}
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
+        ),
         cell: ({ row }) => {
           const isLong = row.original.side === TradeSide.LONG || (row.original.side as string) === 'Long';
           return (
-            <div className="flex items-center">
+            <div className="flex items-center" title={isLong ? 'Long' : 'Short'}>
               {isLong ? (
-                <span
-                  className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/15 text-[#00C48C] dark:bg-emerald-950/40 dark:text-[#00C48C]"
-                  title="Long"
-                >
-                  <ArrowUp className="h-3.5 w-3.5 stroke-[2.5]" />
-                </span>
+                <ArrowUpRight className="h-5 w-5 text-[#00C48C] stroke-[2.5]" />
               ) : (
-                <span
-                  className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-rose-500/15 text-[#FF647C] dark:bg-rose-950/40 dark:text-[#FF647C]"
-                  title="Short"
-                >
-                  <ArrowDown className="h-3.5 w-3.5 stroke-[2.5]" />
-                </span>
+                <ArrowDownRight className="h-5 w-5 text-[#FF647C] stroke-[2.5]" />
               )}
             </div>
           );
@@ -186,18 +207,39 @@ export function PositionTableTanstack({
       {
         id: 'shares',
         accessorKey: 'totalEntryShares',
-        header: t.common.shares,
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {t.common.shares}
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
+        ),
         cell: ({ row }) => (
-          <span className="text-sm font-mono font-semibold text-foreground">
+          <span className="text-base font-mono font-semibold text-foreground">
             {row.original.totalEntryShares}
           </span>
         ),
       },
       {
         id: 'entryDate',
-        header: `${t.dashboard.entryGroup} ${t.common.date}`,
+        accessorKey: 'firstEntryDate',
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {t.dashboard.entryGroup} {t.common.date}
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
+        ),
         cell: ({ row }) => (
-          <span className="text-sm font-mono font-medium text-muted-foreground">
+          <span className="text-base font-mono font-semibold text-foreground">
             {formatDateSafe(row.original.firstEntryDate, 'MMM dd, yyyy')}
           </span>
         ),
@@ -210,23 +252,34 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-xs font-semibold"
+            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
           >
             {t.dashboard.entryGroup} {t.common.price}
-            <ArrowUpDown className="ml-1 h-3 w-3" />
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="text-sm font-mono font-semibold text-foreground">
+          <span className="text-base font-mono font-semibold text-foreground">
             {formatCurrency(row.original.avgEntryPrice, locale)}
           </span>
         ),
       },
       {
         id: 'exitDate',
-        header: `${t.dashboard.exitGroup} ${t.common.date}`,
+        accessorKey: 'lastExitDate',
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {t.dashboard.exitGroup} {t.common.date}
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
+        ),
         cell: ({ row }) => (
-          <span className="text-sm font-mono font-medium text-muted-foreground">
+          <span className="text-base font-mono font-semibold text-foreground">
             {row.original.lastExitDate
               ? formatDateSafe(row.original.lastExitDate, 'MMM dd, yyyy')
               : <span className="text-muted-foreground">-</span>}
@@ -235,9 +288,20 @@ export function PositionTableTanstack({
       },
       {
         id: 'exitPrice',
-        header: `${t.dashboard.exitGroup} ${t.common.price}`,
+        accessorKey: 'avgExitPrice',
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {t.dashboard.exitGroup} {t.common.price}
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
+        ),
         cell: ({ row }) => (
-          <span className="text-sm font-mono font-semibold text-foreground">
+          <span className="text-base font-mono font-semibold text-foreground">
             {row.original.avgExitPrice
               ? formatCurrency(row.original.avgExitPrice, locale)
               : <span className="text-muted-foreground">-</span>}
@@ -246,18 +310,40 @@ export function PositionTableTanstack({
       },
       {
         id: 'fee',
-        header: t.common.fee,
+        accessorKey: 'fee',
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {t.common.fee}
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
+        ),
         cell: ({ row }) => (
-          <span className="text-sm font-mono font-medium text-muted-foreground">
+          <span className="text-base font-mono font-semibold text-foreground">
             {formatCurrency(row.original.fee || 0, locale)}
           </span>
         ),
       },
       {
         id: 'tax',
-        header: t.common.tax,
+        accessorKey: 'tax',
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {t.common.tax}
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
+        ),
         cell: ({ row }) => (
-          <span className={cn("text-sm font-mono font-semibold", getTaxColorClass(row.original.tax))}>
+          <span className="text-base font-mono font-semibold text-foreground">
             {formatTax(row.original.tax, locale)}
           </span>
         ),
@@ -270,10 +356,10 @@ export function PositionTableTanstack({
             variant="ghost"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-3 h-8 text-xs font-semibold"
+            className="-ml-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
           >
             Net P&L
-            <ArrowUpDown className="ml-1 h-3 w-3" />
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
           </Button>
         ),
         cell: ({ row }) => {
@@ -284,7 +370,7 @@ export function PositionTableTanstack({
               {formatSignedCurrency(netPnl, locale)}
             </div>
           ) : (
-            <span className="text-muted-foreground font-mono text-sm">-</span>
+            <span className="text-muted-foreground font-mono text-base">-</span>
           );
         },
       },
@@ -297,17 +383,17 @@ export function PositionTableTanstack({
               variant="ghost"
               size="sm"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-              className="-mr-3 h-8 text-xs font-semibold"
+              className="-mr-3 h-8 text-sm font-semibold text-muted-foreground hover:text-foreground"
             >
               Gross P&L (%)
-              <ArrowUpDown className="ml-1 h-3 w-3" />
+              <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
             </Button>
           </div>
         ),
         cell: ({ row }) => {
           const isClosed = row.original.remainingShares === 0 || row.original.status === PositionStatus.CLOSED;
           return isClosed && row.original.totalPnL !== undefined ? (
-            <div className="text-sm text-right font-mono">
+            <div className="text-base text-right font-mono">
               <span className={cn('font-bold', getAmountColorClass(row.original.totalPnL))}>
                 {formatSignedCurrency(row.original.totalPnL, locale)}
               </span>
@@ -318,14 +404,14 @@ export function PositionTableTanstack({
               )}
             </div>
           ) : (
-            <div className="text-right text-muted-foreground font-mono text-sm">-</div>
+            <div className="text-right text-muted-foreground font-mono text-base">-</div>
           );
         },
       },
       {
         id: 'actions',
         size: 40,
-        header: () => <div className="text-right pr-2">{t.common.actions}</div>,
+        header: () => <div className="text-right pr-2 text-sm font-semibold text-muted-foreground">{t.common.actions}</div>,
         cell: ({ row }) => {
           const isClosed = row.original.status === PositionStatus.CLOSED || row.original.remainingShares === 0;
           return (
@@ -442,7 +528,7 @@ export function PositionTableTanstack({
                     onClick={() => row.toggleExpanded()}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-2.5">
+                      <TableCell key={cell.id} className="py-3.5">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
@@ -459,7 +545,7 @@ export function PositionTableTanstack({
                         <TableRow
                           key={txn.id}
                           className={cn(
-                            'border-l-4 text-xs',
+                            'border-l-4 text-sm',
                             getTransactionRowBg(txn.type, txn.pnl)
                           )}
                         >
@@ -467,7 +553,7 @@ export function PositionTableTanstack({
                           <TableCell />
 
                           {/* 2. Date under Symbol */}
-                          <TableCell className="font-medium text-xs">
+                          <TableCell className="font-semibold text-sm font-mono text-foreground">
                             {formatDateSafe(txn.date, 'MMM dd, yyyy')}
                           </TableCell>
 
@@ -475,76 +561,76 @@ export function PositionTableTanstack({
                           <TableCell>
                             <Badge
                               variant={isEntry ? 'outline' : 'secondary'}
-                              className="text-xs px-2.5 py-0.5 rounded-full font-medium"
+                              className="text-xs px-2.5 py-0.5 rounded-full font-semibold"
                             >
                               {isEntry ? 'Entry' : 'Exit'}
                             </Badge>
                           </TableCell>
 
                           {/* 4. Status placeholder */}
-                          <TableCell className="text-muted-foreground font-mono text-xs">-</TableCell>
+                          <TableCell className="text-muted-foreground font-mono text-sm">-</TableCell>
 
                           {/* 5. Side placeholder */}
-                          <TableCell className="text-muted-foreground font-mono text-xs">-</TableCell>
+                          <TableCell className="text-muted-foreground font-mono text-sm">-</TableCell>
 
                           {/* 6. Shares */}
-                          <TableCell className="font-mono text-xs font-medium">
+                          <TableCell className="font-mono text-sm font-semibold text-foreground">
                             {isExit && '-'}{txn.shares}
                           </TableCell>
 
                           {/* 7. Entry Date */}
-                          <TableCell className="text-muted-foreground font-mono text-xs">
-                            {isEntry ? formatDateSafe(txn.date, 'MMM dd, yyyy') : '-'}
+                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                            {isEntry ? formatDateSafe(txn.date, 'MMM dd, yyyy') : <span className="text-muted-foreground">-</span>}
                           </TableCell>
 
                           {/* 8. Entry Price */}
-                          <TableCell className="font-mono text-xs">
-                            {isEntry ? formatCurrency(txn.price, locale) : '-'}
+                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                            {isEntry ? formatCurrency(txn.price, locale) : <span className="text-muted-foreground">-</span>}
                           </TableCell>
 
                           {/* 9. Exit Date */}
-                          <TableCell className="text-muted-foreground font-mono text-xs">
-                            {isExit ? formatDateSafe(txn.date, 'MMM dd, yyyy') : '-'}
+                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                            {isExit ? formatDateSafe(txn.date, 'MMM dd, yyyy') : <span className="text-muted-foreground">-</span>}
                           </TableCell>
 
                           {/* 10. Exit Price */}
-                          <TableCell className="font-mono text-xs">
-                            {isExit ? formatCurrency(txn.price, locale) : '-'}
+                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                            {isExit ? formatCurrency(txn.price, locale) : <span className="text-muted-foreground">-</span>}
                           </TableCell>
 
                           {/* 11. Fee */}
-                          <TableCell className="font-mono text-xs text-muted-foreground">
-                            {txn.fee !== undefined ? formatCurrency(txn.fee, locale) : '-'}
+                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                            {txn.fee !== undefined ? formatCurrency(txn.fee, locale) : <span className="text-muted-foreground">-</span>}
                           </TableCell>
 
                           {/* 12. Tax */}
-                          <TableCell className={cn("font-mono text-xs font-medium", getTaxColorClass(txn.tax))}>
-                            {formatTax(txn.tax, locale)}
+                          <TableCell className="font-mono text-sm font-semibold text-foreground">
+                            {txn.tax !== undefined ? formatTax(txn.tax, locale) : <span className="text-muted-foreground">-</span>}
                           </TableCell>
 
                           {/* 13. Net P&L */}
                           <TableCell>
                             {isExit && netPnl !== undefined ? (
-                              <div className={cn('font-bold font-mono text-xs', getAmountColorClass(netPnl))}>
+                              <div className={cn('font-bold font-mono text-sm', getAmountColorClass(netPnl))}>
                                 {formatSignedCurrency(netPnl, locale)}
                               </div>
                             ) : !isExit ? (
-                              <span className="text-muted-foreground font-mono text-xs">
+                              <span className="text-muted-foreground font-mono text-sm">
                                 ø {formatCurrency(txn.positionAvgPrice, locale)}
                               </span>
                             ) : (
-                              <span className="text-muted-foreground font-mono text-xs">-</span>
+                              <span className="text-muted-foreground font-mono text-sm">-</span>
                             )}
                           </TableCell>
 
                           {/* 14. Gross P&L */}
                           <TableCell className="text-right">
                             {isExit && txn.pnl !== undefined ? (
-                              <div className={cn('font-semibold font-mono text-xs', getAmountColorClass(txn.pnl))}>
+                              <div className={cn('font-semibold font-mono text-sm', getAmountColorClass(txn.pnl))}>
                                 {formatSignedCurrency(txn.pnl, locale)}
                               </div>
                             ) : (
-                              <span className="text-muted-foreground font-mono text-xs">-</span>
+                              <span className="text-muted-foreground font-mono text-sm">-</span>
                             )}
                           </TableCell>
 
@@ -592,17 +678,16 @@ export function PositionTableTanstack({
                     <span className="font-bold text-base text-foreground tracking-tight">
                       {pos.symbol}
                     </span>
-                    {/* Side icon pill */}
+                    {/* Side Kurspfeil */}
                     <span
-                      className={cn(
-                        "inline-flex items-center justify-center w-5 h-5 rounded-full",
-                        isLong
-                          ? "bg-emerald-500/15 text-[#00C48C] dark:bg-emerald-950/40 dark:text-[#00C48C]"
-                          : "bg-rose-500/15 text-[#FF647C] dark:bg-rose-950/40 dark:text-[#FF647C]"
-                      )}
+                      className="inline-flex items-center justify-center shrink-0"
                       title={isLong ? 'Long' : 'Short'}
                     >
-                      {isLong ? <ArrowUp className="h-3.5 w-3.5 stroke-[2.5]" /> : <ArrowDown className="h-3.5 w-3.5 stroke-[2.5]" />}
+                      {isLong ? (
+                        <ArrowUpRight className="h-5 w-5 text-[#00C48C] stroke-[2.5]" />
+                      ) : (
+                        <ArrowDownRight className="h-5 w-5 text-[#FF647C] stroke-[2.5]" />
+                      )}
                     </span>
                     {/* Type Badge */}
                     <Badge variant="outline" className="text-xs px-2.5 py-0.5 rounded-full font-semibold">
@@ -752,7 +837,7 @@ export function PositionTableTanstack({
                   <div className="text-right">
                     <span className="text-muted-foreground block text-xs font-medium mb-0.5">{t.table.costsAndTax}</span>
                     <span className="font-mono text-sm font-semibold text-foreground">
-                      {formatCurrency(pos.fee || 0, locale)} / <span className={getTaxColorClass(pos.tax)}>{formatTax(pos.tax, locale)}</span>
+                      {formatCurrency(pos.fee || 0, locale)} / {formatTax(pos.tax, locale)}
                     </span>
                   </div>
                 </div>
@@ -794,8 +879,8 @@ export function PositionTableTanstack({
                           </div>
 
                           <div className="flex items-center justify-between text-xs text-muted-foreground font-mono pt-1.5 border-t border-border/20">
-                            <div>
-                              {t.table.feeShort}: {txn.fee !== undefined ? formatCurrency(txn.fee, locale) : '-'} | {t.table.taxShort}: <span className={getTaxColorClass(txn.tax)}>{formatTax(txn.tax, locale)}</span>
+                            <div className="text-foreground">
+                              {t.table.feeShort}: {txn.fee !== undefined ? formatCurrency(txn.fee, locale) : '-'} | {t.table.taxShort}: {formatTax(txn.tax, locale)}
                             </div>
                             {isExit && txnNet !== undefined && (
                               <div className={cn("font-bold text-sm", getAmountColorClass(txnNet))}>
